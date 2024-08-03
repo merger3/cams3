@@ -4,6 +4,8 @@
     y: number;
     width: number;
     height: number;
+    frameWidth: number;
+    frameHeight: number
     };
     export type RectangleStyle = {
         border: string;
@@ -12,6 +14,7 @@
 </script>
 
 <script lang="ts">
+    import { Button, Col, Row, Container } from '@sveltestrap/sveltestrap';
     import { onMount, onDestroy } from 'svelte';
     export let onUpdateRectangle;
     export let rectangleStyle;
@@ -52,11 +55,9 @@
         const { clientX, clientY } = event;
         if ((!drawing || !container) && drawn)
             return;
-        if (!isDragging()) {
-            render = false;
-        } else {
-            render = true;
-        }
+
+        render = isDragging()
+
         const rect = container.getBoundingClientRect();
         currentX = clientX - rect.left;
         currentY = clientY - rect.top;
@@ -71,11 +72,14 @@
         } else {
             drawn = true;
         }
+        const rect = container.getBoundingClientRect();
         const rectangle = {
             x: Math.min(startX, currentX),
             y: Math.min(startY, currentY),
             width: Math.abs(currentX - startX),
-            height: Math.abs(currentY - startY)
+            height: Math.abs(currentY - startY),
+            frameWidth: rect.width,
+            frameHeight: rect.height
         };
         onUpdateRectangle(rectangle);
     };
@@ -95,7 +99,7 @@
     });
     </script>
     
-    <div bind:this={container} style="position: relative;">
+    <div bind:this={container} class="ratio ratio-16x9" style="position: relative;">
         <slot></slot>
         {#if (drawing || drawn) && render}
             <div
@@ -106,7 +110,9 @@
                 )}px; width: {Math.abs(currentX - startX)}px; height: {Math.abs(
                     currentY - startY
                 )}px; border: {rectangleStyle.border}; background-color: {rectangleStyle.backgroundColor};"
-            ></div>
+            >
+                <div class="dot"></div>
+            </div>
         {/if}
     </div>
     
@@ -114,6 +120,16 @@
         .rectangle {
             position: absolute;
             pointer-events: none;
+        }
+        .dot {
+            width: 5px;
+            height: 5px;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
     
