@@ -40,7 +40,7 @@
 
 <div class="container-fluid" id="video-container">
 	<div class="row justify-content-start">
-		<div class="col-1 vstack text-center" id="coordinates">
+		<div class="col-1 vstack align-self-center text-center" id="coordinates">
 			{rectangle?.x == undefined ? 0 : Math.round(rectangle.x)} x {rectangle?.y == undefined ? 0 : Math.round(rectangle.y)}
 			<div>
 				<button on:click={getData} class="btn btn-outline-primary btn-lg">Get Data</button>
@@ -52,15 +52,14 @@
 				!ptzload pasture barn
 			</div>
 			<RectangleSelector onUpdateRectangle={updateRectangle} rectangleStyle={rectangleStyle} drawn={drawn}>
-					<iframe
-						title="da cameras"
-						id="cams"
-						class="http://74.208.238.87:8889/ptz-alv/?controls=0"
-						src="https://www.twitch.tv"
-						frameborder="0"
-						allow="autoplay; fullscreen"
-						allowfullscreen
-					></iframe>
+				<iframe
+					title="da cameras"
+					id="cams"
+					class="http://74.208.238.87:8889/ptz-alv/?controls=0"
+					src="https://www.twitch.tv"
+					allow="autoplay; fullscreen"
+					allowfullscreen
+				></iframe>
 			</RectangleSelector>
 		</div>
 	</div>
