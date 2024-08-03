@@ -53,13 +53,13 @@
 			</div>
 			<RectangleSelector onUpdateRectangle={updateRectangle} rectangleStyle={rectangleStyle} drawn={drawn}>
 					<iframe
-							title="da cameras"
-							id="cams"
-							class="http://74.208.238.87:8889/ptz-alv/?controls=0"
-							src="https://www.twitch.tv"
-							frameborder="0"
-							allow="autoplay; fullscreen"
-							allowfullscreen
+						title="da cameras"
+						id="cams"
+						class="http://74.208.238.87:8889/ptz-alv/?controls=0"
+						src="https://www.twitch.tv"
+						frameborder="0"
+						allow="autoplay; fullscreen"
+						allowfullscreen
 					></iframe>
 			</RectangleSelector>
 		</div>
@@ -67,12 +67,6 @@
 </div>
 
 <style>
-	#command {
-		width: 80%;
-	}
-	#video-container {
-		position: relative;
-	}
 	#wrapper {
 		width: 80%;
 	}
