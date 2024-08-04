@@ -2,11 +2,10 @@
 	import {type Rectangle, type RectangleStyle } from  "./RectangleSelector.svelte";
 	import RectangleSelector from "./RectangleSelector.svelte";
 	import axios from 'axios';
-	import { Button, Col, Row, Container } from '@sveltestrap/sveltestrap';
-	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
 
-	let video: any;
     let drawn = false
+	let modified = false
 	let rectangle: Rectangle | undefined;
 	const rectangleStyle: RectangleStyle = {
 		border: '2px solid red',
@@ -15,11 +14,28 @@
 
 	function updateRectangle(newRectangle: Rectangle) {
 		rectangle = newRectangle;
+		if (commandText != " ") {
+			modified = true
+		}
 	}
 	
+	let commandText: string = " ";
 	async function getData() {
-		if (rectangle) {
-			axios.post('/draw', {
+		if (commandText != " " && !modified) {
+			axios.post('/send', {
+				command: commandText
+			}).then(function (response) {
+				console.log(response);
+				rectangle = undefined
+				commandText = " "
+				drawn = false
+			}).catch(function (error) {
+				console.log(error);
+			});
+			console.log(drawn)
+		} else if (rectangle) {
+			let route: string = drawn ? '/draw' : '/click'
+			axios.post(route, {
 				x: rectangle.x,
 				y: rectangle.y,
 				width: rectangle.width,
@@ -28,68 +44,96 @@
     			frameHeight: rectangle.frameHeight
 			}).then(function (response) {
 				if (rectangle) {
-					rectangle.x = response.data.x
-					rectangle.y = response.data.y
+					rectangle.x = Number(response.data.x)
+					rectangle.y = Number(response.data.y)
 				}
+				modified = false
+				commandText = response.data.command
+
 				console.log(response);
 			}).catch(function (error) {
 				console.log(error);
 			});
 		}
 	}
-	var width: number
-	var height: number
-	var fwidth: number
-	var fheight: number
-	if (browser) {
-		window.addEventListener('resize', function(event){
-			let bounds = video.getBoundingClientRect();
-			width = window.innerWidth;
-			height = window.innerHeight;
-			fwidth = Math.round(bounds.width);
-			fheight = Math.round(bounds.height)	;
-		});
-  }
+	let winWidth: number, winHeight: number;
+	let ifWidth: number, ifHeight: number;
+	let commandHeight: number;
+
+	let width: number, height: number;
+
+	function resizeIframe() {
+		winWidth = window.innerWidth;
+		winHeight = window.innerHeight;
+		console.log(winWidth)
+		let trailingHeight: number = winHeight - commandHeight - 4;
+		let trailingWidth: number = winWidth * .8;
+		
+		let fullHeight: number = trailingWidth / (16/9) ;
+
+		if (fullHeight <= trailingHeight) {
+			width = trailingWidth;
+			height = fullHeight;
+		} else {
+			height = trailingHeight;
+			width = height * (16/9);
+		}
+
+		drawn = false
+	}
+
+	onMount(() => {
+		resizeIframe();
+		window.addEventListener('resize', resizeIframe);
+		return () => {
+			window.removeEventListener('resize', resizeIframe);
+		};
+    });
 </script>
 
 
 
 <div class="container-fluid" id="video-container">
-	<div class="row justify-content-start">
-		<div class="col-1 vstack align-self-center text-center" id="coordinates">
-			<!-- {rectangle?.x == undefined ? 0 : Math.round(rectangle.x)} x {rectangle?.y == undefined ? 0 : Math.round(rectangle.y)} -->
-			{width} x {height} <br>
-			{fwidth} x {fheight}
+	<div class="row justify-content-between">
+		<div class="col-1 vstack text-center align-self-end gx-3" id="coordinates">
+			{rectangle?.x == undefined ? 0 : Math.round(rectangle.x)} x {rectangle?.y == undefined ? 0 : Math.round(rectangle.y)}
 			<div>
-				<button on:click={getData} class="btn btn-outline-primary btn-lg">Get Data</button>
+				<button on:click={getData} id="sendbutton" class="btn btn-outline-primary btn-lg">{commandText == ' ' ? "Get Data" : commandText}</button>
 			</div>
 		</div>
 
-		<div class="col-1 vstack ms-auto" id="wrapper">
-			<div class="text-center" id="command">
-				!ptzload pasture barn
+		<div class="col-auto vstack gx-2" id="wrapper">
+			<div class="text-center ms-auto" id="command" style="width:{width}px; white-space: pre;" bind:clientHeight={commandHeight}>
+				{commandText}
 			</div>
-			<div id="vid" class="ratio ratio-16x9 ms-auto" bind:this={video}>
-				<iframe
-					title="da cameras"
-					id="cams"
-					src="https://www.twitch.tv"
-					allow="autoplay; fullscreen"
-					allowfullscreen
-				></iframe>
+			<div id="vid" class="ms-auto" style="width:{width}px; height:{height}px;" bind:clientWidth={ifWidth} bind:clientHeight={ifHeight}>
+				<RectangleSelector onUpdateRectangle={updateRectangle} rectangleStyle={rectangleStyle} bind:drawn>
+					<iframe
+						title="da cameras"
+						id="cams"
+						class="http://74.208.238.87:8889/ptz-alv?controls=0"
+						src="https://www.twitch.tv"
+						allow="autoplay; fullscreen"
+						allowfullscreen
+					></iframe>
+				</RectangleSelector>
 			</div>
 		</div>
 	</div>
 </div>
 
 <style>
-	#wrapper {
-		width: 100%;
-	}
 	#vid {
-		width: 80%;
+		width: 100%;
+		height: 100%;
 	}
 	#cams {
 		pointer-events: none;
+	}
+	#wrapper {
+		flex-grow: 0;
+	}
+	#sendbutton {
+		width: 100%;
 	}
 </style>
