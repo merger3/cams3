@@ -33,10 +33,12 @@
 	"type": "module",
 	"dependencies": {
 		"@napi-rs/canvas": "^0.1.53",
+		"@pixi-essentials/transformer": "^3.0.4",
 		"@sveltestrap/sveltestrap": "^6.2.7",
 		"axios": "^1.7.2",
 		"canvas": "^2.11.2",
 		"konva": "^9.3.14",
+		"pixijs": "^7.1.4",
 		"svelte-konva": "^0.3.1"
 	}
 }
