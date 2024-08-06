@@ -1,23 +1,17 @@
 <script lang="ts">
 	import {type Rectangle, type RectangleStyle } from  "./RectangleSelector.svelte";
-	import RectangleSelector from "./RectangleSelector.svelte";
+	import Konva from "konva";
+
+	import Tangle from './Tangle.svelte';
 	import axios from 'axios';
 	import { onMount } from 'svelte';
 
     let drawn = false
 	let modified = false
-	let rectangle: Rectangle | undefined;
-	const rectangleStyle: RectangleStyle = {
-		border: '2px solid red',
-		backgroundColor: 'rgba(245, 106, 106, 0.35)',
-	};
+	let tangle: Konva.Rect;
+	
 
-	function updateRectangle(newRectangle: Rectangle) {
-		rectangle = newRectangle;
-		if (commandText != " ") {
-			modified = true
-		}
-	}
+
 	
 	let commandText: string = " ";
 	async function getData() {
@@ -26,27 +20,24 @@
 				command: commandText
 			}).then(function (response) {
 				console.log(response);
-				rectangle = undefined
 				commandText = " "
 				drawn = false
 			}).catch(function (error) {
 				console.log(error);
 			});
 			console.log(drawn)
-		} else if (rectangle) {
+		} else if (tangle) {
 			let route: string = drawn ? '/draw' : '/click'
 			axios.post(route, {
-				x: rectangle.x,
-				y: rectangle.y,
-				width: rectangle.width,
-				height: rectangle.height,
-				frameWidth: rectangle.frameWidth,
-    			frameHeight: rectangle.frameHeight
+				x: tangle.x(),
+				y: tangle.y(),
+				width: tangle.width(),
+				height: tangle.height(),
 			}).then(function (response) {
-				if (rectangle) {
-					rectangle.x = Number(response.data.x)
-					rectangle.y = Number(response.data.y)
-				}
+				// if (rectangle) {
+				// 	rectangle.x = Number(response.data.x)
+				// 	rectangle.y = Number(response.data.y)
+				// }
 				modified = false
 				commandText = response.data.command
 
@@ -92,11 +83,10 @@
 </script>
 
 
-
 <div class="container-fluid" id="video-container">
 	<div class="row justify-content-between">
 		<div class="col-1 vstack text-center align-self-end gx-3" id="coordinates">
-			{rectangle?.x == undefined ? 0 : Math.round(rectangle.x)} x {rectangle?.y == undefined ? 0 : Math.round(rectangle.y)}
+			{tangle?.x() == undefined ? 0 : Math.round(tangle.x())} x {tangle?.y() == undefined ? 0 : Math.round(tangle.y())}
 			<div>
 				<button on:click={getData} id="sendbutton" class="btn btn-outline-primary btn-lg">{commandText == ' ' ? "Get Data" : commandText}</button>
 			</div>
@@ -107,16 +97,18 @@
 				{commandText}
 			</div>
 			<div id="vid" class="ms-auto" style="width:{width}px; height:{height}px;" bind:clientWidth={ifWidth} bind:clientHeight={ifHeight}>
-				<RectangleSelector onUpdateRectangle={updateRectangle} rectangleStyle={rectangleStyle} bind:drawn>
+				<div class="ratio ratio-16x9">
+					<div id="overlay" />
+					<Tangle bind:stageWidth={width} bind:stageHeight={height} bind:tangle />
 					<iframe
-						title="da cameras"
-						id="cams"
-						class="http://74.208.238.87:8889/ptz-alv?controls=0"
-						src="https://www.twitch.tv"
-						allow="autoplay; fullscreen"
-						allowfullscreen
-					></iframe>
-				</RectangleSelector>
+					title="da cameras"
+					id="cams"
+					src="http://74.208.238.87:8889/ptz-alv?controls=0"
+					class="https://www.twitch.tv"
+					allow="autoplay; fullscreen"
+					allowfullscreen
+				></iframe>
+			</div>
 			</div>
 		</div>
 	</div>
@@ -126,14 +118,26 @@
 	#vid {
 		width: 100%;
 		height: 100%;
+		position: relative;
+		z-index: 1;
 	}
 	#cams {
 		pointer-events: none;
+		z-index: 0;
 	}
 	#wrapper {
 		flex-grow: 0;
 	}
 	#sendbutton {
 		width: 100%;
+	}
+	#overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: transparent;
+		z-index: 2;
 	}
 </style>

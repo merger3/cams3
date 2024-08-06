@@ -3,7 +3,7 @@
   import viteLogo from '/vite.svg'
   import Counter from './Counter.svelte'
   import Video from './Video.svelte';
-  import Tangle from './Tangle.svelte';
+  import Tangle from './Tangle2.svelte';
 
   import axios from 'axios';
 	let footprintjs

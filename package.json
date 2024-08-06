@@ -24,7 +24,7 @@
 		"globals": "^15.0.0",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
-		"svelte": "^5.0.0-next.1",
+		"svelte": "^4.2.18",
 		"svelte-check": "^3.6.0",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.0.0-alpha.20",
@@ -32,7 +32,11 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@napi-rs/canvas": "^0.1.53",
 		"@sveltestrap/sveltestrap": "^6.2.7",
-		"axios": "^1.7.2"
+		"axios": "^1.7.2",
+		"canvas": "^2.11.2",
+		"konva": "^9.3.14",
+		"svelte-konva": "^0.3.1"
 	}
 }

@@ -31,10 +31,12 @@
      function isDragging() {
          let a = startX - currentX;
          let b = startY - currentY;
-         return Math.hypot(a, b) >= 5;
+         return Math.hypot(a, b) >= 10;
      }
  
-     const startDrawing = (event: MouseEvent) => {
+     const startDrawing = (event: PointerEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
          const { clientX, clientY } = event;
          if (!container) return;
          drawing = true;
@@ -47,11 +49,13 @@
          currentX = startX;
          currentY = startY;
 
-         window.addEventListener('mousemove', drawRectangle);
-         window.addEventListener('mouseup', endDrawing);
+         window.addEventListener('pointermove', drawRectangle);
+         window.addEventListener('pointerup', endDrawing);
      };
  
-     const drawRectangle = (event: MouseEvent) => {
+     const drawRectangle = (event: PointerEvent) => {
+         event.preventDefault();
+         event.stopPropagation();
          if (!drawing || !container) return;
  
          const { clientX, clientY } = event;
@@ -83,21 +87,21 @@
              frameHeight: rect.height
          };
          onUpdateRectangle(rectangle);
-         window.removeEventListener('mousemove', drawRectangle);
-         window.removeEventListener('mouseup', endDrawing);
+         window.removeEventListener('pointermove', drawRectangle);
+         window.removeEventListener('pointerup', endDrawing);
      };
  
      onMount(() => {
          if (container) {
-             container.addEventListener('mousedown', startDrawing);
+             container.addEventListener('pointerdown', startDrawing);
          }
      });
  
      onDestroy(() => {
          if (container) {
-             container.removeEventListener('mousedown', startDrawing);
-             window.removeEventListener('mousemove', drawRectangle);
-             window.removeEventListener('mouseup', endDrawing);
+             container.removeEventListener('pointerdown', startDrawing);
+             window.removeEventListener('pointermove', drawRectangle);
+             window.removeEventListener('pointerup', endDrawing);
          }
      });
  </script>
@@ -119,20 +123,18 @@
      {/if}
  </div>
     
-    <style>
-        .rectangle {
-            position: absolute;
-            pointer-events: none;
-        }
-        .dot {
-            width: 5px;
-            height: 5px;
-            background-color: black;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-    </style>
-    
+<style>
+    .rectangle {
+        position: absolute;
+    }
+    .dot {
+        width: 5px;
+        height: 5px;
+        background-color: black;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+</style>

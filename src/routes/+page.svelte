@@ -6,7 +6,6 @@
   
 
   <main>
-	<Video />
+	  <Video />
   </main>
-  
   
