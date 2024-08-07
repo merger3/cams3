@@ -160,6 +160,13 @@
 			scaleY: 1,
 		});
 		
+		if (!isDragging(tangle) && crushSize) {
+			tangle.size({
+				width: 0,
+				height: 0
+			});
+			crushSize = false;
+		}
 		calcDraw(stage.getPointerPosition());
 
 		transformer.anchorSize(Math.min(Math.max(Math.min((transformer?.width() / 5), 20), 3), 15))
@@ -172,10 +179,18 @@
 			scaleX: 1,
 			scaleY: 1,
 		});
-		calcDraw(stage.getPointerPosition());
+		if (!crushSize) {
+			tangle.position({
+				x: dot.x(),
+				y: dot.y()
+			})
+			crushSize = true;
+		} 
+
 		dispatch('finishdrawing', {
 			rect: tangle
 		});
+		
 	}
 </script>
 

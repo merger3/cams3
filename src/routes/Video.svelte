@@ -7,7 +7,7 @@
 	let tangle: Konva.Rect;
 
 	let selector: Tangle;
-	let commandText: string = " ";
+	let commandText: string = "!ptzload pasture barn";
 
 	async function sendCommand() {
 		axios.post('/send', {
@@ -46,7 +46,7 @@
 	function resizeIframe() {
 		winWidth = window.innerWidth;
 		winHeight = window.innerHeight;
-		console.log(winWidth)
+
 		let trailingHeight: number = winHeight - commandHeight - 4;
 		let trailingWidth: number = winWidth * .8;
 		
@@ -76,12 +76,12 @@
 		<div class="col-1 vstack text-center align-self-end gx-3" id="coordinates">
 			{tangle?.x() == undefined ? 0 : Math.round(tangle.x())} x {tangle?.y() == undefined ? 0 : Math.round(tangle.y())}
 			<div>
-				<button on:click={sendCommand} id="sendbutton" class="btn btn-outline-primary btn-lg">{commandText == ' ' ? "Get Data" : commandText}</button>
+				<button on:click={sendCommand} id="sendbutton" class="btn btn-outline-primary btn-lg command">{commandText == ' ' ? "Get Data" : commandText}</button>
 			</div>
 		</div>
 
 		<div class="col-auto vstack gx-2" id="wrapper">
-			<div class="text-center ms-auto" id="command" style="width:{width}px; white-space: pre;" bind:clientHeight={commandHeight}>
+			<div class="text-center ms-auto command" id="command" style="width:{width}px; white-space: pre;" bind:clientHeight={commandHeight}>
 				{commandText}
 			</div>
 			<div id="vid" class="ms-auto" style="width:{width}px; height:{height}px;" bind:clientWidth={ifWidth} bind:clientHeight={ifHeight}>
@@ -103,6 +103,14 @@
 </div>
 
 <style>
+	.command {
+		font-family: "consolas", sans-serif;
+		font-weight: 600;
+	} 
+	#command {
+		color: rgb(204, 212, 219);
+		font-size: 3.5vh;
+	}
 	#vid {
 		width: 100%;
 		height: 100%;
