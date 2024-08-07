@@ -1,131 +1,208 @@
 <script lang="ts">
-    import { Stage, Layer, Transformer } from "svelte-konva";
-    import Konva from "konva";
+	import { Stage, Layer, Transformer } from "svelte-konva";
+	import Konva from "konva";
+	import { createEventDispatcher } from 'svelte';
 
-    export let stageWidth;
-    export let stageHeight;
-    export let tangle: Konva.Rect;
+	export let stageWidth;
+	export let stageHeight;
+	export let tangle: Konva.Rect;
+		
+	let dot: Konva.Circle;
 
-    let dot: Konva.Circle;
+	let transformer: Konva.Transformer;
+	let stage: Konva.Stage;
+	var layer: Konva.Layer = new Konva.Layer();
 
-    let transformer: Konva.Transformer;
-    let stage: Konva.Stage;
-    var layer: Konva.Layer = new Konva.Layer();
+	const dispatch = createEventDispatcher();
 
-    
-    let startX = 0;
-    let startY = 0;
+	let startX = 0;
+	let startY = 0;
 
-    function handleStageMouseDown(e: any) {
-        const konvaEvent = e.detail;
-        // clicked on stage - clear selection
-        if (konvaEvent.target === konvaEvent.target.getStage()) {
-            transformer.nodes([]);
+	export function cleanUp() {
+		dot.destroy();
+		tangle.destroy();
+		transformer.nodes([]);
+	}
 
-            let mousePos = stage.getPointerPosition();
+	function isDragging(rect: Konva.Rect) {
+		console.log(Math.hypot(rect.width(), rect.height()))
+		return Math.hypot(rect.width(), rect.height()) >= (stage.width() * .01);
+	}
 
-            if (mousePos) {
-                startX = mousePos.x;
-                startY = mousePos.y;
-            }
-            
-            tangle?.destroy();
-            dot?.destroy();
-            tangle = new Konva.Rect({
-                x: startX,
-                y: startY,
-                width: 0,
-                height: 0,
-                fill: 'rgba(245, 106, 106, 0.35)',
-                stroke: 'red',
-                strokeWidth: 2,
-                strokeScaleEnabled: false,
-                draggable: true
-            });
-            dot = new Konva.Circle({
-                x: (tangle.x() + (tangle.width() / 2)),
-                y: (tangle.y() + (tangle.height() / 2)),
-                radius: 3,
-                strokeScaleEnabled: false,
-                fill: 'black'
-            });
+	function handleStageMouseDown(e: any) {
+		const konvaEvent = e.detail;
+		// clicked on stage - clear selection
+		if (konvaEvent.target === konvaEvent.target.getStage()) {
+			transformer.nodes([]);
 
-            layer.add(tangle);
-            layer.add(dot)
+			let mousePos = stage.getPointerPosition();
 
-            stage.on("pointermove", drawRectangle)
-            stage.on("pointerup", endDrawing)
-            return;
-        }
+			if (mousePos) {
+				startX = mousePos.x;
+				startY = mousePos.y;
+			}
 
-        const clickedOnTransformer =
-            konvaEvent.target.getParent().className === "Transformer";
-        if (clickedOnTransformer) {
-            return;
-        }
-    }
+			tangle?.destroy();
+			dot?.destroy();
+			tangle = new Konva.Rect({
+				x: startX,
+				y: startY,
+				width: 0,
+				height: 0,
+				fill: 'rgba(245, 106, 106, 0.3)',
+				stroke: 'red',
+				strokeWidth: 2,
+				strokeScaleEnabled: false,
+				draggable: true
+			});
+			dot = new Konva.Circle({
+				x: (tangle.x() + (tangle.width() / 2)),
+				y: (tangle.y() + (tangle.height() / 2)),
+				radius: 3,
+				strokeScaleEnabled: false,
+				fill: 'black'
+			});
 
+			tangle.hide();
+			layer.add(tangle);
+			layer.add(dot);
+			transformer.moveToTop();
 
-    function drawRectangle(event: any) {
-        // event.preventDefault();
-        // event.stopPropagation();
-        let mousePos = stage.getPointerPosition();
-        
-        if (mousePos) {
-            tangle.size({
-                width: (mousePos.x - tangle.x()),
-                height: (mousePos.y - tangle.y())
-            });
-            dot.position({
-                x: (tangle.x() + (tangle.width() / 2)),
-                y: (tangle.y() + (tangle.height() / 2)),
-            })
-        }
-     };
+			tangle.on("transform", handleTransform);
+			tangle.on("transformend", handleTransformEnd);
+			tangle.on("dragmove", handleDrag);
+			tangle.on("dragend", endDrag);
+			stage.on("pointermove", drawRectangle);
+			stage.on("pointerup", endDrawing);
+			return;
+		}
+		const clickedOnTransformer = konvaEvent.target.getParent().className === "Transformer";
+		if (clickedOnTransformer) {
+			return;
+		}
+	}
 
-    function endDrawing(event: any) {
-        transformer.nodes([tangle]);
-        stage.off('pointermove');
-        stage.off('pointerup');
-    };
+	function calcDraw(mousePos: Konva.Vector2d | null) {
+		if (mousePos) {
+			if (isDragging(tangle)) {
+				tangle.show()
+				transformer.show();
+				dot.position({
+					x: (tangle.x() + (tangle.width() / 2)),
+					y: (tangle.y() + (tangle.height() / 2)),
+				})
+			} else {
+				tangle.hide();
+				transformer.hide();
+				dot.position({
+					x: (mousePos.x),
+					y: (mousePos.y),
+				})
+			}
+		}
+	}
 
-    function handleTransformEnd() {
-        // find element in our state
-        tangle.strokeWidth(2);
-    }
-    // anchorSize = Math.max(Math.min((transformer?.width() / 4), 20), 6.5)
-    // rect1.on('transform', () => {
-    //     rect1.setAttrs({
-    //       width: Math.max(rect1.width() * rect1.scaleX(), 5),
-    //       height: Math.max(rect1.height() * rect1.scaleY(), 5),
-    //       scaleX: 1,
-    //       scaleY: 1,
-    //     });
+	function drawRectangle(event: any) {
+		// event.preventDefault();
+		// event.stopPropagation();
+		let mousePos = stage.getPointerPosition();
+
+		if (mousePos) {
+			tangle.size({
+				width: (mousePos.x - tangle.x()),
+				height: (mousePos.y - tangle.y())
+			});
+			
+			calcDraw(mousePos);
+		}
+	};
+
+	function endDrawing(event: any) {
+		if (!isDragging(tangle)) {
+			tangle.size({
+				width: 0,
+				height: 0
+			});
+			transformer.hide();
+		} else {
+			transformer.show();
+		}
+
+		dot.moveDown()
+
+		transformer.nodes([tangle]);
+		transformer.anchorSize(Math.min(Math.max(Math.min((transformer?.width() / 5), 20), 3), 15))
+		stage.off('pointermove');
+		stage.off('pointerup');
+
+		dispatch('finishdrawing', {
+			rect: tangle
+		});
+	};
+
+	function handleDrag() {
+		calcDraw(stage.getPointerPosition());
+	}
+
+	function endDrag() {
+		calcDraw(stage.getPointerPosition());
+		dispatch('finishdrawing', {
+			rect: tangle
+		});
+	}
+
+	let crushSize: boolean = true;
+	function handleTransform() {
+		tangle.setAttrs({
+			width: tangle.width() * tangle.scaleX(),
+			height: tangle.height() * tangle.scaleY(),
+			scaleX: 1,
+			scaleY: 1,
+		});
+		
+		calcDraw(stage.getPointerPosition());
+
+		transformer.anchorSize(Math.min(Math.max(Math.min((transformer?.width() / 5), 20), 3), 15))
+	}
+
+	function handleTransformEnd() {
+		tangle.setAttrs({
+			width: tangle.width() * tangle.scaleX(),
+			height: tangle.height() * tangle.scaleY(),
+			scaleX: 1,
+			scaleY: 1,
+		});
+		calcDraw(stage.getPointerPosition());
+		dispatch('finishdrawing', {
+			rect: tangle
+		});
+	}
 </script>
 
 <Stage
-    bind:handle={stage}
-    config={{
-        container: 'overlay',
-        x: 0, 
-        y: 0,
-        width: stageWidth,
-        height: stageHeight
-    }}
-    on:mousedown={handleStageMouseDown}
-    on:touchstart={handleStageMouseDown}
+	bind:handle={stage}
+	config={{
+		container: 'overlay',
+		x: 0,
+		y: 0,
+		width: stageWidth,
+		height: stageHeight
+	}}
+	on:mousedown={handleStageMouseDown}
+	on:touchstart={handleStageMouseDown}
 >
-    <Layer bind:handle={layer}>
-        <Transformer bind:handle={transformer} on:transformend={handleTransformEnd} config={{
-            keepRatio: false,
-            anchorSize: 20,
-            rotateEnabled: false,
-            borderEnabled: false,
-            ignoreStroke: true,
-            shouldOverdrawWholeArea: true,
-            anchorStyleFunc: function (anchor) {
-                anchor.fill('rgba(138, 219, 207, .5)');
-                anchor.cornerRadius(anchor.width() / 2);
-            }}} />
-    </Layer>
+
+	<Layer bind:handle={layer}>
+		<Transformer bind:handle={transformer} on:transformend={handleTransformEnd} config={{
+			keepRatio: false,
+			anchorSize: 15,
+			rotateEnabled: false,
+			borderEnabled: false,
+			ignoreStroke: true,
+			shouldOverdrawWholeArea: true,
+			anchorStyleFunc: function (anchor) {
+			anchor.fill('rgba(138, 219, 207, .5)');
+			anchor.cornerRadius(anchor.width() / 2);
+		}}} />
+	</Layer>
 </Stage>

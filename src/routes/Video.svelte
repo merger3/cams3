@@ -1,52 +1,42 @@
 <script lang="ts">
-	import {type Rectangle, type RectangleStyle } from  "./RectangleSelector.svelte";
 	import Konva from "konva";
-
 	import Tangle from './Tangle.svelte';
 	import axios from 'axios';
 	import { onMount } from 'svelte';
 
-    let drawn = false
-	let modified = false
 	let tangle: Konva.Rect;
-	
 
-
-	
+	let selector: Tangle;
 	let commandText: string = " ";
-	async function getData() {
-		if (commandText != " " && !modified) {
-			axios.post('/send', {
-				command: commandText
-			}).then(function (response) {
-				console.log(response);
-				commandText = " "
-				drawn = false
-			}).catch(function (error) {
-				console.log(error);
-			});
-			console.log(drawn)
-		} else if (tangle) {
-			let route: string = drawn ? '/draw' : '/click'
-			axios.post(route, {
-				x: tangle.x(),
-				y: tangle.y(),
-				width: tangle.width(),
-				height: tangle.height(),
-			}).then(function (response) {
-				// if (rectangle) {
-				// 	rectangle.x = Number(response.data.x)
-				// 	rectangle.y = Number(response.data.y)
-				// }
-				modified = false
-				commandText = response.data.command
 
-				console.log(response);
-			}).catch(function (error) {
-				console.log(error);
-			});
-		}
+	async function sendCommand() {
+		axios.post('/send', {
+			command: commandText
+		}).then(function (response) {
+			console.log(response);
+			commandText = " "
+		}).catch(function (error) {
+			console.log(error);
+		});
+		selector.cleanUp();
 	}
+
+	async function getData(e: Event) {
+		axios.post("/click", {
+			x: tangle.x(),
+			y: tangle.y(),
+			width: tangle.width(),
+			height: tangle.height(),
+			frameWidth: width,
+			frameHeight: height
+		}).then(function (response) {
+			commandText = response.data.command
+			console.log(response);
+		}).catch(function (error) {
+			console.log(error);
+		});
+	}
+
 	let winWidth: number, winHeight: number;
 	let ifWidth: number, ifHeight: number;
 	let commandHeight: number;
@@ -69,8 +59,6 @@
 			height = trailingHeight;
 			width = height * (16/9);
 		}
-
-		drawn = false
 	}
 
 	onMount(() => {
@@ -88,7 +76,7 @@
 		<div class="col-1 vstack text-center align-self-end gx-3" id="coordinates">
 			{tangle?.x() == undefined ? 0 : Math.round(tangle.x())} x {tangle?.y() == undefined ? 0 : Math.round(tangle.y())}
 			<div>
-				<button on:click={getData} id="sendbutton" class="btn btn-outline-primary btn-lg">{commandText == ' ' ? "Get Data" : commandText}</button>
+				<button on:click={sendCommand} id="sendbutton" class="btn btn-outline-primary btn-lg">{commandText == ' ' ? "Get Data" : commandText}</button>
 			</div>
 		</div>
 
@@ -99,16 +87,16 @@
 			<div id="vid" class="ms-auto" style="width:{width}px; height:{height}px;" bind:clientWidth={ifWidth} bind:clientHeight={ifHeight}>
 				<div class="ratio ratio-16x9">
 					<div id="overlay" />
-					<Tangle bind:stageWidth={width} bind:stageHeight={height} bind:tangle />
+					<Tangle bind:this={selector} bind:stageWidth={width} bind:stageHeight={height} bind:tangle on:finishdrawing={getData} />
 					<iframe
 					title="da cameras"
 					id="cams"
-					src="http://74.208.238.87:8889/ptz-alv?controls=0"
-					class="https://www.twitch.tv"
+					class="http://74.208.238.87:8889/ptz-alv?controls=0"
+					src="https://www.twitch.tv"
 					allow="autoplay; fullscreen"
 					allowfullscreen
-				></iframe>
-			</div>
+					></iframe>
+				</div>
 			</div>
 		</div>
 	</div>

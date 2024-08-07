@@ -1,11 +1,8 @@
 <script lang="ts">
-	import Counter from './Counter.svelte'
 	  import Video from './Video.svelte';
-	import Tangle from './Tangle.svelte';
   </script>
   
 
-  <main>
+  <main class="bg-dark">
 	  <Video />
   </main>
-  
