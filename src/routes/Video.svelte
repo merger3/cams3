@@ -1,25 +1,13 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Konva from "konva";
 	import Tangle from './Tangle.svelte';
 	import axios from 'axios';
-	import { onMount } from 'svelte';
+	
+	export let selector: Tangle;
+	export let commandText: string = "!ptzload pasture barn";
 
 	let tangle: Konva.Rect;
-
-	let selector: Tangle;
-	let commandText: string = "!ptzload pasture barn";
-
-	async function sendCommand() {
-		axios.post('/send', {
-			command: commandText
-		}).then(function (response) {
-			console.log(response);
-			commandText = " "
-		}).catch(function (error) {
-			console.log(error);
-		});
-		selector.cleanUp();
-	}
 
 	async function getData(e: Event) {
 		axios.post("/click", {
@@ -37,11 +25,13 @@
 		});
 	}
 
+
 	let winWidth: number, winHeight: number;
 	let ifWidth: number, ifHeight: number;
 	let commandHeight: number;
 
 	let width: number, height: number;
+	let headerHeight: number;
 
 	function resizeIframe() {
 		winWidth = window.innerWidth;
@@ -71,33 +61,22 @@
 </script>
 
 
-<div class="container-fluid" id="video-container">
-	<div class="row justify-content-between">
-		<div class="col-1 vstack text-center align-self-end gx-3" id="coordinates">
-			{tangle?.x() == undefined ? 0 : Math.round(tangle.x())} x {tangle?.y() == undefined ? 0 : Math.round(tangle.y())}
-			<div>
-				<button on:click={sendCommand} id="sendbutton" class="btn btn-outline-primary btn-lg command">{commandText == ' ' ? "Get Data" : commandText}</button>
-			</div>
-		</div>
-
-		<div class="col-auto vstack gx-2" id="wrapper">
-			<div class="text-center ms-auto command" id="command" style="width:{width}px; white-space: pre;" bind:clientHeight={commandHeight}>
-				{commandText}
-			</div>
-			<div id="vid" class="ms-auto" style="width:{width}px; height:{height}px;" bind:clientWidth={ifWidth} bind:clientHeight={ifHeight}>
-				<div class="ratio ratio-16x9">
-					<div id="overlay" />
-					<Tangle bind:this={selector} bind:stageWidth={width} bind:stageHeight={height} bind:tangle on:finishdrawing={getData} />
-					<iframe
-					title="da cameras"
-					id="cams"
-					class="http://74.208.238.87:8889/ptz-alv?controls=0"
-					src="https://www.twitch.tv"
-					allow="autoplay; fullscreen"
-					allowfullscreen
-					></iframe>
-				</div>
-			</div>
+<div class="vstack" id="wrapper">
+	<div class="text-center ms-auto command" id="command" style="width:{width}px; white-space: pre;" bind:clientHeight={commandHeight}>
+		{commandText}
+	</div>
+	<div id="vid" class="ms-auto" style="width:{width}px; height:{height}px;" bind:clientWidth={ifWidth} bind:clientHeight={ifHeight}>
+		<div class="ratio ratio-16x9">
+			<div id="overlay" />
+				<Tangle bind:this={selector} bind:stageWidth={width} bind:stageHeight={height} bind:tangle on:finishdrawing={getData} />
+			<iframe
+			title="da cameras"
+			id="cams"
+			class="http://74.208.238.87:8889/ptz-alv?controls=0"
+			src="https://www.twitch.tv"
+			allow="autoplay; fullscreen"
+			allowfullscreen
+			></iframe>
 		</div>
 	</div>
 </div>
@@ -110,6 +89,7 @@
 	#command {
 		color: rgb(204, 212, 219);
 		font-size: 3.5vh;
+		background-color: rgb(191, 148, 235);
 	}
 	#vid {
 		width: 100%;
@@ -123,9 +103,6 @@
 	}
 	#wrapper {
 		flex-grow: 0;
-	}
-	#sendbutton {
-		width: 100%;
 	}
 	#overlay {
 		position: absolute;

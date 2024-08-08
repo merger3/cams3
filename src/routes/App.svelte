@@ -1,30 +1,52 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './Counter.svelte'
-  import Video from './Video.svelte';
-  import Tangle from './Tangle2.svelte';
+	import Konva from "konva";
+	import Tangle from './Tangle.svelte';
+	import CamSelector from "./CamSelector.svelte";
+	import axios from 'axios';
+	import Video from "./Video.svelte";
 
-  import axios from 'axios';
-	let footprintjs
-	async function getData() {
-    try {
-			const res = await axios.get(`127.0.0.1:1323/hello`, {
-				headers: {},
-				params: {},
-			});
-      console.log(res.data)
-		} catch (err) {
-			console.log(err);
-		}
+	let selector: Tangle;
+	let commandText: string = "!ptzload pasture barn";
+
+	async function sendCommand() {
+		axios.post('/send', {
+			command: commandText
+		}).then(function (response) {
+			console.log(response);
+			commandText = " "
+		}).catch(function (error) {
+			console.log(error);
+		});
+		selector.cleanUp();
 	}
 </script>
 
-<main>
-  <div>
-    <button on:click={getData}>Get Data</button>
-  </div>
-  <Video />
 
-  
-</main>
+<div class="container-fluid" id="video-container">
+	<div class="row justify-content-between flex-nowrap ">
+		<div class="col-1 text-center gx-3 d-flex flex-column justify-content-between p-0 m-0" id="camselector">
+			<CamSelector />
+			<button on:click={sendCommand} id="sendbutton" class="btn btn-outline-primary btn-lg command">{commandText == ' ' ? "Get Data" : commandText}</button>
+		</div>
+		<div class="col-auto gx-2" id="wrapper">
+			<Video bind:commandText bind:selector />
+		</div>
+	</div>
+</div>
+
+<style>
+	#camselector {
+		background-color: rebeccapurple;
+		flex-grow: 1;
+	}
+	.command {
+		font-family: "consolas", sans-serif;
+		font-weight: 600;
+	} 
+	#wrapper {
+		flex-grow: 0;
+	}
+	#sendbutton {
+		width: 100%;
+	}
+</style>

@@ -1,8 +1,8 @@
 <script lang="ts">
-	  import Video from './Video.svelte';
+	  import App from './App.svelte';
   </script>
   
 
   <main class="bg-dark">
-	  <Video />
+	  <App />
   </main>

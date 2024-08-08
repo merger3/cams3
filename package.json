@@ -34,11 +34,15 @@
 	"dependencies": {
 		"@napi-rs/canvas": "^0.1.53",
 		"@pixi-essentials/transformer": "^3.0.4",
+		"@popperjs/core": "^2.11.8",
 		"@sveltestrap/sveltestrap": "^6.2.7",
 		"axios": "^1.7.2",
+		"bootstrap": "^5.3.3",
 		"canvas": "^2.11.2",
+		"jquery": "^3.7.1",
 		"konva": "^9.3.14",
 		"pixijs": "^7.1.4",
+		"popper.js": "^1.16.1",
 		"svelte-konva": "^0.3.1"
 	}
 }

@@ -1,20 +1,27 @@
 <script lang="ts">
+	import {
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownToggle
+  } from '@sveltestrap/sveltestrap';
 
 </script>
 
-
 <div class="dropdown">
-  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+  <button id="dropdown" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
     Dropdown button
   </button>
-  <ul class="dropdown-menu dropdown-menu-dark">
-    <li><span class="dropdown-item active">Action</span></li>
-    <li><span class="dropdown-item">Another action</span></li>
-    <li><span class="dropdown-item">Something else here</span></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><span class="dropdown-item">Separated link</span></li>
+	<!-- svelte-ignore a11y-invalid-attribute -->
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item" href="#">Action</a></li>
+    <li><a class="dropdown-item" href="#">Another action</a></li>
+    <li><a class="dropdown-item" href="#">Something else here</a></li>
   </ul>
 </div>
 
-
-
+<style>
+	/* #dropdown {
+		font-size: 3.5vh;
+	} */
+</style>
