@@ -1,17 +1,7 @@
-// Custom.scss
-// Option B: Include parts of Bootstrap
+// custom.scss
 
-// 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
-@import "../node_modules/bootstrap/scss/functions";
+// Override Bootstrap variable
+$dropdown-min-width: 1px; // Set your desired min-width
 
-// 2. Include any default variable overrides here
-
-// 3. Include remainder of required Bootstrap stylesheets
-@import "../node_modules/bootstrap/scss/variables";
-
-// 4. Include any default map overrides here
-
-// 5. Include remainder of required parts
-@import "../node_modules/bootstrap/scss/maps";
-@import "../node_modules/bootstrap/scss/mixins";
-@import "../node_modules/bootstrap/scss/root";
+// Import Bootstrap's SCSS
+@import "../node_modules/bootstrap/scss/bootstrap";

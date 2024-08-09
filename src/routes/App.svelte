@@ -8,6 +8,8 @@
 	let selector: Tangle;
 	let commandText: string = "!ptzload pasture barn";
 
+	let spacerHeight: number = 0;
+
 	async function sendCommand() {
 		axios.post('/send', {
 			command: commandText
@@ -25,7 +27,8 @@
 <div class="container-fluid" id="video-container">
 	<div class="row justify-content-between flex-nowrap ">
 		<div class="col-1 text-center gx-3 d-flex flex-column justify-content-between p-0 m-0" id="camselector">
-			<CamSelector />
+			<CamSelector bind:spacerHeight />
+			<div id="spacer" bind:clientHeight={spacerHeight}></div>
 			<button on:click={sendCommand} id="sendbutton" class="btn btn-outline-primary btn-lg command">{commandText == ' ' ? "Get Data" : commandText}</button>
 		</div>
 		<div class="col-auto gx-2" id="wrapper">
@@ -35,6 +38,10 @@
 </div>
 
 <style>
+	#spacer {
+		height: 100%;
+		background-color: aqua;
+	}
 	#camselector {
 		background-color: rebeccapurple;
 		flex-grow: 1;
@@ -42,7 +49,7 @@
 	.command {
 		font-family: "consolas", sans-serif;
 		font-weight: 600;
-	} 
+	}
 	#wrapper {
 		flex-grow: 0;
 	}
