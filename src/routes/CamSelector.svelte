@@ -27,9 +27,9 @@
 		margin-top: -2px!important;
 		overflow: scroll;
 		-ms-overflow-style: none;  /* IE and Edge */
-  		/* scrollbar-width: none; */
+  		scrollbar-width: none; /* Firefox */
 	}
-	#dropdown-menu::-webkit-scrollbar {
+	#dropdown-menu::-webkit-scrollbar { /* Chrome */
 		display: none;
 	}
 </style>
