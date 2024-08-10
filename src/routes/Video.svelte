@@ -11,7 +11,8 @@
 	let tangle: Konva.Rect;
 
 	async function getData(e: Event) {
-		axios.post("/click", {
+		let clickRoute = (tangle.width() == 0 && tangle.height() == 0) ? "/click" : "/draw";  
+		axios.post(clickRoute, {
 			x: tangle.x(),
 			y: tangle.y(),
 			width: tangle.width(),
@@ -82,7 +83,7 @@
 			title="da cameras"
 			id="cams"
 			class="http://74.208.238.87:8889/ptz-alv?controls=0"
-			src="https://www.twitch.tv"
+			src="https://player.twitch.tv/?channel=alveussanctuary&parent=localhost"
 			allow="autoplay; fullscreen"
 			allowfullscreen
 			></iframe>

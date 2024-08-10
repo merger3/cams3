@@ -184,6 +184,10 @@
 				x: dot.x(),
 				y: dot.y()
 			})
+			tangle.size({
+				width: 0,
+				height: 0
+			});
 			crushSize = true;
 		} 
 
