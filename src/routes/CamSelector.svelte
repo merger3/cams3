@@ -1,12 +1,19 @@
 <script lang="ts">
-	import {
-	Dropdown,
-	DropdownItem,
-	DropdownMenu,
-	DropdownToggle
-	} from '@sveltestrap/sveltestrap';
+	import { onMount } from 'svelte';
+	import 'simplebar'; // or "import SimpleBar from 'simplebar';" if you want to use it manually.
+	import 'simplebar/dist/simplebar.css';
+
+	import ResizeObserver from 'resize-observer-polyfill';
+	
 
 	export let spacerHeight: number;
+	export let spacerWidth: number;
+
+	const cars = ["Saab", "Volvo", "BMW", "Hondaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "Toyota", "Nissan", "Ford", "Chevy", "GM", "Kia", "Hyundai", "Cadillac", "Lincoln", "Mini", "Audi", "Lexus", "Acura", "Porsche"];
+
+	onMount(() => {
+		window.ResizeObserver = ResizeObserver;
+    });
 </script>
 
 <div class="dropdown">
@@ -14,22 +21,37 @@
 		Dropdown button
 	</button>
 	<!-- svelte-ignore a11y-invalid-attribute -->
-	<div id="dropdown-menu" class="dropdown-menu w-100" style="height: {spacerHeight - 1}px;">
-		<div>item 1</div>
-		<div>item 2</div>
-		<div>item 3</div>
+	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-3 border-danger-subtle" style="max-height: {spacerHeight}px; max-width: {spacerWidth}px;" data-simplebar>
+		{#each cars as car, i}
+			<button type="button" class="btn btn-secondary btn-sm d-block w-100 mb-2 overflow-hidden">{car}</button>
+			{#if (i - 2) % 3 == 0 && i != cars.length - 1}
+				<hr class="dropdown-divider">
+			{/if}
+		{/each}
 	</div>
 </div>
 
 <style>
 	#dropdown-menu {
 		background-color: coral;
+		/* background: transparent; */
 		margin-top: -2px!important;
 		overflow: scroll;
 		-ms-overflow-style: none;  /* IE and Edge */
-  		scrollbar-width: none; /* Firefox */
+		scrollbar-width: none; /* Firefox */
+		/* padding: 0 8px; Add equal padding on the left and right */
+		box-sizing: border-box; /* Ensure padding doesn't cause overflow */
 	}
 	#dropdown-menu::-webkit-scrollbar { /* Chrome */
 		display: none;
+	}
+	#dropdown-menu button:last-child {
+   	 	margin-bottom: 0!important;
+	}
+	#dropdown-menu .dropdown-divider {
+		border-top-width: 3px; /* Adjust this value for the desired thickness */
+		border-color: rgba(70, 63, 63, 0.4); 
+		/* background-color: #000; /* Optional: Change the color if needed 
+		margin: 0.5rem 0; Optional: Adjust the vertical spacing */
 	}
 </style>

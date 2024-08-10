@@ -3,9 +3,10 @@
 	import Konva from "konva";
 	import Tangle from './Tangle.svelte';
 	import axios from 'axios';
-	
+	import { fit, parent_style } from '@leveluptuts/svelte-fit'
+
 	export let selector: Tangle;
-	export let commandText: string = "!ptzload pasture barn";
+	export let commandText: string;
 
 	let tangle: Konva.Rect;
 
@@ -51,8 +52,14 @@
 		}
 	}
 
+	let doit: number;
 	onMount(() => {
+
 		resizeIframe();
+		window.onresize = function() {
+			clearTimeout(doit);
+			doit = setTimeout(resizeIframe, 50);
+		};
 		window.addEventListener('resize', resizeIframe);
 		return () => {
 			window.removeEventListener('resize', resizeIframe);
@@ -62,9 +69,11 @@
 
 
 <div class="vstack" id="wrapper">
-	<div class="text-center ms-auto command" id="command" style="width:{width}px; white-space: pre;" bind:clientHeight={commandHeight}>
-		{commandText}
-	</div>
+	<div style={parent_style}>
+		<div use:fit={{min_size: 1}} class="text-center ms-auto command" id="command" style="width:{width}px; white-space: pre;" bind:clientHeight={commandHeight}>
+			{commandText}
+		</div>
+	</div>	
 	<div id="vid" class="ms-auto" style="width:{width}px; height:{height}px;" bind:clientWidth={ifWidth} bind:clientHeight={ifHeight}>
 		<div class="ratio ratio-16x9">
 			<div id="overlay" />
@@ -88,7 +97,7 @@
 	} 
 	#command {
 		color: rgb(204, 212, 219);
-		font-size: 3.5vh;
+		height: 5vh;
 		background-color: rgb(191, 148, 235);
 	}
 	#vid {
