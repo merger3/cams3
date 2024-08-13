@@ -1,10 +1,15 @@
 <script lang="ts">
+
 	import { onMount } from 'svelte';
 	import 'simplebar'; // or "import SimpleBar from 'simplebar';" if you want to use it manually.
 	import 'simplebar/dist/simplebar.css';
+	import type { CamList } from '$types';
 
 	import ResizeObserver from 'resize-observer-polyfill';
 	
+	export let camList: CamList[];
+
+	export let commandHeight: number;
 
 	export let spacerHeight: number;
 	export let spacerWidth: number;
@@ -13,23 +18,25 @@
 
 	onMount(() => {
 		window.ResizeObserver = ResizeObserver;
-    });
+	});
 </script>
 
 <div class="dropdown">
-	<button id="dropdown" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+	<button style="position: absolute;min-height: {commandHeight}px;max-height: {commandHeight}px;right: 0;top: 0;" id="dropdown-button" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
 		Dropdown button
 	</button>
-	<!-- svelte-ignore a11y-invalid-attribute -->
-	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-3 border-danger-subtle" style="max-height: {spacerHeight}px; max-width: {spacerWidth}px;" data-simplebar>
-		{#each cars as car, i}
-			<button type="button" class="btn btn-secondary btn-sm d-block w-100 mb-2 overflow-hidden">{car}</button>
-			{#if (i - 2) % 3 == 0 && i != cars.length - 1}
+	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-2 border-danger-subtle shadow" style="max-height: {spacerHeight - 5}px; max-width: {spacerWidth}px;" data-simplebar>
+		{#each camList as cam, i}
+			{#each cam.cameras as c}
+				<button type="button" class="btn btn-secondary btn-sm d-block w-100 mb-2 overflow-hidden">{c}</button>
+			{/each}
+			{#if i != camList.length - 1}
 				<hr class="dropdown-divider">
 			{/if}
 		{/each}
 	</div>
 </div>
+
 
 <style>
 	#dropdown-menu {
@@ -40,7 +47,6 @@
 		-ms-overflow-style: none;  /* IE and Edge */
 		scrollbar-width: none; /* Firefox */
 		/* padding: 0 8px; Add equal padding on the left and right */
-		box-sizing: border-box; /* Ensure padding doesn't cause overflow */
 	}
 	#dropdown-menu::-webkit-scrollbar { /* Chrome */
 		display: none;

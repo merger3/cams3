@@ -14,8 +14,8 @@ const config = {
 		adapter: adapter({
 			// default options are shown. On some platforms
 			// these options are set automatically — see below
-			pages: '../camserver/cmd/build',
-			assets: '../camserver/cmd/build',
+			pages: '../camserver/build',
+			assets: '../camserver/build',
 			fallback: undefined,
 			precompress: false,
 			strict: true

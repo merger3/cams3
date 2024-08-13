@@ -25,11 +25,11 @@
 	}
 
 	function isDragging(rect: Konva.Rect) {
-		console.log(Math.hypot(rect.width(), rect.height()))
 		return Math.hypot(rect.width(), rect.height()) >= (stage.width() * .01);
 	}
 
 	function handleStageMouseDown(e: any) {
+		// e.preventDefault();
 		const konvaEvent = e.detail;
 		// clicked on stage - clear selection
 		if (konvaEvent.target === konvaEvent.target.getStage()) {
@@ -131,7 +131,7 @@
 		dot.moveDown()
 
 		transformer.nodes([tangle]);
-		transformer.anchorSize(Math.min(Math.max(Math.min((transformer?.width() / 5), 20), 3), 15))
+		transformer.anchorSize(Math.max(Math.min((transformer?.width() / 6), 15), 3))
 		stage.off('pointermove');
 		stage.off('pointerup');
 
@@ -169,7 +169,7 @@
 		}
 		calcDraw(stage.getPointerPosition());
 
-		transformer.anchorSize(Math.min(Math.max(Math.min((transformer?.width() / 5), 20), 3), 15))
+		transformer.anchorSize(Math.max(Math.min((transformer?.width() / 6), 15), 3))
 	}
 
 	function handleTransformEnd() {
@@ -189,7 +189,7 @@
 				height: 0
 			});
 			crushSize = true;
-		} 
+		}
 
 		dispatch('finishdrawing', {
 			rect: tangle
@@ -207,14 +207,13 @@
 		width: stageWidth,
 		height: stageHeight
 	}}
-	on:mousedown={handleStageMouseDown}
-	on:touchstart={handleStageMouseDown}
+	on:pointerdown={handleStageMouseDown}
 >
 
 	<Layer bind:handle={layer}>
 		<Transformer bind:handle={transformer} on:transformend={handleTransformEnd} config={{
 			keepRatio: false,
-			anchorSize: 15,
+			anchorSize: Math.max(Math.min((transformer?.width() / 6), 15), 3),
 			rotateEnabled: false,
 			borderEnabled: false,
 			ignoreStroke: true,

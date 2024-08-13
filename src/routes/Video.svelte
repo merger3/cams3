@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import Konva from "konva";
 	import Tangle from './Tangle.svelte';
 	import axios from 'axios';
@@ -8,54 +8,64 @@
 	export let selector: Tangle;
 	export let commandText: string;
 
+	const dispatch = createEventDispatcher();
+
 	let tangle: Konva.Rect;
 
-	async function getData(e: Event) {
+	function getData(e: Event) {
 		let clickRoute = (tangle.width() == 0 && tangle.height() == 0) ? "/click" : "/draw";  
 		axios.post(clickRoute, {
 			x: tangle.x(),
 			y: tangle.y(),
 			width: tangle.width(),
 			height: tangle.height(),
-			frameWidth: width,
-			frameHeight: height
+			frameWidth: ifWidth,
+			frameHeight: ifHeight
 		}).then(function (response) {
-			commandText = response.data.command
+			commandText = response.data.command;
 			console.log(response);
 		}).catch(function (error) {
 			console.log(error);
 		});
+		dispatch('triggerResize');
 	}
 
 
 	let winWidth: number, winHeight: number;
-	let ifWidth: number, ifHeight: number;
-	let commandHeight: number;
+	export let commandHeight: number;
 
-	let width: number, height: number;
-	let headerHeight: number;
+	let ifWidth: number; 
+	export let ifHeight: number;
 
 	function resizeIframe() {
 		winWidth = window.innerWidth;
 		winHeight = window.innerHeight;
 
-		let trailingHeight: number = winHeight - commandHeight - 4;
-		let trailingWidth: number = winWidth * .8;
+		let fullWidth: number = winWidth * .8;
+		let maxHeight: number = winHeight - 4;
 		
-		let fullHeight: number = trailingWidth / (16/9) ;
+		let fullHeight: number = fullWidth / (16/9) ;
 
-		if (fullHeight <= trailingHeight) {
-			width = trailingWidth;
-			height = fullHeight;
+		if (fullHeight <= maxHeight) {
+			ifWidth = fullWidth;
+			ifHeight = fullHeight;
 		} else {
-			height = trailingHeight;
-			width = height * (16/9);
+			ifHeight = maxHeight;
+			ifWidth = ifHeight * (16/9);
+		}
+
+		commandHeight = ifHeight * .06;
+
+		let trailingHeight: number = maxHeight - commandHeight;
+
+		if (ifHeight > trailingHeight) {
+			ifHeight = trailingHeight;
+			ifWidth = ifHeight * (16/9);
 		}
 	}
 
 	let doit: number;
 	onMount(() => {
-
 		resizeIframe();
 		window.onresize = function() {
 			clearTimeout(doit);
@@ -71,19 +81,19 @@
 
 <div class="vstack" id="wrapper">
 	<div style={parent_style}>
-		<div use:fit={{min_size: 1}} class="text-center ms-auto command" id="command" style="width:{width}px; white-space: pre;" bind:clientHeight={commandHeight}>
+		<div use:fit={{min_size: 1}} class="text-center ms-auto command" id="command" style="width:{ifWidth}px; height:{commandHeight}px; white-space: pre;">
 			{commandText}
 		</div>
 	</div>	
-	<div id="vid" class="ms-auto" style="width:{width}px; height:{height}px;" bind:clientWidth={ifWidth} bind:clientHeight={ifHeight}>
+	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px;">
 		<div class="ratio ratio-16x9">
 			<div id="overlay" />
-				<Tangle bind:this={selector} bind:stageWidth={width} bind:stageHeight={height} bind:tangle on:finishdrawing={getData} />
+				<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle on:finishdrawing={getData} />
 			<iframe
 			title="da cameras"
 			id="cams"
-			class="http://74.208.238.87:8889/ptz-alv?controls=0"
-			src="https://player.twitch.tv/?channel=alveussanctuary&parent=localhost"
+			src="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0"
+			class="https://player.twitch.tv/?channel=alveussanctuary&parent=notlocalhost"
 			allow="autoplay; fullscreen"
 			allowfullscreen
 			></iframe>
@@ -98,7 +108,6 @@
 	} 
 	#command {
 		color: rgb(204, 212, 219);
-		height: 5vh;
 		background-color: rgb(191, 148, 235);
 	}
 	#vid {
