@@ -5,25 +5,12 @@
     export let spacerHeight: number;
 	export let spacerWidth: number;
     export let commandText: string;
+	export let camPresets: CamPresets;
 
     const dispatch = createEventDispatcher();
-    let cam: CamPresets = {
-        camname: "wolf",
-        presets: [
-            "den1",
-            "den2",
-            "river",
-            "right",
-            "left",
-            "insidedoor",
-            "farfence",
-            "grass",
-            "pond"
-        ]
-    }
 
     function buildCommand(preset: string) {
-        commandText = `!ptzload ${cam.camname} ${preset}`
+        commandText = `!ptzload ${camPresets.camName} ${preset}`
         dispatch('triggerResize');
     }
     
@@ -31,7 +18,7 @@
 </script>
 
 <div id="presets-menu" class="w-100 d-block m-auto text-center px-3 py-3 rounded shadow" style="max-height: {spacerHeight - 25}px; max-width: {spacerWidth - 25}px; margin-top: 4px;" data-simplebar>
-    {#each cam.presets as p}
+    {#each camPresets.presets as p}
         <button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 mb-2 overflow-hidden">{p}</button>
     {/each}
 </div>

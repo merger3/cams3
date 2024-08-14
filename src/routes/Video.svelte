@@ -92,8 +92,8 @@
 			<iframe
 			title="da cameras"
 			id="cams"
-			src="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0"
-			class="https://player.twitch.tv/?channel=alveussanctuary&parent=notlocalhost"
+			class="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0"
+			src="https://player.twitch.tv/?channel=alveussanctuary&parent=localhost"
 			allow="autoplay; fullscreen"
 			allowfullscreen
 			></iframe>

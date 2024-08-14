@@ -8,6 +8,6 @@ export interface Config {
 }
 
 export interface CamPresets {
-    camname: string;
+    camName: string;
     presets: string[];
 } 

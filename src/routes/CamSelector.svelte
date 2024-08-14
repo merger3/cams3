@@ -1,9 +1,10 @@
 <script lang="ts">
 
-	import { onMount } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import 'simplebar'; // or "import SimpleBar from 'simplebar';" if you want to use it manually.
 	import 'simplebar/dist/simplebar.css';
-	import type { CamList } from '$types';
+	import type { CamList, CamPresets } from '$types';
+	import axios from 'axios';
 
 	import ResizeObserver from 'resize-observer-polyfill';
 	
@@ -14,7 +15,20 @@
 	export let spacerHeight: number;
 	export let spacerWidth: number;
 
+	export let camPresets: CamPresets;
+
 	const cars = ["Saab", "Volvo", "BMW", "Hondaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "Toyota", "Nissan", "Ford", "Chevy", "GM", "Kia", "Hyundai", "Cadillac", "Lincoln", "Mini", "Audi", "Lexus", "Acura", "Porsche"];
+
+	function getConfig(cam: string) {
+		axios.post("/getConfig", {
+			camera: cam
+		}).then(function (response) {
+			camPresets = response.data.camPresets;
+			console.log(response);
+		}).catch(function (error) {
+			console.log(error);
+		});
+	}
 
 	onMount(() => {
 		window.ResizeObserver = ResizeObserver;
@@ -28,7 +42,7 @@
 	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-2 border-danger-subtle shadow" style="max-height: {spacerHeight - 5}px; max-width: {spacerWidth}px;" data-simplebar>
 		{#each camList as cam, i}
 			{#each cam.cameras as c}
-				<button type="button" class="btn btn-secondary btn-sm d-block w-100 mb-2 overflow-hidden">{c}</button>
+				<button type="button" on:click={() => getConfig(c)} class="btn btn-secondary btn-sm d-block w-100 mb-2 overflow-hidden">{c}</button>
 			{/each}
 			{#if i != camList.length - 1}
 				<hr class="dropdown-divider">
