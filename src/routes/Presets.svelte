@@ -7,6 +7,8 @@
     export let commandText: string;
 	export let camPresets: CamPresets;
 
+	let yMargin: number = spacerHeight * .035;
+
     const dispatch = createEventDispatcher();
 
     function buildCommand(preset: string) {
@@ -17,7 +19,7 @@
 
 </script>
 
-<div id="presets-menu" class="w-100 d-block m-auto text-center px-3 py-3 rounded shadow" style="max-height: {spacerHeight - 25}px; max-width: {spacerWidth - 25}px; margin-top: 4px;" data-simplebar>
+<div id="presets-menu" class="w-100 d-block m-auto text-center px-3 py-3 rounded shadow" style="max-height: {spacerHeight - yMargin}px; max-width: {spacerWidth - 15}px; top: {(yMargin / 2) - 2}px;" data-simplebar>
     {#each camPresets.presets as p}
         <button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 mb-2 overflow-hidden">{p}</button>
     {/each}
@@ -28,6 +30,7 @@
 
         
 		background-color: #1c1b22;
+
         /* left: 5px; */
 		/* background: transparent; */
 		overflow: scroll;
@@ -35,11 +38,7 @@
 		scrollbar-width: none; /* Firefox */
 		/* padding: 0 8px; Add equal padding on the left and right */
 	}
-    #presets-menu::before {
-    content: "";
-    display: inline-block;
-    width: 4px; /* Adds 4px of space before the element */
-}
+
     #presets-menu button:last-child {
    	 	margin-bottom: 0!important;
 	}

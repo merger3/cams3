@@ -20,7 +20,7 @@
             {
                 name: "wolves",
                 cameras: [
-                    "wolves",
+                    "wolf",
                     "wolfcorner",
                     "wolfinside",
                     "wolfden",

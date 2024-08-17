@@ -11,9 +11,11 @@
 	export let config: Config;
 	let selector: Tangle;
 	let commandText: string = " ";
+	let camPresets: CamPresets;
 
 	let commandHeight: number;
 	let ifHeight: number;
+	let ifWidth: number;
 
 	let spacerHeight: number;
 	let spacerWidth: number;
@@ -33,7 +35,19 @@
 		fixText();
 	}
 
-	let camPresets: CamPresets;
+	async function handleDoubleClick(e: any) {
+		axios.post('/getClickedCam', {
+			x: e.detail.x,
+			y: e.detail.y,
+			frameWidth: ifWidth,
+			frameHeight: ifHeight
+		}).then(function (response) {
+			camPresets = response.data.camPresets;
+			console.log(response);
+		}).catch(function (error) {
+			console.log(error);
+		});
+	}
 
 	function resizeText() {
 		fit(resize, {min_size: 8});
@@ -42,7 +56,7 @@
 	let doit: number;
 	function fixText() {
 		clearTimeout(doit);
-		doit = setTimeout(resizeText, 5);
+		doit = setTimeout(resizeText, 10);
 	}
 
 	// $: commandText && fit(resize, {min_size: 8});
@@ -66,7 +80,7 @@
 			</div>
 		</div>
 		<div class="col-auto g-0" id="wrapper">
-			<Video bind:commandText bind:selector bind:commandHeight bind:ifHeight on:triggerResize={fixText} />
+			<Video bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth on:triggerResize={fixText} on:doubleclick={handleDoubleClick} />
 		</div>
 	</div>
 </div>

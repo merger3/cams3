@@ -12,8 +12,8 @@
 
 	let tangle: Konva.Rect;
 
-	function getData(e: Event) {
-		let clickRoute = (tangle.width() == 0 && tangle.height() == 0) ? "/click" : "/draw";  
+	function getData(e: any) {
+		let clickRoute = (e.detail.rect.width() == 0 && e.detail.rect.height() == 0) ? "/click" : "/draw";  
 		axios.post(clickRoute, {
 			x: tangle.x(),
 			y: tangle.y(),
@@ -30,11 +30,15 @@
 		dispatch('triggerResize');
 	}
 
+	function doubleClick(e: any) {
+		dispatch('doubleclick', e.detail);	
+	}
+
 
 	let winWidth: number, winHeight: number;
 	export let commandHeight: number;
 
-	let ifWidth: number; 
+	export let ifWidth: number; 
 	export let ifHeight: number;
 
 	function resizeIframe() {
@@ -62,7 +66,28 @@
 			ifHeight = trailingHeight;
 			ifWidth = ifHeight * (16/9);
 		}
+		selector.cleanUp();
 	}
+
+	// let lastScrollTop = 0; // Keep track of the last scroll position
+
+	// function scrollDirection(e: Event) {
+	
+	// 	// Get the current scroll position
+	// 	let currentScrollTop = e.target!.scrollTop;
+
+	// 	if (currentScrollTop > lastScrollTop) {
+	// 		// Scrolling down
+	// 		console.log("Scrolling down");
+	// 	} else if (currentScrollTop < lastScrollTop) {
+	// 		// Scrolling up
+	// 		console.log("Scrolling up");
+	// 	}
+
+	// 	// Update lastScrollTop to the current position
+	// 	lastScrollTop = currentScrollTop;
+	// }
+
 
 	let doit: number;
 	onMount(() => {
@@ -88,12 +113,12 @@
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px;">
 		<div class="ratio ratio-16x9">
 			<div id="overlay" />
-				<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle on:finishdrawing={getData} />
+				<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle on:finishdrawing={getData} on:doubleclick={doubleClick} />
 			<iframe
 			title="da cameras"
 			id="cams"
 			class="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0"
-			src="https://player.twitch.tv/?channel=alveussanctuary&parent=localhost"
+			src="https://player.twitch.tv/?channel=alveussanctuary&parent=nlocalhost"
 			allow="autoplay; fullscreen"
 			allowfullscreen
 			></iframe>
