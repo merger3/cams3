@@ -45,7 +45,7 @@
 		winWidth = window.innerWidth;
 		winHeight = window.innerHeight;
 
-		let fullWidth: number = winWidth * .8;
+		let fullWidth: number = winWidth * .85;
 		let maxHeight: number = winHeight - 4;
 		
 		let fullHeight: number = fullWidth / (16/9) ;
@@ -104,9 +104,9 @@
 </script>
 
 
-<div class="vstack" id="wrapper">
-	<div style={parent_style}>
-		<div use:fit={{min_size: 1}} class="text-center ms-auto command" id="command" style="width:{ifWidth}px; height:{commandHeight}px; white-space: pre;">
+<div class="vstack gap-1" id="wrapper">
+	<div style={parent_style}height:{commandHeight}px;>
+		<div use:fit={{min_size: 1}} class="text-center mt-2 border border-primary rounded command" id="command" style="width:{ifWidth - 2.5}px; max-width:{ifWidth}px; height:70%; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false">
 			{commandText}
 		</div>
 	</div>	
@@ -127,13 +127,16 @@
 </div>
 
 <style>
+
+	[contenteditable="true"]:focus {
+		outline: none;
+	}
 	.command {
 		font-family: "consolas", sans-serif;
 		font-weight: 600;
 	} 
 	#command {
 		color: rgb(204, 212, 219);
-		background-color: rgb(191, 148, 235);
 	}
 	#vid {
 		width: 100%;

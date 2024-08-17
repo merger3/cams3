@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Tangle from './Tangle.svelte';
 	import Presets from './Presets.svelte';
 
@@ -7,10 +8,14 @@
 	import Video from "./Video.svelte";
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
+	import ResizeObserver from 'resize-observer-polyfill'
+	
+	const defaultCMD: string = "​";
 
 	export let config: Config;
 	let selector: Tangle;
-	let commandText: string = " ";
+	let commandText: string = defaultCMD;
+	
 	let camPresets: CamPresets;
 
 	let commandHeight: number;
@@ -27,7 +32,7 @@
 			command: commandText
 		}).then(function (response) {
 			console.log(response);
-			commandText = " "
+			commandText = defaultCMD;
 		}).catch(function (error) {
 			console.log(error);
 		});
@@ -50,6 +55,9 @@
 	}
 
 	function resizeText() {
+		if (commandText == "<br>") {
+			commandText = defaultCMD;
+		}
 		fit(resize, {min_size: 8});
 	}
 
@@ -59,7 +67,18 @@
 		doit = setTimeout(resizeText, 10);
 	}
 
-	// $: commandText && fit(resize, {min_size: 8});
+	let resizeObserverDefined = false;
+
+	onMount(() => {
+		window.ResizeObserver = ResizeObserver;
+		resizeObserverDefined = true;
+
+		if (commandText) {
+			resizeText();
+		}
+	});
+	$: resizeObserverDefined && commandText && resizeText();
+
 </script>
 
 
@@ -76,7 +95,7 @@
 
 			</div>
 			<div id="sendcontainer" style="{parent_style}max-height: {ifHeight * .15}px;">
-				<button bind:this={resize}  use:fit={{min_size: 8}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0"> {commandText == ' ' ? " Send " : " " + commandText + " "} </button>
+				<button bind:this={resize}  use:fit={{min_size: 8}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0"> {commandText == defaultCMD ? " Send " : " " + commandText + " "} </button>
 			</div>
 		</div>
 		<div class="col-auto g-0" id="wrapper">

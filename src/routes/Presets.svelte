@@ -19,7 +19,7 @@
 
 </script>
 
-<div id="presets-menu" class="w-100 d-block m-auto text-center px-3 py-3 rounded shadow" style="max-height: {spacerHeight - yMargin}px; max-width: {spacerWidth - 15}px; top: {(yMargin / 2) - 2}px;" data-simplebar>
+<div id="presets-menu" class="w-100 d-block m-auto text-center px-3 py-2 rounded shadow" style="max-height: {spacerHeight - yMargin}px; max-width: {spacerWidth - 15}px; top: {(yMargin / 2) - 4}px;" data-simplebar>
     {#each camPresets.presets as p}
         <button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 mb-2 overflow-hidden">{p}</button>
     {/each}
@@ -27,8 +27,6 @@
 
 <style>
     #presets-menu {
-
-        
 		background-color: #1c1b22;
 
         /* left: 5px; */
