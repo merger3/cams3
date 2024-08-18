@@ -1,21 +1,20 @@
-	
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
    
+	export let isOpen: boolean;
+	export let portal: any;
 	let showBookmarks = false;
 	let showFullURLs = true;
    
 	let value = "pedro";
   </script>
-   
-  <ContextMenu.Root>
-	<ContextMenu.Trigger
-	  class="flex h-[150px] w-[300px] items-center justify-center rounded-md border border-dashed text-sm"
-	>
-	  Right click here
+   <div class="dark">
+  <ContextMenu.Root open={isOpen} portal={portal}>
+	<ContextMenu.Trigger>
+		<slot></slot>
 	</ContextMenu.Trigger>
-	<ContextMenu.Content class="w-64">
-	  <ContextMenu.Item inset>
+	<ContextMenu.Content class="w-64 dark:bg-slate-800">
+	  <ContextMenu.Item class="dark:bg-slate-800" inset>
 		Back
 		<ContextMenu.Shortcut>⌘[</ContextMenu.Shortcut>
 	  </ContextMenu.Item>
@@ -57,5 +56,4 @@
 	  </ContextMenu.RadioGroup>
 	</ContextMenu.Content>
   </ContextMenu.Root>
-  
-  
+</div>

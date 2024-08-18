@@ -1,5 +1,6 @@
 <script lang="ts">
 	  import App from './App.svelte';
+	  import ContextMenu from './ContextMenu.svelte';
       import type { Config } from '$types';
 
     let config: Config = {

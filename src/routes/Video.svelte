@@ -4,6 +4,7 @@
 	import Tangle from './Tangle.svelte';
 	import axios from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
+	import ContextMenu from './ContextMenu.svelte';
 
 	export let selector: Tangle;
 	export let commandText: string;
@@ -87,6 +88,11 @@
 	// 	// Update lastScrollTop to the current position
 	// 	lastScrollTop = currentScrollTop;
 	// }
+	let isOpen: boolean = true;
+	function toggleOpen() {
+		isOpen = !isOpen
+		console.log(isOpen)
+	}
 
 
 	let doit: number;
@@ -101,10 +107,12 @@
 			window.removeEventListener('resize', resizeIframe);
 		};
     });
+	let overlay: any;
 </script>
 
 
 <div class="vstack gap-1" id="wrapper">
+	<button on:click={toggleOpen} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0"> CLINK ME </button>
 	<div style={parent_style}height:{commandHeight}px;>
 		<div use:fit={{min_size: 1}} class="text-center mt-2 border border-primary rounded command" id="command" style="width:{ifWidth - 2.5}px; max-width:{ifWidth}px; height:70%; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false">
 			{commandText}
@@ -112,8 +120,11 @@
 	</div>	
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px;">
 		<div class="ratio ratio-16x9">
-			<div id="overlay" />
-				<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle on:finishdrawing={getData} on:doubleclick={doubleClick} />
+
+			<ContextMenu bind:isOpen bind:portal={overlay}>
+				<div bind:this={overlay} id="overlay" />
+			</ContextMenu>
+			<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle on:finishdrawing={getData} on:doubleclick={doubleClick} />
 			<iframe
 			title="da cameras"
 			id="cams"
