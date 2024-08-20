@@ -73,13 +73,19 @@
 		return;
 	}
 
+	// clean up all the places event watchers are added
+	// and especially where they are removed
+
 	let clickEvent: any;
 	let clickTimeout: number | undefined;
 
 	let placeholderTangle: Konva.Rect | null;
 	function handleStageMouseDown(e: any) {
 		const konvaEvent = e.detail;
-		
+		if (konvaEvent.evt.button == 2) {
+			return
+		}
+
 		if (konvaEvent.target === konvaEvent.target.getStage()) {
 			if (clickTimeout) {
 				clearTimeout(clickTimeout);

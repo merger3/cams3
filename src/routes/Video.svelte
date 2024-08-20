@@ -70,31 +70,39 @@
 		selector.cleanUp();
 	}
 
-	// let lastScrollTop = 0; // Keep track of the last scroll position
-
-	// function scrollDirection(e: Event) {
+	let clickWrapper: any = null;
+	let portal = clickWrapper;
+	let pointerEventsEnabled: string = "none";
+	let overlay: any;
 	
-	// 	// Get the current scroll position
-	// 	let currentScrollTop = e.target!.scrollTop;
+	function sleep(milliseconds: number): Promise<void> {
+		return new Promise(resolve => setTimeout(resolve, milliseconds));
+	}
+	
+	function callSleep(milliseconds: number, state: boolean) {
+		// await sleep(milliseconds)
+		// isRendered = state
+		isOpen = state;
+		console.log("sleep over")
+	}
+	
+	let test: string = "Outer default";
 
-	// 	if (currentScrollTop > lastScrollTop) {
-	// 		// Scrolling down
-	// 		console.log("Scrolling down");
-	// 	} else if (currentScrollTop < lastScrollTop) {
-	// 		// Scrolling up
-	// 		console.log("Scrolling up");
-	// 	}
-
-	// 	// Update lastScrollTop to the current position
-	// 	lastScrollTop = currentScrollTop;
-	// }
-	let isOpen: boolean = true;
-	function toggleOpen() {
-		isOpen = !isOpen
-		console.log(isOpen)
+	let isOpen: boolean;
+	let isRendered: boolean = true;
+	function openMenu(e: any) {
+		// isOpen = false;
+		test = String(Math.random());
+		isRendered = true;
+		// isOpen = true;
 	}
 
-
+	function closeMenu(e: any) {
+		// await sleep(500)
+		// isOpen = false;
+		isRendered = true;
+	}
+	
 	let doit: number;
 	onMount(() => {
 		resizeIframe();
@@ -107,23 +115,24 @@
 			window.removeEventListener('resize', resizeIframe);
 		};
     });
-	let overlay: any;
+
+	let clickOverlay: any;
 </script>
 
 
 <div class="vstack gap-1" id="wrapper">
-	<button on:click={toggleOpen} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0"> CLINK ME </button>
 	<div style={parent_style}height:{commandHeight}px;>
 		<div use:fit={{min_size: 1}} class="text-center mt-2 border border-primary rounded command" id="command" style="width:{ifWidth - 2.5}px; max-width:{ifWidth}px; height:70%; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false">
 			{commandText}
-		</div>
+		</div>	
 	</div>	
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px;">
 		<div class="ratio ratio-16x9">
 
-			<ContextMenu bind:isOpen bind:portal={overlay}>
-				<div bind:this={overlay} id="overlay" />
-			</ContextMenu>
+				<ContextMenu bind:isRendered bind:isOpen bind:test on:openmenu={openMenu} on:closemenu={closeMenu}>
+					<div bind:this={overlay} id="overlay" />
+				</ContextMenu>
+
 			<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle on:finishdrawing={getData} on:doubleclick={doubleClick} />
 			<iframe
 			title="da cameras"

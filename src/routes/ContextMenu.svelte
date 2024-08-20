@@ -1,21 +1,35 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
-   
-	export let isOpen: boolean;
-	export let portal: any;
+	import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
+	
 	let showBookmarks = false;
 	let showFullURLs = true;
-   
+	
 	let value = "pedro";
+	
+	export let isRendered: boolean;
+	export let isOpen: boolean;
+
+	export let test: string = "Default value"
+
+	function opc(open: boolean) {
+		if (open) {
+			dispatch("openmenu");
+		} else {
+			dispatch("closemenu");
+		}
+	}
   </script>
-   <div class="dark">
-  <ContextMenu.Root open={isOpen} portal={portal}>
+   
+  <ContextMenu.Root bind:open={isOpen} onOpenChange={opc}>
 	<ContextMenu.Trigger>
 		<slot></slot>
 	</ContextMenu.Trigger>
+	{#if isRendered}
 	<ContextMenu.Content class="w-64 dark:bg-slate-800">
 	  <ContextMenu.Item class="dark:bg-slate-800" inset>
-		Back
+		{test}
 		<ContextMenu.Shortcut>⌘[</ContextMenu.Shortcut>
 	  </ContextMenu.Item>
 	  <ContextMenu.Item inset>
@@ -53,7 +67,7 @@
 		<ContextMenu.Separator />
 		<ContextMenu.RadioItem value="pedro">Pedro Duarte</ContextMenu.RadioItem>
 		<ContextMenu.RadioItem value="colm">Colm Tuite</ContextMenu.RadioItem>
-	  </ContextMenu.RadioGroup>
-	</ContextMenu.Content>
-  </ContextMenu.Root>
-</div>
+	</ContextMenu.RadioGroup>
+</ContextMenu.Content>
+{/if}
+</ContextMenu.Root>
