@@ -71,20 +71,9 @@
 	}
 
 	let clickWrapper: any = null;
-	let portal = clickWrapper;
 	let pointerEventsEnabled: string = "none";
 	let overlay: any;
 	
-	function sleep(milliseconds: number): Promise<void> {
-		return new Promise(resolve => setTimeout(resolve, milliseconds));
-	}
-	
-	function callSleep(milliseconds: number, state: boolean) {
-		// await sleep(milliseconds)
-		// isRendered = state
-		isOpen = state;
-		console.log("sleep over")
-	}
 	
 	let test: string = "Outer default";
 
@@ -122,7 +111,7 @@
 
 <div class="vstack gap-1" id="wrapper">
 	<div style={parent_style}height:{commandHeight}px;>
-		<div use:fit={{min_size: 1}} class="text-center mt-2 border border-primary rounded command" id="command" style="width:{ifWidth - 2.5}px; max-width:{ifWidth}px; height:70%; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false">
+		<div use:fit={{min_size: 1}} class="text-center border border-primary rounded command" id="command" style="width:{ifWidth - 2.5}px; max-width:{ifWidth}px; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false">
 			{commandText}
 		</div>	
 	</div>	
