@@ -2,6 +2,12 @@
 
 // Override Bootstrap variable
 $dropdown-min-width: 1px; // Set your desired min-width
+// $spacer: 1rem;
+// $custom-spacers: (
+//   .5: $spacer * 4, // Add a new .5 entry
+// );
+// $spacers: map-merge($spacers, $custom-spacers);
 
+// Merge the custom spacers with the original spacers map
 // Import Bootstrap's SCSS
 @import "../node_modules/bootstrap/scss/bootstrap";
