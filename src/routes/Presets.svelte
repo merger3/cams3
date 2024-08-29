@@ -9,11 +9,8 @@
 
 	let yMargin: number = spacerHeight * .035;
 
-    const dispatch = createEventDispatcher();
-
     function buildCommand(preset: string) {
         commandText = `!ptzload ${camPresets.camName} ${preset}`
-        dispatch('triggerResize');
     }
     
 

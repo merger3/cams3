@@ -95,7 +95,7 @@
 
 			</div>
 			<div id="sendcontainer" style="{parent_style}max-height: {ifHeight * .15}px;">
-				<button bind:this={resize}  use:fit={{min_size: 8}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0"> {commandText == defaultCMD ? " Send " : " " + commandText + " "} </button>
+				<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0"> {commandText == defaultCMD ? " Send " : " " + commandText + " "} </button>
 			</div>
 		</div>
 		<div class="col-auto g-0" id="wrapper">

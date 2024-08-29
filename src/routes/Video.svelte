@@ -5,6 +5,7 @@
 	import axios from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import ContextMenu from './ContextMenu.svelte';
+	import type { Entry, SwapResponse } from '$types';
 
 	export let selector: Tangle;
 	export let commandText: string;
@@ -33,6 +34,10 @@
 
 	function doubleClick(e: any) {
 		dispatch('doubleclick', e.detail);	
+	}
+
+	function handleClickedEntry(e: any) {
+		commandText = `!swap ${e.detail.cam} ${e.detail.target}`
 	}
 
 
@@ -70,18 +75,49 @@
 		selector.cleanUp();
 	}
 
-	let clickWrapper: any = null;
-	let pointerEventsEnabled: string = "none";
-	let overlay: any;
-	
-	
-	let test: string = "Outer default";
+	interface Coordinates {
+		x: number;
+		y: number;
+	} 
+	let rightClickCoords: Coordinates = { x: 0, y: 0 };
+	let menuOpen: boolean = false;
+	let coordinatesRegistered: boolean = false;
+	function registerMenuClick(e: any) {
+		menuOpen = true;
+		if (menuOpen && coordinatesRegistered) {
+			openMenu(rightClickCoords);
+		}
+	}
+
+	function registerCanvasClick(e: any) {
+		coordinatesRegistered = true;
+		rightClickCoords = {x: e.detail.x, y: e.detail.y}
+		console.log(rightClickCoords)
+		if (menuOpen && coordinatesRegistered) {
+			openMenu(rightClickCoords);
+		}
+	}
 
 	let isOpen: boolean;
 	let isRendered: boolean = true;
-	function openMenu(e: any) {
+	
+	let swaps: SwapResponse = {found: false, cam: "", swaps: null}
+	function openMenu(coords: Coordinates) {
+		selector.cleanUp();
+		axios.post('/getSwapMenu', {
+			x: coords.x,
+			y: coords.y,
+			frameWidth: ifWidth,
+			frameHeight: ifHeight
+		}).then(function (response) {
+			swaps = response.data;
+			console.log(response);
+		}).catch(function (error) {
+			console.log(error);
+		});
+
 		// isOpen = false;
-		test = String(Math.random());
+		// test = String(Math.random());
 		isRendered = true;
 		// isOpen = true;
 	}
@@ -89,7 +125,12 @@
 	function closeMenu(e: any) {
 		// await sleep(500)
 		// isOpen = false;
-		isRendered = true;
+		// isRendered = false;
+
+		menuOpen = false;
+		coordinatesRegistered = false;
+		rightClickCoords = {x: 0, y: 0};
+		swaps = {found: false, cam: "", swaps: null}
 	}
 	
 	let doit: number;
@@ -104,8 +145,6 @@
 			window.removeEventListener('resize', resizeIframe);
 		};
     });
-
-	let clickOverlay: any;
 </script>
 
 
@@ -118,16 +157,16 @@
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px;">
 		<div class="ratio ratio-16x9">
 
-				<ContextMenu bind:isRendered bind:isOpen bind:test on:openmenu={openMenu} on:closemenu={closeMenu}>
-					<div bind:this={overlay} id="overlay" />
+				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
+					<div id="overlay" />
 				</ContextMenu>
 
-			<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle on:finishdrawing={getData} on:doubleclick={doubleClick} />
+			<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle on:finishdrawing={getData} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} />
 			<iframe
 			title="da cameras"
 			id="cams"
 			class="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0"
-			src="https://player.twitch.tv/?channel=alveussanctuary&parent=nlocalhost"
+			src="https://player.twitch.tv/?channel=alveussanctuary&parent=localhost"
 			allow="autoplay; fullscreen"
 			allowfullscreen
 			></iframe>

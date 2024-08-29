@@ -83,6 +83,11 @@
 	function handleStageMouseDown(e: any) {
 		const konvaEvent = e.detail;
 		if (konvaEvent.evt.button == 2) {
+			let mousePos = stage.getPointerPosition();
+			dispatch("rightclick", {
+				x: mousePos!.x,
+				y: mousePos!.y
+			})
 			return
 		}
 
@@ -94,7 +99,6 @@
 
 			clickEvent = e;
 			
-
 			let mousePos = stage.getPointerPosition();
 			
 			console.log("creating placeholders")
@@ -197,7 +201,6 @@
 		}
 	};
 
-	let releaseTimer: number | undefined;
 	function finshEndDrawing(event: any) {
 		console.log("pointer up full")
 		stage.off('pointermove');
