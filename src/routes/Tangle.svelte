@@ -2,6 +2,7 @@
 	import { Stage, Layer, Transformer } from "svelte-konva";
 	import Konva from "konva";
 	import { createEventDispatcher } from 'svelte';
+	import type { Coordinates } from '$types';
 
 	export let stageWidth;
 	export let stageHeight;
@@ -19,6 +20,11 @@
 		dot?.remove();
 		tangle?.remove();
 		transformer?.nodes([]);
+	}
+
+	export function removeHandlers() {
+		stage.off("pointerup", endDrawingCheck);
+		stage.off("pointermove", watchForDrag);
 	}
 
 	function isDragging(rect: Konva.Rect) {
@@ -40,9 +46,9 @@
 			y: placeholderTangle!.y(),
 			width: placeholderTangle!.width(),
 			height: placeholderTangle!.height(),
-			fill: 'rgba(245, 106, 106, 0.3)',
-			stroke: 'red',
-			strokeWidth: 2,
+			fill: 'rgba(255, 192, 203, 0.3)',
+			stroke: 'rgba(255, 0, 0, 0.7)',
+			strokeWidth: 1.5,
 			strokeScaleEnabled: false,
 			draggable: true
 		});
@@ -75,12 +81,11 @@
 
 	// clean up all the places event watchers are added
 	// and especially where they are removed
-
 	let clickEvent: any;
-	let clickTimeout: number | undefined;
-
+	export let clickTimeout: number | undefined;
 	let placeholderTangle: Konva.Rect | null;
 	function handleStageMouseDown(e: any) {
+		console.log(`Relative X: ${stage.getPointerPosition()?.x}, Relative Y: ${stage.getPointerPosition()?.y}`)
 		const konvaEvent = e.detail;
 		if (konvaEvent.evt.button == 2) {
 			let mousePos = stage.getPointerPosition();
@@ -109,9 +114,9 @@
 				y: mousePos!.y,
 				width: 0,
 				height: 0,
-				fill: 'rgba(245, 106, 106, 0.3)',
-				stroke: 'red',
-				strokeWidth: 2,
+				fill: 'rgba(255, 192, 203, 0.3)',
+				stroke: 'rgba(255, 0, 0, 0.7)',
+				strokeWidth: 1.5,
 				strokeScaleEnabled: false,
 				draggable: true
 			});
@@ -130,7 +135,6 @@
 
 	function handleStageDblClick(e: any) {
 		// e.preventDefault();
-		console.log("double clicking")
 		if (clickTimeout) {
 			clearTimeout(clickTimeout);
 		}
@@ -202,7 +206,6 @@
 	};
 
 	function finshEndDrawing(event: any) {
-		console.log("pointer up full")
 		stage.off('pointermove');
 		stage.off('pointerup');
 		console.log(placeholderTangle);
@@ -234,10 +237,6 @@
 		}
 		stage.off('pointermove');
 		stage.off('pointerup');
-
-		if (clickTimeout) {
-			clearTimeout(clickTimeout);
-		}
 
 		clickTimeout = setTimeout(() => {
 			finshEndDrawing(event);
@@ -300,9 +299,9 @@
 		dispatch('finishdrawing', {
 			rect: tangle
 		});
-		
 	}
 </script>
+
 
 <Stage
 	bind:handle={stage}
@@ -315,8 +314,8 @@
 	}}
 	on:pointerdblclick={handleStageDblClick}
 	on:pointerdown={handleStageMouseDown}
->
-
+	>
+	
 	<Layer bind:handle={layer}>
 		<Transformer bind:handle={transformer} on:transformend={handleTransformEnd} config={{
 			keepRatio: false,
@@ -324,10 +323,10 @@
 			rotateEnabled: false,
 			borderEnabled: false,
 			ignoreStroke: true,
-			shouldOverdrawWholeArea: true,
+			shouldOverdrawWholeArea: true,	
 			anchorStyleFunc: function (anchor) {
-			anchor.fill('rgba(138, 219, 207, .5)');
-			anchor.cornerRadius(anchor.width() / 2);
-		}}} />
+				anchor.fill('rgba(138, 219, 207, .5)');
+				anchor.cornerRadius(anchor.width() / 2);
+			}}} />
 	</Layer>
 </Stage>

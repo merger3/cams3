@@ -2,10 +2,12 @@
 	import { onMount, createEventDispatcher } from 'svelte';
 	import Konva from "konva";
 	import Tangle from './Tangle.svelte';
-	import axios from 'axios';
+	import axios, { spread } from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import ContextMenu from './ContextMenu.svelte';
-	import type { Entry, SwapResponse } from '$types';
+	import type { SwapResponse, Coordinates } from '$types';
+	import { M, Motion } from 'svelte-motion'
+	import { press, type PressCustomEvent } from 'svelte-gestures';
 
 	export let selector: Tangle;
 	export let commandText: string;
@@ -13,9 +15,14 @@
 	const dispatch = createEventDispatcher();
 
 	let tangle: Konva.Rect;
-
 	function getData(e: any) {
-		let clickRoute = (e.detail.rect.width() == 0 && e.detail.rect.height() == 0) ? "/click" : "/draw";  
+		let isClick: boolean = (e.detail.rect.width() == 0 && e.detail.rect.height() == 0);
+		let clickRoute: string = isClick ? "/click" : "/draw";
+		if (e.detail.rect.width() == 0 && e.detail.rect.height() == 0) {
+			clickRoute = "/click";
+		} else {
+			clickRoute = "/draw";
+		}
 		axios.post(clickRoute, {
 			x: tangle.x(),
 			y: tangle.y(),
@@ -25,6 +32,9 @@
 			frameHeight: ifHeight
 		}).then(function (response) {
 			commandText = response.data.command;
+			if (isClick) {
+				zoom = 100;
+			}
 			console.log(response);
 		}).catch(function (error) {
 			console.log(error);
@@ -40,6 +50,7 @@
 		commandText = `!swap ${e.detail.cam} ${e.detail.target}`
 	}
 
+	let clickTimeout: number | undefined;
 
 	let winWidth: number, winHeight: number;
 	export let commandHeight: number;
@@ -75,10 +86,7 @@
 		selector.cleanUp();
 	}
 
-	interface Coordinates {
-		x: number;
-		y: number;
-	} 
+
 	let rightClickCoords: Coordinates = { x: 0, y: 0 };
 	let menuOpen: boolean = false;
 	let coordinatesRegistered: boolean = false;
@@ -101,9 +109,8 @@
 	let isOpen: boolean;
 	let isRendered: boolean = true;
 	
-	let swaps: SwapResponse = {found: false, cam: "", swaps: null}
+	let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null}
 	function openMenu(coords: Coordinates) {
-		selector.cleanUp();
 		axios.post('/getSwapMenu', {
 			x: coords.x,
 			y: coords.y,
@@ -115,26 +122,74 @@
 		}).catch(function (error) {
 			console.log(error);
 		});
-
-		// isOpen = false;
-		// test = String(Math.random());
+		
+		selector.cleanUp();
 		isRendered = true;
-		// isOpen = true;
 	}
 
 	function closeMenu(e: any) {
-		// await sleep(500)
-		// isOpen = false;
-		// isRendered = false;
-
 		menuOpen = false;
 		coordinatesRegistered = false;
 		rightClickCoords = {x: 0, y: 0};
-		swaps = {found: false, cam: "", swaps: null}
+		swaps = {found: false, cam: "", position: 0, swaps: null}
+		isOpen = false;
+		pressRegistered = false;
 	}
-	
+
+	let zoom: number = 100;
+	function handleWheel(e: WheelEvent) {
+		if (commandText.startsWith("!ptzclick")) {
+			if (e.deltaY < 0) {
+				zoom += 10;
+			} else {
+				if (zoom > 0) {
+					zoom -= 10;
+				}
+				if (zoom < 0) {
+					zoom = 0;
+				}
+			}
+			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
+		}
+	}
+
+
+
+	let overlay: any;
+	let pressRegistered: boolean = false;
+	function pressHandler(event: PressCustomEvent) {
+		console.log("Press registered")
+		if (pressRegistered) {
+			return;
+		}
+
+		if (clickTimeout) {
+			clearTimeout(clickTimeout);
+		}
+		pressRegistered = true;
+		let target: any = event.detail.target;
+		let rect = target.getBoundingClientRect();
+		let simulateRightClickX = event.detail.x + rect.left; 
+		let simulateRightClickY = event.detail.y + rect.top;  
+
+		const pointerDownEvent = new PointerEvent('pointerdown', {bubbles: true, cancelable: true, view: window, clientX: simulateRightClickX, clientY: simulateRightClickY, button: 2, buttons: 2, pointerId: 1, isPrimary: true});
+		const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, view: window, clientX: simulateRightClickX, clientY: simulateRightClickY, button: 2, buttons: 0, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+		const leftPointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, view: window, clientX: simulateRightClickX, clientY: simulateRightClickY, button: 0, buttons: 0, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+
+		selector.removeHandlers();
+		overlay.dispatchEvent(leftPointerUpEvent);
+		openMenu({x: event.detail.x, y: event.detail.y});
+		
+		overlay.dispatchEvent(pointerDownEvent);
+		overlay.dispatchEvent(pointerUpEvent);
+	}
+
+
 	let doit: number;
+	var player: any;
 	onMount(() => {
+		player = new Twitch.Player("cams", {width: "100%", height: "100%", channel: "alveussanctuary"});
+		// console.log(player.getQualities());
 		resizeIframe();
 		window.onresize = function() {
 			clearTimeout(doit);
@@ -144,32 +199,33 @@
 		return () => {
 			window.removeEventListener('resize', resizeIframe);
 		};
+
     });
 </script>
 
+<svelte:head>
+	<script src="https://player.twitch.tv/js/embed/v1.js"></script>
+</svelte:head>
+
 
 <div class="vstack gap-1" id="wrapper">
-	<div style={parent_style}height:{commandHeight}px;>
-		<div use:fit={{min_size: 1}} class="text-center border border-primary rounded command" id="command" style="width:{ifWidth - 2.5}px; max-width:{ifWidth}px; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false">
-			{commandText}
+	<Motion whileFocus={{ scale: 1.3 }} let:motion>
+		<div style={parent_style}height:{commandHeight}px;>
+			<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command" id="command" style="width:{ifWidth - 2.5}px; max-width:{ifWidth}px; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false">
+				{commandText}
+			</div>
 		</div>	
-	</div>	
+	</Motion>
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px;">
 		<div class="ratio ratio-16x9">
 
 				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
-					<div id="overlay" />
+					<div id="overlay" class="unselectable" bind:this={overlay} on:wheel={handleWheel} use:press={{ timeframe: 400, triggerBeforeFinished: true, spread: 4 }} on:press={pressHandler}/>
 				</ContextMenu>
 
-			<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle on:finishdrawing={getData} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} />
-			<iframe
-			title="da cameras"
-			id="cams"
-			class="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0"
-			src="https://player.twitch.tv/?channel=alveussanctuary&parent=localhost"
-			allow="autoplay; fullscreen"
-			allowfullscreen
-			></iframe>
+			<Tangle bind:this={selector} bind:stageWidth={ifWidth} bind:stageHeight={ifHeight} bind:tangle bind:clickTimeout on:finishdrawing={getData} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} />
+			
+			<div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/>
 		</div>
 	</div>
 </div>
@@ -184,7 +240,9 @@
 		font-weight: 600;
 	} 
 	#command {
+		position: relative;
 		color: rgb(204, 212, 219);
+		z-index: 5;
 	}
 	#vid {
 		width: 100%;
@@ -192,10 +250,10 @@
 		position: relative;
 		z-index: 1;
 	}
-	#cams {
+	/* #cams {
 		pointer-events: none;
 		z-index: 0;
-	}
+	} */
 	#wrapper {
 		flex-grow: 0;
 	}
@@ -207,5 +265,14 @@
 		height: 100%;
 		background: transparent;
 		z-index: 2;
+	}
+	.unselectable {
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		-khtml-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		-o-user-select: none;
+		user-select: none;
 	}
 </style>

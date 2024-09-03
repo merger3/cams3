@@ -10,13 +10,13 @@
 	let yMargin: number = spacerHeight * .035;
 
     function buildCommand(preset: string) {
-        commandText = `!ptzload ${camPresets.camName} ${preset}`
+        commandText = `!ptzload ${camPresets.name} ${preset}`
     }
     
 
 </script>
 
-<div id="presets-menu" class="w-100 d-block m-auto text-center px-3 py-2 rounded shadow" style="max-height: {spacerHeight - yMargin}px; max-width: {spacerWidth - 15}px; top: {(yMargin / 2) - 4}px;" data-simplebar>
+<div id="presets-menu" class="w-100 d-block m-auto text-center px-3 py-2 rounded shadow" style="max-height: {spacerHeight - yMargin}px; max-width: {spacerWidth - 15}px; top: {(yMargin / 2) - 4}px;">
     {#each camPresets.presets as p}
         <button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 mb-2 overflow-hidden">{p}</button>
     {/each}

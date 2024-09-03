@@ -8,7 +8,7 @@ export interface Config {
 }
 
 export interface CamPresets {
-    camName: string;
+    name: string;
     presets: string[];
 } 
 
@@ -20,5 +20,11 @@ interface Entry {
 interface SwapResponse {
 	found: boolean;
 	cam: string;
+	position: number;
 	swaps: Entry | null;
 }
+
+interface Coordinates {
+	x: number;
+	y: number;
+} 

@@ -79,6 +79,7 @@
 	});
 	$: resizeObserverDefined && commandText && resizeText();
 
+
 </script>
 
 
@@ -124,5 +125,6 @@
 		height: 100%;
 		white-space: pre;
 	}
+	
 
 </style>

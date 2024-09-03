@@ -1,19 +1,28 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { createEventDispatcher, onMount } from 'svelte';
-	import type { Entry } from '$types';
+	import type { Entry, SwapResponse } from '$types';
 	import SubContextMenu from './SubContextMenu.svelte';
 	const dispatch = createEventDispatcher();
 	
 
 	export let entries: Entry[];
-	export let cam: string;
-	function handleClick(sourceCam: string, target: string) {
+	export let cam: SwapResponse;
+	function handleClick(source: SwapResponse, target: string) {
 		target = target == "main" ? "1" : target;
-		dispatch('clickentry', {
-			cam: sourceCam,
-			target: target
-		});
+		let sourceCam = isNaN(Number(target)) ? source.cam : source.position
+		if (target == "1") {
+			dispatch('clickentry', {
+				cam: target,
+				target: sourceCam
+			});
+		} else {
+			dispatch('clickentry', {
+				cam: sourceCam,
+				target: target
+			});
+		}
+		
 	}
 
 	function bubbleClick(e: any) {
@@ -24,7 +33,7 @@
 		console.log(entries)
     });
 </script>
-   
+
 <!-- <ContextMenu.Item>an item</ContextMenu.Item> -->
 {#each entries as e, i}
 	{#if !e.subentries || e.subentries.length == 0}
