@@ -27,4 +27,31 @@ interface SwapResponse {
 interface Coordinates {
 	x: number;
 	y: number;
-} 
+}
+
+interface Box {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    zone: number;
+}
+
+interface RadialMenu {
+	partsCount: number;
+	color: string;
+	rotationOffset: number;
+	functionBindings: string[];
+	location: Coordinates;
+	subMenus: {[key: string]: RadialMenu};
+	previousMenu: RadialMenu | null;
+}
+
+interface RadialPart {
+	x: number;
+	y: number;
+	angle: number;
+	rotation: number;
+	action: string;
+	submenu: RadialMenu | null;
+}

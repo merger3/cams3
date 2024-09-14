@@ -10,6 +10,8 @@
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
 	
+	import _ from 'lodash';
+
 	const defaultCMD: string = "​";
 
 	export let config: Config;
@@ -32,15 +34,15 @@
 			command: commandText
 		}).then(function (response) {
 			console.log(response);
-			commandText = defaultCMD;
 		}).catch(function (error) {
 			console.log(error);
 		});
+		commandText = defaultCMD;
 		selector.cleanUp();
-		fixText();
 	}
 
 	async function handleDoubleClick(e: any) {
+		console.log("double click registered highest level")
 		axios.post('/getClickedCam', {
 			x: e.detail.x,
 			y: e.detail.y,
@@ -54,25 +56,46 @@
 		});
 	}
 
-	function resizeText() {
+	let zoom: number = 100;
+	function handleWheel(event: any) {
+		let e = event.originalEvent as WheelEvent;
+		if (commandText.startsWith("!ptzclick")) {
+			let forceResize: boolean = false;
+			if (e.deltaY < 0) {
+				zoom += 10;
+				if (zoom > 420) {
+					zoom = 10000;
+					forceResize = true;
+				}
+			} else {
+				if (zoom > 0) {
+					zoom -= 10;
+				}
+				if (zoom < 0) {
+					zoom = 0;
+				}
+			}
+			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
+			if (forceResize) {
+				resizeText();
+			}
+		}
+	}
+
+	function resizeTextRaw() {
 		if (commandText == "<br>") {
 			commandText = defaultCMD;
 		}
 		fit(resize, {min_size: 8});
 	}
 
-	let doit: number;
-	function fixText() {
-		clearTimeout(doit);
-		doit = setTimeout(resizeText, 10);
-	}
+	var resizeText = _.throttle(resizeTextRaw, 50, { 'leading': true, 'trailing': false });
 
 	let resizeObserverDefined = false;
-
 	onMount(() => {
 		window.ResizeObserver = ResizeObserver;
 		resizeObserverDefined = true;
-
+		jQuery(".movedown").on('wheel', handleWheel)
 		if (commandText) {
 			resizeText();
 		}
@@ -82,7 +105,6 @@
 
 </script>
 
-
 <div class="container-fluid" id="video-container">
 	<div class="row justify-content-between flex-nowrap ">
 		<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector">
@@ -91,16 +113,16 @@
 			</div>
 			<div id="spacer" bind:clientHeight={spacerHeight} bind:clientWidth={spacerWidth}>
 				{#if camPresets}
-					<Presets bind:spacerHeight bind:spacerWidth bind:commandText bind:camPresets on:triggerResize={fixText} />
+					<Presets bind:spacerHeight bind:spacerWidth bind:commandText bind:camPresets />
 				{/if}
 
 			</div>
 			<div id="sendcontainer" style="{parent_style}max-height: {ifHeight * .15}px;">
-				<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0"> {commandText == defaultCMD ? " Send " : " " + commandText + " "} </button>
+				<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-30 movedown"> {commandText == defaultCMD ? " Send " : " " + commandText + " "} </button>
 			</div>
 		</div>
 		<div class="col-auto g-0" id="wrapper">
-			<Video bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth on:triggerResize={fixText} on:doubleclick={handleDoubleClick} />
+			<Video bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth bind:zoom on:doubleclick={handleDoubleClick} on:resizecommand={resizeText} on:sendcmd={sendCommand} />
 		</div>
 	</div>
 </div>
@@ -124,7 +146,7 @@
 	#sendbutton {
 		height: 100%;
 		white-space: pre;
+		position: relative;
 	}
 	
-
 </style>

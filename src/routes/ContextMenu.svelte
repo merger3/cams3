@@ -33,7 +33,7 @@
 		<slot></slot>
 	</ContextMenu.Trigger>
 	{#if isRendered && entry.found && entry.swaps && entry.swaps.subentries}
-		<ContextMenu.Content class="w-52 dark:bg-slate-800 z-10">
+		<ContextMenu.Content class="w-52 dark:bg-slate-800 z-50">
 				<SubContextMenu on:clickentry={bubbleClick} entries={entry.swaps.subentries} cam={{cam: entry.cam, position: entry.position, found: true, swaps: null}} />
 		</ContextMenu.Content>
 	{/if}

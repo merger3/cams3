@@ -35,7 +35,7 @@
 	});
 </script>
 
-<div class="dropdown">
+<div class="dropdown z-30 movedown">
 	<button style="position: absolute;min-height: {commandHeight}px;max-height: {commandHeight}px;right: 0;top: 0;" id="dropdown-button" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
 		Dropdown button
 	</button>
