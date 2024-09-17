@@ -15,6 +15,7 @@
 	}
 
 	function opc(open: boolean) {
+		console.log("trigger recieved")
 		if (open) {
 			dispatch("openmenu");
 		} else {
@@ -28,13 +29,15 @@
    
    <!-- let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null} -->
 
-  <ContextMenu.Root bind:open={isOpen} onOpenChange={opc}>
+
+<ContextMenu.Root bind:open={isOpen} onOpenChange={opc}>
 	<ContextMenu.Trigger>
 		<slot></slot>
 	</ContextMenu.Trigger>
 	{#if isRendered && entry.found && entry.swaps && entry.swaps.subentries}
-		<ContextMenu.Content class="w-52 dark:bg-slate-800 z-50">
-				<SubContextMenu on:clickentry={bubbleClick} entries={entry.swaps.subentries} cam={{cam: entry.cam, position: entry.position, found: true, swaps: null}} />
+		<ContextMenu.Content class="w-52 dark:bg-slate-800 z-50" fitViewport={true} overlap={true}>
+			<SubContextMenu on:clickentry={bubbleClick} entries={entry.swaps.subentries} cam={{cam: entry.cam, position: entry.position, found: true, swaps: null}} />
 		</ContextMenu.Content>
 	{/if}
 </ContextMenu.Root>
+	

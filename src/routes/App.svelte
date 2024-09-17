@@ -43,6 +43,7 @@
 
 	async function handleDoubleClick(e: any) {
 		console.log("double click registered highest level")
+		console.log(`ifWidth: ${ifWidth}, ifHeight: ${ifHeight}`)
 		axios.post('/getClickedCam', {
 			x: e.detail.x,
 			y: e.detail.y,
@@ -113,7 +114,7 @@
 			</div>
 			<div id="spacer" bind:clientHeight={spacerHeight} bind:clientWidth={spacerWidth}>
 				{#if camPresets}
-					<Presets bind:spacerHeight bind:spacerWidth bind:commandText bind:camPresets />
+					<Presets bind:spacerHeight bind:spacerWidth bind:commandText bind:camPresets on:sendcmd={sendCommand} />
 				{/if}
 
 			</div>

@@ -2,28 +2,36 @@
 	import { Arc, Group, Shape, Text, TextPath } from "svelte-konva";
 	import Konva from "konva";
 	import { createEventDispatcher, onMount, tick } from 'svelte';
-	import type { RadialPart, RadialMenu } from '$types';
+	import type { RadialPart, RadialMenu, Coordinates, CamPosition, SwapResponse } from '$types';
+	import axios from 'axios';
+	import _ from 'lodash';
+
+	const dispatch = createEventDispatcher();
+	const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "reset": resetCam, "next": loadNextCam, "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
+
 
 	
-	const dispatch = createEventDispatcher();
-	const buttonHandlers: {[key: string]: any} = {"send": send, "swap": nop, "load": nop, "reset": nop, "focus": nop, "pan": nop, "tilt": nop, "zoom": nop, "back": nop};
-	const buttonIcons: {[key: string]: string} = {"send": "arrow-return-left", "swap": "arrow-left-right", "load": "upload", "reset": "arrow-repeat", "move": "arrows-move", "pan": "bezier", "tilt": "bezier", "zoom": "bezier", "back": "bezier"};
-
 	export let stage: Konva.Stage;
-	export let menuDefintion: RadialMenu = {partsCount: 0, color: "grey", rotationOffset: 0, functionBindings: [], location: {x: 0, y: 0}, previousMenu: null, subMenus: {}};
-	let color: string = 'gray';
-	function builder(defintion: RadialMenu): RadialPart[] {
-		color = defintion.color;
-		
-		let radialParts: RadialPart[] = [];
-		var angle: number = 360 / defintion.partsCount;
-		var rotation: number = 0;
-		for (let i = 1; i < defintion.partsCount + 1; i++) {
-			radialParts.push({x: defintion.location.x, y: defintion.location.y, angle: angle, rotation: rotation + defintion.rotationOffset, action: defintion.functionBindings[i - 1], submenu: defintion.subMenus[defintion.functionBindings[i - 1]]});
-			rotation = i * angle; 
+	export let commandText: string;
+	export let ifWidth: number;
+	export let ifHeight: number;
+
+	let menuDefinition: RadialMenu;
+	let color: string;
+	let location: Coordinates;
+	let innerRadius: number = window.innerHeight * .08;
+	let outerRadius: number = (window.innerHeight * .08) + (window.innerHeight * .13);
+	
+	function builder(definition: RadialMenu): RadialPart[] {
+		if (!definition) {
+			return [];
 		}
-		
-		return radialParts;
+		color = definition.color;
+		location = definition.location;
+		innerRadius = window.innerHeight * .08;
+		outerRadius = (window.innerHeight * .08) + (window.innerHeight * .13);
+
+		return definition.parts;
 	}
 
 	function getFunctionFromName(name: string) {
@@ -33,13 +41,14 @@
 
 	let radials: Konva.Group;
 	export function redefine(definition: RadialMenu) {
-		
-		menuDefintion = definition;
+		menuDefinition = definition;
 	}
 	
 	export function addHandlers() {
 		stage.on("pointerup", function () {
-			menuDefintion.partsCount = 0;
+			menuDefinition.parts = [];
+			label.hide();
+			dispatch("closemenu");
 			jQuery('.movedown').css('z-index', '');
 			stage.off("pointerup");
       	});
@@ -61,7 +70,7 @@
 	
 	let label: Konva.Text;
 	let hoverTimeout: number;
-	function highlightRadial(e: CustomEvent, name: string, submenu: RadialMenu | null) {
+	function highlightRadial(e: CustomEvent, r: RadialPart) {
 		console.log(e.detail.target);
 		console.log(e.detail.target.offsetX());
 		
@@ -70,43 +79,37 @@
 		label.position({x: hoveredElementPos.x, y: hoveredElementPos.y});
 		label.offsetX(label.width() / 2);
 		label.offsetY(label.height() / 2);
-		label.text(e.detail.target.name());
+		label.text(r.label);
 		label.show();
 
-		if (name == "back") {
+		if (r.action == "back") {
 			hoverTimeout = setTimeout(() => {
 				loadPreviousMenu();
 			}, 500);
-		} else if (submenu) {
+		} else if (r.action == "submenu") {
 			hoverTimeout = setTimeout(() => {
-				loadSubmenu(submenu);
+				loadSubmenu(r.submenu!);
 			}, 500);
 		}
 	}
 	
-	function unhighlightRadial(e: CustomEvent) {
+	function unhighlightRadial(e: CustomEvent, r: RadialPart) {
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
 		}
-		(e.detail.target as Konva.Shape).fill(color);
+		(e.detail.target as Konva.Shape).fill(r.color!);
 		label.hide();
 	}
 
 	function nop() {
 		console.log("calling function");
-		label.hide();
+
 	};
 
 	function loadSubmenu(submenu: RadialMenu) {
 		console.log("Loading submenu");
-		submenu.location = {x: menuDefintion.location.x, y: menuDefintion.location.y};
-		// let mousePos = stage.getPointerPosition();
-		// if (mousePos) {
-		// 	submenu.location = {x: mousePos.x, y: mousePos.y};
-		// } else {
-		// }
-
-		submenu.previousMenu = menuDefintion;
+		submenu.location = {x: menuDefinition.location.x, y: menuDefinition.location.y};
+		submenu.previousMenu = menuDefinition;
 		label.hide();
 
 		redefine(submenu);
@@ -114,13 +117,9 @@
 
 	function loadPreviousMenu() {
 		console.log("Going back to previous menu");
-		if (menuDefintion.previousMenu) {
-			// let mousePos = stage.getPointerPosition();
-			// if (mousePos) {
-			// 	menuDefintion.previousMenu.location = {x: mousePos.x, y: mousePos.y};
-			// }
+		if (menuDefinition.previousMenu) {
 			label.hide();
-			redefine(menuDefintion.previousMenu);
+			redefine(menuDefinition.previousMenu);
 		} else {
 			alert("Should not have gotten here!");
 		}
@@ -129,7 +128,66 @@
 
 	function send() {
 		dispatch("sendcmd");
-		label.hide();
+	}
+
+	function swapMenu() {
+		let mousePos = stage.getPointerPosition();
+		if (!mousePos) {
+			return;
+		}
+		dispatch("openmenu", {
+			camCoordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y},
+			menuPosition: {x: mousePos.x, y: mousePos.y}
+		});
+	}
+
+	async function resetCam() {
+		let camera = await getCamCoordinates({x: menuDefinition.location.x, y: menuDefinition.location.y}, ifWidth, ifHeight);
+		if (!camera.found) {
+			return;
+		}
+
+		commandText = `!resetcam ${camera.cam}`
+	}
+	
+	async function moveCMD(direction: string) {
+		let camera = await getCamCoordinates({x: menuDefinition.location.x, y: menuDefinition.location.y}, ifWidth, ifHeight);
+		if (!camera.found) {
+			return;
+		}
+
+		commandText = `!ptzmove ${camera.cam} ${direction}`
+		_.delay(function(text) {
+			dispatch(text);
+		}, 1050, 'sendcmd');
+	}
+
+	async function irCMD(state: string) {
+		let camera = await getCamCoordinates({x: menuDefinition.location.x, y: menuDefinition.location.y}, ifWidth, ifHeight);
+		if (!camera.found) {
+			return;
+		}
+
+		commandText = `!ptzir ${camera.cam} ${state}`
+	}
+
+	async function loadNextCam() {
+		let response = await axios.post('/getSwapMenu', {x: menuDefinition.location.x, y: menuDefinition.location.y, frameWidth: ifWidth, frameHeight: ifHeight});
+		console.log(response)
+		let swaps: SwapResponse = response.data;
+
+		if (!swaps.found) {
+			return;
+		}
+
+		if (swaps.swaps!.subentries![0].subentries != null) {
+			return;
+		}
+		commandText = `!swap ${swaps.cam} ${swaps.swaps!.subentries![0].label}`
+
+		_.delay(function(text) {
+			dispatch(text);
+		}, 1050, 'sendcmd');
 	}
 
 	onMount(async () => {
@@ -143,9 +201,35 @@
 
 		context.beginPath();
 		context.arc(0, 0, arc.outerRadius() * 1.75, 0, angle, clockwise);
-		context.arc(0, 0, arc.innerRadius() * .8, angle, 0, !clockwise);
+		context.arc(0, 0, arc.innerRadius() * .6, angle, 0, !clockwise);
 		context.closePath();
 		context.fillStrokeShape(arc);
+	}
+
+	export function setRotations(menu: RadialMenu) {
+		let currentRotation: number = 0;
+		for (const part of menu.parts) {
+			part.rotation = currentRotation + menu.rotation;
+			if (!part.color) {
+				part.color = menu.color;
+			}
+			currentRotation += part.angle;
+		}
+	}
+
+	async function getCamCoordinates(coords: Coordinates, width: number, height: number): Promise<CamPosition> {
+		try {
+			let response = await axios.post('/getcam', {
+			x: coords.x,
+			y: coords.y,
+			frameWidth: width,
+			frameHeight: height
+			});
+			return response.data;
+		} catch (error) {
+			console.log(error);
+			return { found: false, cam: "", position: 0 };
+		}
 	}
 
 	// window.addEventListener('keydown', function (e) {
@@ -170,6 +254,12 @@
 		}
 	}
 
+	function iconStyle(r: RadialPart) {
+		let location: Coordinates = menuDefinition.location;
+		let polar: Coordinates = polar2xy((innerRadius + outerRadius) / 2, (r.rotation! + (r.rotation! + r.angle)) / 2);
+		return `left: ${polar.x + location.x}px; top: ${polar.y + location.y}px; transform: translate(-50%, -50%)`
+	}
+
 </script>
 
 <Group 
@@ -179,27 +269,26 @@
 		y: stage.y(),
 	}}
 >
-	{#each builder(menuDefintion) as r, i}
+	{#each builder(menuDefinition) as r}
 		<Arc config={{
-			x: r.x,
-			y: r.y,
-			innerRadius: window.innerHeight * .08,
-			outerRadius: (window.innerHeight * .08) + (window.innerHeight * .13),
+			x: menuDefinition.location.x,
+			y: menuDefinition.location.y,
+			innerRadius: innerRadius,
+			outerRadius: outerRadius,
 			angle: r.angle,
-			fill: color,
+			fill: r.color,
 			stroke: 'darkgrey',
 			strokeWidth: 2,
 			rotation: r.rotation,
-			name: r.action,
+			name: "radialpart",
 			hitFunc: arcCustomHitbox
 		}}
-		on:pointerenter={(e) => highlightRadial(e, r.action, r.submenu)}
-		on:pointerleave={unhighlightRadial}
+		on:pointerenter={(e) => highlightRadial(e, r)}
+		on:pointerleave={(e) => unhighlightRadial(e, r)}
 		on:pointerup={getFunctionFromName(r.action)}
 		/>
-		<i class="bi bi-{buttonIcons[r.action]} absolute z-50 pointer-events-none text-3xl" style="left: {polar2xy(((window.innerHeight * .08) + ((window.innerHeight * .08) + (window.innerHeight * .13))) / 2, (r.rotation + (r.rotation + r.angle)) / 2).x + r.x}px; top: {polar2xy(((window.innerHeight * .08) + ((window.innerHeight * .08) + (window.innerHeight * .13))) / 2, (r.rotation + (r.rotation + r.angle)) / 2).y + r.y}px; transform: translate(-50%, -50%)"></i>
+		<i class="bi bi-{r.icon} absolute z-50 pointer-events-none text-2xl" style={iconStyle(r)}></i>
+		{radials.moveToTop()}
 	{/each}
 	<Text bind:handle={label} config={labelConfig} />
-	
 </Group>
-

@@ -27,7 +27,8 @@
 		} else {
 			clickRoute = "/draw";
 		}
-
+		console.log("getting data")
+		console.log(`ifWidth: ${ifWidth}, ifHeight: ${ifHeight}`)
 		axios.post(clickRoute, {
 			x: rect.x(),
 			y: rect.y(),
@@ -131,6 +132,7 @@
 	function registerMenuClick(e: any) {
 		menuOpen = true;
 		if (menuOpen && coordinatesRegistered) {
+			console.log("opening from registerMenuClick")
 			openMenu(rightClickCoords);
 		}
 	}
@@ -140,6 +142,7 @@
 		rightClickCoords = {x: e.detail.x, y: e.detail.y}
 		console.log(rightClickCoords)
 		if (menuOpen && coordinatesRegistered) {
+			console.log("opening from registerCanvasClick")
 			openMenu(rightClickCoords);
 		}
 	}
@@ -175,19 +178,23 @@
 	}
 
 	export let zoom: number = 100;
+	let maxZoom: number = 320;
+	let maxZoomTouch: number = 440;
 	function handleWheel(e: WheelEvent) {
 		if (commandText.startsWith("!ptzclick")) {
 			let forceResize: boolean = false;
 			if (e.deltaY < 0) {
 				zoom += 10;
-				if (zoom > 420) {
+				if (zoom > maxZoom) {
 					zoom = 10000;
 					forceResize = true;
 				}
 			} else {
-				if (zoom > 0) {
+				if (zoom >= 10000) {
+					zoom = maxZoom;
+				} else if (zoom > 0) {
 					zoom -= 10;
-				}
+				} 
 				if (zoom < 0) {
 					zoom = 0;
 				}
@@ -199,89 +206,107 @@
 		}
 	}
 
-
-	const radialActions: string[] = ["send", "swap", "move", "load", "reset", "focus", "pan", "tilt", "zoom"]
-	let radialMenu: Radial;
+	let mainMenu: RadialMenu;
+	let radial: Radial;
 	function pressHandler(event: PressCustomEvent) {
 		console.log("Press registered")
+		console.log(event)
 		if (!stagePressed || panning) {
+			console.log(`Returning early. stagePressed: ${stagePressed}, panning: ${panning}`)
 			return;
 		}
 		console.log("remove handlers")
 		selector.removeHandlers();
+		selector.stopListening();
 
-		radialMenu.addHandlers();
+		radial.addHandlers();
 
 		if (clickTimeout) {
 			clearTimeout(clickTimeout);
 		}
 
-		let submenu: RadialMenu = {partsCount: 4, color: "#212529", rotationOffset: 45, functionBindings: ["pan", "tilt", "back"], location: {x: 0, y: 0}, previousMenu: null, subMenus: {}}
-
-		let rect = overlay.getBoundingClientRect()
-
-		radialMenu.redefine({partsCount: 5, color: "#212529", rotationOffset: -90, functionBindings: radialActions, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, previousMenu: null, subMenus: {"move": submenu}});
+		setupRadials(event);
+		radial.redefine(mainMenu);
 		console.log("completed")
+	}
+
+	function setupRadials(event: PressCustomEvent) {
+		let rect = overlay.getBoundingClientRect()
+		
+		let moveParts: RadialPart[] = [
+			{angle: 45, action: "up", label: "up", icon: "arrow-up"},
+			{angle: 45, action: "upright", label: "upright", icon: "arrow-up-right"},
+			{angle: 45, action: "right", label: "right", icon: "arrow-right"},
+			{angle: 45, action: "downright", label: "downright", icon: "arrow-down-right"},
+			{angle: 45, action: "down", label: "down", icon: "arrow-down"},
+			{angle: 45, action: "downleft", label: "downleft", icon: "arrow-down-left"},
+			{angle: 45, action: "left", label: "left", icon: "arrow-left"},
+			{angle: 45, action: "upleft", label: "upleft", icon: "arrow-up-left"},
+		]
+		let moveMenu: RadialMenu = {color: "rgba(149, 91, 157, 1)", rotation: 22.5 - 135, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: moveParts}
+		radial.setRotations(moveMenu);
+
+			
+		let irParts: RadialPart[] = [
+			{angle: 90, action: "iroff", label: "off", icon: "lightbulb-off"},
+			{angle: 90, action: "back", label: "back", icon: "arrow-bar-left"},
+			{angle: 90, action: "iron", label: "on", icon: "lightbulb-fill"},
+			{angle: 90, action: "irauto", label: "auto", icon: "sunrise"},
+		]
+		let irMenu: RadialMenu = {color: "#212529", rotation: 45, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: irParts}
+		radial.setRotations(irMenu);
+
+		let parts: RadialPart[] = [
+			{angle: 120, action: "send", label: "send", icon: "arrow-return-left"},
+			{angle: 60, action: "swap", label: "swap", icon: "menu-button-wide"},
+			{angle: 60, action: "next", label: "next", icon: "arrow-left-right"},
+			{angle: 30, action: "submenu", label: "move", icon: "arrows-move", submenu: moveMenu},
+			{angle: 30, action: "submenu", label: "ir", icon: "lightbulb", submenu: irMenu},
+			{angle: 60, action: "reset", label: "reset", icon: "arrow-repeat"},
+		]
+		mainMenu = {color: "#212529", rotation: -90, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, previousMenu: undefined, parts: parts}
+		radial.setRotations(mainMenu);
+
+		moveMenu.previousMenu = mainMenu;
 	}
 
 	let overlay: any;
 	let stageOverlay: any;
 	let stagePressed: boolean = true;
-	function pressHandler2(event: PressCustomEvent) {
-		if (!stagePressed || panning) {
+	function simulateMenu(e: CustomEvent) {
+		if (!stagePressed) {
 			return;
 		}
 		console.log("Press registered")
-
-		if (clickTimeout) {
-			clearTimeout(clickTimeout);
-		}
-		console.log("doing math")
-		let target: any = event.detail.target;
-		let rect = target.getBoundingClientRect();
-		let simulateRightClickX = event.detail.x + rect.left;
-		let simulateRightClickY = event.detail.y + rect.top;
-
-		console.log("creating events")
-		const pointerDownEvent = new PointerEvent('pointerdown', {bubbles: true, cancelable: true, view: window, clientX: simulateRightClickX, clientY: simulateRightClickY, button: 2, buttons: 2, pointerId: 1, isPrimary: true});
-		const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, view: window, clientX: simulateRightClickX, clientY: simulateRightClickY, button: 2, buttons: 0, pointerId: 1, pointerType: 'mouse', isPrimary: true});
-		const leftPointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, view: window, clientX: simulateRightClickX, clientY: simulateRightClickY, button: 0, buttons: 0, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+	
+		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: e.detail.menuPosition.x, clientY: e.detail.menuPosition.y});
 
 		console.log("remove handlers")
 		selector.removeHandlers();
 
-		console.log("dispatching left up")
-		overlay.dispatchEvent(leftPointerUpEvent);
-
-		console.log("dispatching right down")
-		overlay.dispatchEvent(pointerDownEvent);
-		console.log("dispatching right up")
-		overlay.dispatchEvent(pointerUpEvent);
-		console.log("opening menu")
-		openMenu({x: event.detail.x, y: event.detail.y});
+		stageOverlay.dispatchEvent(rightClickEvent);
+		openMenu(e.detail.camCoordinates);
 		console.log("completed")
 	}
-
-
-
 
 	let notchSizeUp: number, notchSizeDown: number;
 	let panning: boolean = false;
 	function panDown(gestureEvent: GestureCustomEvent) {
 		if (gestureEvent.detail.pointersCount < 2) {
-			return
+			return;
 		}
+		console.log("panning true")
+		panning = true;
 		selector.removeHandlers();
 		if (!commandText.startsWith("!ptzclick")) {
 			return;
 		}
-		notchSizeUp = Math.round(ifHeight * .01);
-		notchSizeDown =  Math.round(ifHeight * .017);
+		notchSizeUp = Math.round(ifHeight * .027);
+		notchSizeDown =  Math.round(ifHeight * .027);
 		lastY = gestureEvent.detail.y;
 		lastX = null;
 		lastNotch = gestureEvent.detail.y;
 		lastTime = gestureEvent.timeStamp;
-		panning = true;
 	}
 
 	let lastNotch: number, lastTime: number, lastY: number;
@@ -297,8 +322,8 @@
 		let panDirection = lastY - gestureEvent.detail.y;
 		let notchDelta = lastNotch - gestureEvent.detail.y;
 		if ((panDirection > 0) && (Math.abs(notchDelta) >= notchSizeUp)) {
-			zoom += 10;
-			if (zoom > 420) {
+			zoom += 20;
+			if (zoom > maxZoomTouch) {
 				zoom = 10000;
 				forceResize = true;
 			}
@@ -309,12 +334,14 @@
 			lastNotch = gestureEvent.detail.y;
 			console.log(`move up`)
 		} else if ((panDirection < 0) && (Math.abs(notchDelta) >= notchSizeDown)) {
-			if (zoom > 0) {
-				zoom -= 10;
-			}
-			if (zoom < 0) {
-				zoom = 0;
-			}
+			if (zoom >= 10000) {
+					zoom = maxZoomTouch;
+				} else if (zoom > 0) {
+					zoom -= 10;
+				} 
+				if (zoom < 0) {
+					zoom = 0;
+				}
 			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
 			lastNotch = gestureEvent.detail.y;
 			console.log(`move down`)
@@ -327,10 +354,21 @@
 
 	function panUp(gestureEvent: GestureCustomEvent) {
 		panning = false;
+		jQuery('.movedown').css('z-index', '');
 	}
 
 	function bubbleSend(e: any) {
 		dispatch("sendcmd");
+	}
+
+	function submitCommand(e: KeyboardEvent) {
+		if (e.code == "Enter") {
+			e.preventDefault()
+			dispatch("sendcmd");
+			if (document.activeElement) {
+				(document.activeElement as HTMLElement).blur();
+			}
+		}
 	}
 
 	let doit: number;
@@ -357,24 +395,27 @@
 <svelte:head>
 	<script src="https://player.twitch.tv/js/embed/v1.js"></script>
 </svelte:head>
-
-<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
 <div class="vstack gap-1" id="wrapper">
-	<Motion whileFocus={{ scale: 1.3 }} let:motion>
-		<div style={parent_style}height:{commandHeight}px;>
-			<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-30 movedown" id="command" style="width:{ifWidth - 2.5}px; max-width:{ifWidth}px; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false">
-				{commandText}
+	<div class="hstack gap-1">
+		<Motion whileFocus={{ scale: 1.3 }} let:motion>
+			<div style={parent_style}height:{commandHeight}px;>
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-30 movedown" id="command" style="max-width:{ifWidth}px; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} >
+					{commandText}
+				</div>
 			</div>
-		</div>
-	</Motion>
+		</Motion>
+		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-30 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
+	</div>
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px;">
 		<div class="ratio ratio-16x9">
 
 				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
+					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
 					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 223, 0);" bind:this={overlay} />
 				</ContextMenu>
 
-			<Tangle bind:this={selector} bind:stagePressed bind:stageWidth={winWidth} bind:stageHeight={ifHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe}/>
+			<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu}/>
 
 			<!-- <div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/> -->
 			<iframe
@@ -405,6 +446,9 @@
 		width: 100%;
 		height: 100%;
 		position: relative;
+	}
+	#cams {
+		pointer-events: none;
 	}
 	#wrapper {
 		flex-grow: 0;

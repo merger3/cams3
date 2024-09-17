@@ -10,7 +10,9 @@
 	export let tangle: Konva.Rect;
 	export let radialMenu: Radial;
 	export let mainLayerConfig: any;
-
+	export let commandText: string;
+	export let ifWidth: number;
+	export let ifHeight: number;
 
 	let dot: Konva.Circle;
 	let arrow: Konva.Arrow;
@@ -53,6 +55,18 @@
 		stage.off("pointerdblclick", handleStageDblClick)
 		stage.off("pointerup", endDrawingCheck);
 		stage.off("pointermove", watchForDrag);
+	}
+
+	export function stopListening() {
+		if (tangle) {
+			tangle.draggable(false);
+		}
+	}
+
+	function relisten() {
+		if (tangle) {
+			tangle.draggable(true);
+		}
 	}
 
 	function isDragging(rect: Konva.Rect) {
@@ -162,14 +176,19 @@
 		
 
 		if (konvaEvent.evt.button == 2) {
+			let relativePos = layer.getRelativePointerPosition();
+			if (!relativePos) {
+				return;
+			}
 			dispatch("rightclick", {
-				x: mousePos!.x,
-				y: mousePos!.y
+				x: relativePos.x,
+				y: relativePos.y
 			})
 			return;
 		}
 
 		if (konvaEvent.target === konvaEvent.target.getStage() || konvaEvent.target.getParent() === boxGroup) {
+			stagePressed = true;
 			stage.on("pointerdblclick", handleStageDblClick)
 			if (clickTimeout) {
 				clearTimeout(clickTimeout);
@@ -223,7 +242,7 @@
 		stage.off('pointermove');
 		stage.off('pointerup');
 		stage.off("pointerdblclick", handleStageDblClick)
-		let mousePos = stage.getPointerPosition();
+		let mousePos = layer.getRelativePointerPosition();
 		console.log(mousePos?.x, mousePos?.y)
 		dispatch("doubleclick", {
 			x: mousePos!.x,
@@ -476,8 +495,13 @@
 		});
 	}
 
-	function bubbleSend(e: any) {
+	function bubbleSend(e: CustomEvent) {
 		dispatch("sendcmd");
+	}
+
+	function bubbleOpenMenu(e: CustomEvent) {
+		console.log(e);
+		dispatch("openmenu", e.detail);
 	}
 
 	onMount(async () => {
@@ -568,6 +592,6 @@
 				anchor.cornerRadius(anchor.width() / 2);
 			}}} />
 
-		<Radial bind:this={radialMenu} bind:stage on:sendcmd={bubbleSend} />
+		<Radial bind:this={radialMenu} bind:stage bind:commandText bind:ifWidth bind:ifHeight on:sendcmd={bubbleSend} on:openmenu={bubbleOpenMenu} on:closemenu={relisten}/>
 	</Layer>
 </Stage>

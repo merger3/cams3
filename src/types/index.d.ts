@@ -24,6 +24,12 @@ interface SwapResponse {
 	swaps: Entry | null;
 }
 
+interface CamPosition {
+	found: boolean;
+	cam: string;
+	position: number;
+}
+
 interface Coordinates {
 	x: number;
 	y: number;
@@ -38,20 +44,19 @@ interface Box {
 }
 
 interface RadialMenu {
-	partsCount: number;
 	color: string;
-	rotationOffset: number;
-	functionBindings: string[];
+	rotation: number;
 	location: Coordinates;
-	subMenus: {[key: string]: RadialMenu};
-	previousMenu: RadialMenu | null;
+	previousMenu?: RadialMenu | undefined;
+	parts: RadialPart[];
 }
 
 interface RadialPart {
-	x: number;
-	y: number;
 	angle: number;
-	rotation: number;
 	action: string;
-	submenu: RadialMenu | null;
+	label: string;
+	icon: string;
+	color?: string;
+	submenu?: RadialMenu | undefined;
+	rotation?: number;
 }
