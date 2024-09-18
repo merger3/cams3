@@ -44,7 +44,7 @@
 		"@popperjs/core": "^2.11.8",
 		"@sveltestrap/sveltestrap": "^6.2.7",
 		"axios": "^1.7.2",
-		"bits-ui": "^0.21.13",
+		"bits-ui": "^0.21.14",
 		"bootstrap": "^5.3.3",
 		"bootstrap-icons": "^1.11.3",
 		"canvas": "^2.11.2",
@@ -64,6 +64,7 @@
 		"tailwind-merge": "^2.5.2",
 		"tailwind-variants": "^0.2.1",
 		"tailwindcss-animate": "^1.0.7",
-		"textfit": "^2.4.0"
+		"textfit": "^2.4.0",
+		"vaul-svelte": "^0.3.2"
 	}
 }

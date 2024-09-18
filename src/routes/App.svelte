@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import Tangle from './Tangle.svelte';
 	import Presets from './Presets.svelte';
-
+	import Chat from './Chat.svelte';
 	import CamSelector from "./CamSelector.svelte";
 	import axios from 'axios';
 	import Video from "./Video.svelte";
@@ -108,7 +108,7 @@
 
 <div class="container-fluid" id="video-container">
 	<div class="row justify-content-between flex-nowrap ">
-		<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector">
+		<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1 z-30 movedown" id="camselector">
 			<div style="min-height: {commandHeight}px;max-height: {commandHeight}px;">
 				<CamSelector bind:spacerHeight bind:spacerWidth bind:commandHeight bind:camPresets bind:camList={config.camlist} />
 			</div>
@@ -123,11 +123,34 @@
 			</div>
 		</div>
 		<div class="col-auto g-0" id="wrapper">
-			<Video bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth bind:zoom on:doubleclick={handleDoubleClick} on:resizecommand={resizeText} on:sendcmd={sendCommand} />
+			<Video bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth bind:zoom bind:camPresets on:doubleclick={handleDoubleClick} on:resizecommand={resizeText} on:sendcmd={sendCommand} />
 		</div>
 	</div>
 </div>
+<Chat bind:ifHeight />
+<!-- <button class="btn btn-primary z-50" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>
 
+<div class="offcanvas offcanvas-end show" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasRightLabel">Offcanvas right</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost"
+		title="chat"
+		height=50%
+		width=100%
+        >
+	</iframe>
+	<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost"
+		title="chat"
+		height=50%
+		width=100%
+        >
+	</iframe>
+
+  </div>
+</div> -->
 <style>
 	#spacer {
 		height: 100%;
