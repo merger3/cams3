@@ -5,7 +5,7 @@
 	import axios from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import ContextMenu from './ContextMenu.svelte';
-	import type { SwapResponse, Coordinates, Box, RadialPart, RadialMenu } from '$types';
+	import type { SwapResponse, Coordinates, Box, RadialPart, RadialMenu, CamPresets } from '$types';
 	import { Motion } from 'svelte-motion'
 	import { press, type PressCustomEvent, pan, type PanCustomEvent, type GestureCustomEvent } from 'svelte-gestures';
 	import Radial from "./Radial.svelte";
@@ -13,6 +13,7 @@
 
 	export let selector: Tangle;
 	export let commandText: string;
+	export let camPresets: CamPresets;
 
 	const dispatch = createEventDispatcher();
 
@@ -37,10 +38,10 @@
 			frameWidth: ifWidth,
 			frameHeight: ifHeight
 		}).then(function (response) {
-			commandText = response.data.command;
 			if (isClick) {
 				zoom = 100;
 			}
+			commandText = response.data.command;
 			console.log(response);
 		}).catch(function (error) {
 			console.log(error);
@@ -177,34 +178,7 @@
 		isOpen = false;
 	}
 
-	export let zoom: number = 100;
-	let maxZoom: number = 320;
-	let maxZoomTouch: number = 440;
-	function handleWheel(e: WheelEvent) {
-		if (commandText.startsWith("!ptzclick")) {
-			let forceResize: boolean = false;
-			if (e.deltaY < 0) {
-				zoom += 10;
-				if (zoom > maxZoom) {
-					zoom = 10000;
-					forceResize = true;
-				}
-			} else {
-				if (zoom >= 10000) {
-					zoom = maxZoom;
-				} else if (zoom > 0) {
-					zoom -= 10;
-				} 
-				if (zoom < 0) {
-					zoom = 0;
-				}
-			}
-			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
-			if (forceResize) {
-				dispatch('resizecommand');
-			}
-		}
-	}
+	
 
 	let mainMenu: RadialMenu;
 	let radial: Radial;
@@ -246,7 +220,6 @@
 		let moveMenu: RadialMenu = {color: "rgba(149, 91, 157, 1)", rotation: 22.5 - 135, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: moveParts}
 		radial.setRotations(moveMenu);
 
-			
 		let irParts: RadialPart[] = [
 			{angle: 90, action: "iroff", label: "off", icon: "lightbulb-off"},
 			{angle: 90, action: "back", label: "back", icon: "arrow-bar-left"},
@@ -256,10 +229,18 @@
 		let irMenu: RadialMenu = {color: "#212529", rotation: 45, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: irParts}
 		radial.setRotations(irMenu);
 
+		let swapParts: RadialPart[] = [
+			{angle: 150, action: "nextswap", label: "swap", icon: "box-arrow-up-right"},
+			{angle: 60, action: "back", label: "back", icon: "arrow-bar-left"},
+			{angle: 150, action: "nextload", label: "load", icon: "download"},
+		]
+		let swapMenu: RadialMenu = {color: "#212529", rotation: 0, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: swapParts}
+		radial.setRotations(swapMenu);
+
 		let parts: RadialPart[] = [
 			{angle: 120, action: "send", label: "send", icon: "arrow-return-left"},
 			{angle: 60, action: "swap", label: "swap", icon: "menu-button-wide"},
-			{angle: 60, action: "next", label: "next", icon: "arrow-left-right"},
+			{angle: 60, action: "submenu", label: "next", icon: "arrow-left-right", submenu: swapMenu},
 			{angle: 30, action: "submenu", label: "move", icon: "arrows-move", submenu: moveMenu},
 			{angle: 30, action: "submenu", label: "ir", icon: "lightbulb", submenu: irMenu},
 			{angle: 60, action: "reset", label: "reset", icon: "arrow-repeat"},
@@ -289,6 +270,49 @@
 		console.log("completed")
 	}
 
+
+	export let zoom: number = 100;
+	let maxZoom: number = 300;
+	let maxZoomTouch: number = 300;
+	function handleWheel(e: WheelEvent) {
+		if (commandText.startsWith("!ptzclick")) {
+			let forceResize: boolean = false;
+			if (e.deltaY < 0) {
+				if (zoom >= 100) {
+					zoom += 20;
+				} else if (zoom < 10) {
+					zoom += 2
+				} else {
+					zoom += 10;
+				}
+				if (zoom > maxZoom) {
+					zoom = 10000;
+					forceResize = true;
+				}
+			} else {
+				if (zoom >= 10000) {
+					zoom = maxZoom;			
+				} else if (zoom > 0) {
+					if (zoom > 100) {
+						zoom -= 20;
+					} else if (zoom <= 10) {
+						zoom -= 2
+					} else {
+						zoom -= 10;
+					}
+				} 
+				if (zoom < 0) {
+					zoom = 0;
+				}
+
+			}
+			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
+			if (forceResize) {
+				dispatch('resizecommand');
+			}
+		}
+	}
+
 	let notchSizeUp: number, notchSizeDown: number;
 	let panning: boolean = false;
 	function panDown(gestureEvent: GestureCustomEvent) {
@@ -301,8 +325,8 @@
 		if (!commandText.startsWith("!ptzclick")) {
 			return;
 		}
-		notchSizeUp = Math.round(ifHeight * .027);
-		notchSizeDown =  Math.round(ifHeight * .027);
+		notchSizeUp = Math.round(window.innerHeight / 2 * .05);
+		notchSizeDown =  Math.round(window.innerHeight / 2 * .05);
 		lastY = gestureEvent.detail.y;
 		lastX = null;
 		lastNotch = gestureEvent.detail.y;
@@ -322,7 +346,13 @@
 		let panDirection = lastY - gestureEvent.detail.y;
 		let notchDelta = lastNotch - gestureEvent.detail.y;
 		if ((panDirection > 0) && (Math.abs(notchDelta) >= notchSizeUp)) {
-			zoom += 20;
+			if (zoom >= 100) {
+				zoom += 20;
+			} else if (zoom < 10) {
+				zoom += 2
+			} else {
+				zoom += 10;
+			}
 			if (zoom > maxZoomTouch) {
 				zoom = 10000;
 				forceResize = true;
@@ -335,13 +365,19 @@
 			console.log(`move up`)
 		} else if ((panDirection < 0) && (Math.abs(notchDelta) >= notchSizeDown)) {
 			if (zoom >= 10000) {
-					zoom = maxZoomTouch;
-				} else if (zoom > 0) {
+				zoom = maxZoomTouch;			
+			} else if (zoom > 0) {
+				if (zoom > 100) {
+					zoom -= 20;
+				} else if (zoom <= 10) {
+					zoom -= 2
+				} else {
 					zoom -= 10;
-				} 
-				if (zoom < 0) {
-					zoom = 0;
 				}
+			} 
+			if (zoom < 0) {
+				zoom = 0;
+			}
 			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
 			lastNotch = gestureEvent.detail.y;
 			console.log(`move down`)
@@ -415,13 +451,13 @@
 					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 223, 0);" bind:this={overlay} />
 				</ContextMenu>
 
-			<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu}/>
+			<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu}/>
 
 			<!-- <div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/> -->
 			<iframe
 				title="da cameras"
 				id="cams"
-				src="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0"
+				src="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0&autoplay=1&mute=0"
 				class="unselectable"
 				allow="autoplay; fullscreen"
 				allowfullscreen

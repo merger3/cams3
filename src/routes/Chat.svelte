@@ -48,7 +48,7 @@
 			height=50%
 			width=95%
 			/>
-			<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost"
+			<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost&parent=glennpc.com"
 			title="chat"
 			class="ml-auto"
 			height=50%

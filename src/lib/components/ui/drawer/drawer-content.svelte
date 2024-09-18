@@ -13,12 +13,12 @@
 	<DrawerOverlay />
 	<DrawerPrimitive.Content
 		class={cn(
-			"bg-background fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border",
+			"bg-background fixed inset-y-0 right-0 z-50 flex w-[20vw] h-full flex-col border-l rounded-l-[10px]",
 			className
 		)}
 		{...$$restProps}
 	>
-		<div class="bg-muted mx-auto mt-4 h-2 w-[100px] rounded-full"></div>
+		<!-- <div class="bg-muted my-auto ml-4 h-[1000px] w-2 rounded-full"></div> -->
 		<slot />
 	</DrawerPrimitive.Content>
 </DrawerPrimitive.Portal>

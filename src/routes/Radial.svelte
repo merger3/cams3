@@ -2,19 +2,19 @@
 	import { Arc, Group, Shape, Text, TextPath } from "svelte-konva";
 	import Konva from "konva";
 	import { createEventDispatcher, onMount, tick } from 'svelte';
-	import type { RadialPart, RadialMenu, Coordinates, CamPosition, SwapResponse } from '$types';
+	import type { RadialPart, RadialMenu, Coordinates, CamPosition, SwapResponse, CamPresets } from '$types';
 	import axios from 'axios';
 	import _ from 'lodash';
 
 	const dispatch = createEventDispatcher();
-	const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "reset": resetCam, "next": loadNextCam, "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
+	const defaultCMD: string = "​";
+	const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
 
-
-	
 	export let stage: Konva.Stage;
 	export let commandText: string;
 	export let ifWidth: number;
 	export let ifHeight: number;
+	export let camPresets: CamPresets;
 
 	let menuDefinition: RadialMenu;
 	let color: string;
@@ -126,8 +126,15 @@
 	}
 	
 
-	function send() {
-		dispatch("sendcmd");
+	async function send() {
+		if (commandText == defaultCMD) {
+			let response = await axios.post("/click", {x: menuDefinition.location.x, y: menuDefinition.location.y, width: 0, height: 0, frameWidth: ifWidth,frameHeight: ifHeight})
+			commandText = response.data.command;
+			
+			_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
+		} else {
+			dispatch("sendcmd");
+		}
 	}
 
 	function swapMenu() {
@@ -148,6 +155,7 @@
 		}
 
 		commandText = `!resetcam ${camera.cam}`
+		_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
 	}
 	
 	async function moveCMD(direction: string) {
@@ -157,9 +165,7 @@
 		}
 
 		commandText = `!ptzmove ${camera.cam} ${direction}`
-		_.delay(function(text) {
-			dispatch(text);
-		}, 1050, 'sendcmd');
+		_.delay(function(text) {dispatch(text)}, 1050, 'sendcmd');
 	}
 
 	async function irCMD(state: string) {
@@ -171,7 +177,7 @@
 		commandText = `!ptzir ${camera.cam} ${state}`
 	}
 
-	async function loadNextCam() {
+	async function loadNextCam(action: string) {
 		let response = await axios.post('/getSwapMenu', {x: menuDefinition.location.x, y: menuDefinition.location.y, frameWidth: ifWidth, frameHeight: ifHeight});
 		console.log(response)
 		let swaps: SwapResponse = response.data;
@@ -183,11 +189,16 @@
 		if (swaps.swaps!.subentries![0].subentries != null) {
 			return;
 		}
-		commandText = `!swap ${swaps.cam} ${swaps.swaps!.subentries![0].label}`
 
-		_.delay(function(text) {
-			dispatch(text);
-		}, 1050, 'sendcmd');
+		if (action == "swap") {
+			commandText = `!swap ${swaps.cam} ${swaps.swaps!.subentries![0].label}`
+	
+			_.delay(function(text) {dispatch(text)}, 1050, 'sendcmd');
+		} else if (action == "load") {
+			let presetResponse = await axios.post('/getConfig', {camera: swaps.swaps!.subentries![0].label});
+			console.log(presetResponse)
+			camPresets = presetResponse.data.camPresets;
+		}
 	}
 
 	onMount(async () => {
@@ -201,7 +212,7 @@
 
 		context.beginPath();
 		context.arc(0, 0, arc.outerRadius() * 1.75, 0, angle, clockwise);
-		context.arc(0, 0, arc.innerRadius() * .6, angle, 0, !clockwise);
+		context.arc(0, 0, arc.innerRadius() * .5, angle, 0, !clockwise);
 		context.closePath();
 		context.fillStrokeShape(arc);
 	}

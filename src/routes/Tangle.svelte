@@ -2,7 +2,7 @@
 	import { Stage, Layer, Transformer, Rect, Circle, Line, Shape, Arc, Group, type KonvaTouchEvent } from "svelte-konva";
 	import Konva from "konva";
 	import { createEventDispatcher, onMount, tick } from 'svelte';
-	import type { Box, Coordinates } from '$types';
+	import type { Box, Coordinates, CamPresets } from '$types';
 	import Radial from "./Radial.svelte";
 
 	export let stageWidth: number;
@@ -13,6 +13,7 @@
 	export let commandText: string;
 	export let ifWidth: number;
 	export let ifHeight: number;
+	export let camPresets: CamPresets;
 
 	let dot: Konva.Circle;
 	let arrow: Konva.Arrow;
@@ -592,6 +593,6 @@
 				anchor.cornerRadius(anchor.width() / 2);
 			}}} />
 
-		<Radial bind:this={radialMenu} bind:stage bind:commandText bind:ifWidth bind:ifHeight on:sendcmd={bubbleSend} on:openmenu={bubbleOpenMenu} on:closemenu={relisten}/>
+		<Radial bind:this={radialMenu} bind:stage bind:commandText bind:ifWidth bind:ifHeight bind:camPresets on:sendcmd={bubbleSend} on:openmenu={bubbleOpenMenu} on:closemenu={relisten}/>
 	</Layer>
 </Stage>

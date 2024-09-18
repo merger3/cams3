@@ -39,10 +39,10 @@
 	<button style="position: absolute;min-height: {commandHeight}px;max-height: {commandHeight}px;right: 0;top: 0;" id="dropdown-button" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
 		Dropdown button
 	</button>
-	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-2 border-danger-subtle shadow movedown z-40" style="max-height: {spacerHeight - 5}px; max-width: {spacerWidth}px;" data-simplebar>
+	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-2 border-danger-subtle shadow " style="max-height: {spacerHeight - 5}px; max-width: {spacerWidth}px;" data-simplebar>
 		{#each camList as cam, i}
 			{#each cam.cameras as c}
-				<button type="button" on:click={() => getConfig(c)} class="btn btn-secondary btn-sm d-block w-100 mb-2 overflow-hidden movedown z-40">{c}</button>
+				<button type="button" on:click={() => getConfig(c)} class="btn btn-secondary btn-sm d-block w-100 mb-2 overflow-hidden">{c}</button>
 			{/each}
 			{#if i != camList.length - 1}
 				<hr class="dropdown-divider">
