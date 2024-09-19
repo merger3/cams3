@@ -25,7 +25,7 @@
 			</Tabs.List>
 		</Drawer.Header>
 		<Tabs.Content value="alveus" class="h-100 m-0">
-			<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost"
+			<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app"
 			title="chat"
 			class="ml-auto"
 			height=100%
@@ -33,7 +33,7 @@
 			/>
 		</Tabs.Content>
 		<Tabs.Content value="agg" class="h-100 m-0">
-			<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost"
+			<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app"
 			title="chat"
 			class="ml-auto"
 			height=100%
@@ -42,13 +42,13 @@
 			
 		</Tabs.Content>
 		<Tabs.Content value="both" class="h-100 m-0">
-			<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost"
+			<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app"
 			title="chat"
 			class="ml-auto"
 			height=50%
 			width=95%
 			/>
-			<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost"
+			<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app"
 			title="chat"
 			class="ml-auto"
 			height=50%
