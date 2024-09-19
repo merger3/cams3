@@ -42,7 +42,7 @@
 			
 		</Tabs.Content>
 		<Tabs.Content value="both" class="h-100 m-0">
-			<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=alvsanc-cams.app"
+			<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app"
 			title="chat"
 			class="ml-auto"
 			height=50%
