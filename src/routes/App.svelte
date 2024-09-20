@@ -128,7 +128,7 @@
 		</div>
 	</div>
 </div>
-<Chat bind:ifHeight/>
+<Chat bind:ifHeight={commandHeight}/>
 
 
 <style>

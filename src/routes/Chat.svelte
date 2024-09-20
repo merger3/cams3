@@ -12,7 +12,7 @@
    <!-- let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null} -->
 
 
-   <button class="btn btn-outline-secondary z-50 fixed right-0 transform -translate-y-1/2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+   <button class="btn btn-outline-secondary z-50 fixed right-0" style="top: {ifHeight + 5}px;" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
 	Chat
   </button>
 <!-- <Chat bind:ifHeight /> -->
