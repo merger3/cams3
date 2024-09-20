@@ -9,6 +9,7 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
+	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	
 	import _ from 'lodash';
 
@@ -127,30 +128,8 @@
 		</div>
 	</div>
 </div>
-<Chat bind:ifHeight />
-<!-- <button class="btn btn-primary z-50" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>
+<Chat bind:ifHeight/>
 
-<div class="offcanvas offcanvas-end show" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="offcanvasRightLabel">Offcanvas right</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body">
-    <iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost"
-		title="chat"
-		height=50%
-		width=100%
-        >
-	</iframe>
-	<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost"
-		title="chat"
-		height=50%
-		width=100%
-        >
-	</iframe>
-
-  </div>
-</div> -->
 
 <style>
 	#spacer {
