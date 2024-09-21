@@ -8,7 +8,7 @@
 
 	const dispatch = createEventDispatcher();
 	const defaultCMD: string = "​";
-	const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
+	const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "focus": focusCam, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
 
 	export let stage: Konva.Stage;
 	export let commandText: string;
@@ -175,6 +175,17 @@
 		}
 
 		commandText = `!ptzir ${camera.cam} ${state}`
+	}
+
+	async function focusCam() {
+		let camera = await getCamCoordinates({x: menuDefinition.location.x, y: menuDefinition.location.y}, ifWidth, ifHeight);
+		if (!camera.found) {
+			return;
+		}
+
+		commandText = `!ptzfocusr ${camera.cam} 0`
+
+		dispatch('resetfocus');
 	}
 
 	async function loadNextCam(action: string) {

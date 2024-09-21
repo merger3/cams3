@@ -230,16 +230,17 @@
 		radial.setRotations(irMenu);
 
 		let swapParts: RadialPart[] = [
-			{angle: 150, action: "nextswap", label: "swap", icon: "box-arrow-up-right"},
+			{angle: 120, action: "nextswap", label: "swap", icon: "box-arrow-up-right"},
 			{angle: 60, action: "back", label: "back", icon: "arrow-bar-left"},
-			{angle: 150, action: "nextload", label: "load", icon: "download"},
+			{angle: 60, action: "swap", label: "swap", icon: "menu-button-wide"},
+			{angle: 120, action: "nextload", label: "load", icon: "download"},
 		]
 		let swapMenu: RadialMenu = {color: "#212529", rotation: 0, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: swapParts}
 		radial.setRotations(swapMenu);
 
 		let parts: RadialPart[] = [
 			{angle: 120, action: "send", label: "send", icon: "arrow-return-left"},
-			{angle: 60, action: "swap", label: "swap", icon: "menu-button-wide"},
+			{angle: 60, action: "focus", label: "focus", icon: "eye"},
 			{angle: 60, action: "submenu", label: "next", icon: "arrow-left-right", submenu: swapMenu},
 			{angle: 30, action: "submenu", label: "move", icon: "arrows-move", submenu: moveMenu},
 			{angle: 30, action: "submenu", label: "ir", icon: "lightbulb", submenu: irMenu},
@@ -275,8 +276,8 @@
 	let maxZoom: number = 300;
 	let maxZoomTouch: number = 300;
 	function handleWheel(e: WheelEvent) {
+		let forceResize: boolean = false;
 		if (commandText.startsWith("!ptzclick")) {
-			let forceResize: boolean = false;
 			if (e.deltaY < 0) {
 				if (zoom >= 100) {
 					zoom += 20;
@@ -310,11 +311,19 @@
 			if (forceResize) {
 				dispatch('resizecommand');
 			}
+		} else if (commandText.startsWith("!ptzfocusr")) {
+			if (e.deltaY < 0) {
+				zoom += 50;
+			} else {
+				zoom -= 50;
+			}
+			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
 		}
 	}
 
 	let notchSizeUp: number, notchSizeDown: number;
 	let panning: boolean = false;
+	let panInitialized: boolean = false;
 	function panDown(gestureEvent: GestureCustomEvent) {
 		if (gestureEvent.detail.pointersCount < 2) {
 			return;
@@ -322,22 +331,25 @@
 		console.log("panning true")
 		panning = true;
 		selector.removeHandlers();
-		if (!commandText.startsWith("!ptzclick")) {
+		if (!commandText.startsWith("!ptzclick") && !commandText.startsWith("!ptzfocusr")) {
 			return;
 		}
 		notchSizeUp = Math.round(window.innerHeight / 2 * .05);
 		notchSizeDown =  Math.round(window.innerHeight / 2 * .05);
-		lastY = gestureEvent.detail.y;
-		lastX = null;
-		lastNotch = gestureEvent.detail.y;
 		lastTime = gestureEvent.timeStamp;
 	}
 
-	let lastNotch: number, lastTime: number, lastY: number;
+	let lastNotch: number, lastTime: number, lastY: number = -1;
 	let lastX: number | null;
 	function panMove(gestureEvent: GestureCustomEvent) {
 		if (!panning || gestureEvent.detail.pointersCount < 2 || lastY == gestureEvent.detail.y || gestureEvent.timeStamp == lastTime) {
 			return;
+		}
+		if (!panInitialized) {
+			lastY = gestureEvent.detail.y;
+			lastX = null;
+			lastNotch = gestureEvent.detail.y;
+			panInitialized = true;
 		}
 		if (lastX && (Math.abs(lastX - gestureEvent.detail.x) > 5)) {
 			return;
@@ -345,44 +357,55 @@
 		let forceResize: boolean = false;
 		let panDirection = lastY - gestureEvent.detail.y;
 		let notchDelta = lastNotch - gestureEvent.detail.y;
-		if ((panDirection > 0) && (Math.abs(notchDelta) >= notchSizeUp)) {
-			if (zoom >= 100) {
-				zoom += 20;
-			} else if (zoom < 10) {
-				zoom += 2
-			} else {
-				zoom += 10;
-			}
-			if (zoom > maxZoomTouch) {
-				zoom = 10000;
-				forceResize = true;
-			}
-			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
-			if (forceResize) {
-				dispatch('resizecommand');
-			}
-			lastNotch = gestureEvent.detail.y;
-			console.log(`move up`)
-		} else if ((panDirection < 0) && (Math.abs(notchDelta) >= notchSizeDown)) {
-			if (zoom >= 10000) {
-				zoom = maxZoomTouch;			
-			} else if (zoom > 0) {
-				if (zoom > 100) {
-					zoom -= 20;
-				} else if (zoom <= 10) {
-					zoom -= 2
+		if (commandText.startsWith("!ptzclick")) {
+			if ((panDirection > 0) && (Math.abs(notchDelta) >= notchSizeUp)) {
+				if (zoom >= 100) {
+					zoom += 20;
+				} else if (zoom < 10) {
+					zoom += 2
 				} else {
-					zoom -= 10;
+					zoom += 10;
 				}
-			} 
-			if (zoom < 0) {
-				zoom = 0;
+				if (zoom > maxZoomTouch) {
+					zoom = 10000;
+					forceResize = true;
+				}
+				lastNotch = gestureEvent.detail.y;
+				console.log(`move up`)
+			} else if ((panDirection < 0) && (Math.abs(notchDelta) >= notchSizeDown)) {
+				if (zoom >= 10000) {
+					zoom = maxZoomTouch;			
+				} else if (zoom > 0) {
+					if (zoom > 100) {
+						zoom -= 20;
+					} else if (zoom <= 10) {
+						zoom -= 2
+					} else {
+						zoom -= 10;
+					}
+				} 
+				if (zoom < 0) {
+					zoom = 0;
+				}
+				lastNotch = gestureEvent.detail.y;
+				console.log(`move down`)
 			}
-			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
-			lastNotch = gestureEvent.detail.y;
-			console.log(`move down`)
+		} else {
+			if ((panDirection > 0) && (Math.abs(notchDelta) >= notchSizeUp)) {
+				zoom += 50
+				lastNotch = gestureEvent.detail.y;
+				console.log(`move up`)
+			} else if ((panDirection < 0) && (Math.abs(notchDelta) >= notchSizeDown)) {
+				zoom -= 50;
+				lastNotch = gestureEvent.detail.y;
+				console.log(`move down`)
+			}
 		}
-
+		
+		commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
+		if (forceResize) {
+			dispatch('resizecommand');
+		}
 		lastTime = gestureEvent.timeStamp;
 		lastX = gestureEvent.detail.x;
 		lastY = gestureEvent.detail.y;
@@ -390,6 +413,7 @@
 
 	function panUp(gestureEvent: GestureCustomEvent) {
 		panning = false;
+		panInitialized = false;
 		jQuery('.movedown').css('z-index', '');
 	}
 
@@ -451,7 +475,7 @@
 					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 223, 0);" bind:this={overlay} />
 				</ContextMenu>
 
-			<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu}/>
+			<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu} on:resetfocus={(e) => {zoom = 0;}}/>
 
 			<!-- <div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/>  http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0&autoplay=1&mute=0-->
 

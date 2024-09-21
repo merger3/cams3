@@ -500,6 +500,11 @@
 		dispatch("sendcmd");
 	}
 
+	function bubbleFocus(e: CustomEvent) {
+		console.log("bubbling focus")
+		dispatch("resetfocus");
+	}
+
 	function bubbleOpenMenu(e: CustomEvent) {
 		console.log(e);
 		dispatch("openmenu", e.detail);
@@ -593,6 +598,6 @@
 				anchor.cornerRadius(anchor.width() / 2);
 			}}} />
 
-		<Radial bind:this={radialMenu} bind:stage bind:commandText bind:ifWidth bind:ifHeight bind:camPresets on:sendcmd={bubbleSend} on:openmenu={bubbleOpenMenu} on:closemenu={relisten}/>
+		<Radial bind:this={radialMenu} bind:stage bind:commandText bind:ifWidth bind:ifHeight bind:camPresets on:sendcmd={bubbleSend} on:openmenu={bubbleOpenMenu} on:resetfocus={bubbleFocus} on:closemenu={relisten}  />
 	</Layer>
 </Stage>

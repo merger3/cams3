@@ -21,12 +21,12 @@
 	<Tabs.Root value="both" class="w-100 h-100">
 	<div class="offcanvas-header p-2">
 	 
-		<button type="button" class="btn-close m-0 me-auto " data-bs-dismiss="offcanvas" aria-label="Close"></button>
 		<Tabs.List class="grid w-full grid-cols-3 w-100 ms-1 me-0">
 			<Tabs.Trigger value="both">Chat</Tabs.Trigger>
 			<Tabs.Trigger value="alveus">Alveus</Tabs.Trigger>
 			<Tabs.Trigger value="agg">AGG</Tabs.Trigger>
 		</Tabs.List>
+		<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 	</div>
 	<div class="offcanvas-body h-100 p-0">
 			<Tabs.Content value="alveus" class="h-100 m-0">
