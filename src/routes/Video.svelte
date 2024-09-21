@@ -232,10 +232,10 @@
 		let swapParts: RadialPart[] = [
 			{angle: 120, action: "nextswap", label: "swap", icon: "box-arrow-up-right"},
 			{angle: 60, action: "back", label: "back", icon: "arrow-bar-left"},
-			{angle: 60, action: "swap", label: "swap", icon: "menu-button-wide"},
 			{angle: 120, action: "nextload", label: "load", icon: "download"},
+			{angle: 60, action: "swap", label: "swap", icon: "menu-button-wide"},
 		]
-		let swapMenu: RadialMenu = {color: "#212529", rotation: 0, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: swapParts}
+		let swapMenu: RadialMenu = {color: "#212529", rotation: 30, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: swapParts}
 		radial.setRotations(swapMenu);
 
 		let parts: RadialPart[] = [
