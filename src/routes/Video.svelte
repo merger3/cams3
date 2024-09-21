@@ -240,8 +240,8 @@
 
 		let parts: RadialPart[] = [
 			{angle: 120, action: "send", label: "send", icon: "arrow-return-left"},
-			{angle: 60, action: "focus", label: "focus", icon: "eye"},
 			{angle: 60, action: "submenu", label: "next", icon: "arrow-left-right", submenu: swapMenu},
+			{angle: 60, action: "focus", label: "focus", icon: "eye"},
 			{angle: 30, action: "submenu", label: "move", icon: "arrows-move", submenu: moveMenu},
 			{angle: 30, action: "submenu", label: "ir", icon: "lightbulb", submenu: irMenu},
 			{angle: 60, action: "reset", label: "reset", icon: "arrow-repeat"},
