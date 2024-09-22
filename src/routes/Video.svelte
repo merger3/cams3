@@ -345,6 +345,9 @@
 		if (!panning || gestureEvent.detail.pointersCount < 2 || lastY == gestureEvent.detail.y || gestureEvent.timeStamp == lastTime) {
 			return;
 		}
+		if (!commandText.startsWith("!ptzclick") && !commandText.startsWith("!ptzfocusr")) {
+			return;
+		}
 		if (!panInitialized) {
 			lastY = gestureEvent.detail.y;
 			lastX = null;
@@ -465,7 +468,7 @@
 				</div>
 			</div>
 		</Motion>
-		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-30 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
+		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-40 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
 	</div>
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px;">
 		<div class="ratio ratio-16x9">
