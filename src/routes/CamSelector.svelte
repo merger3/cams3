@@ -5,6 +5,7 @@
 	import 'simplebar/dist/simplebar.css';
 	import type { CamList, CamPresets } from '$types';
 	import axios from 'axios';
+	import { server, user } from '$lib/stores';
 
 	import ResizeObserver from 'resize-observer-polyfill';
 	
@@ -20,7 +21,7 @@
 	const cars = ["Saab", "Volvo", "BMW", "Hondaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "Toyota", "Nissan", "Ford", "Chevy", "GM", "Kia", "Hyundai", "Cadillac", "Lincoln", "Mini", "Audi", "Lexus", "Acura", "Porsche"];
 
 	function getConfig(cam: string) {
-		axios.post("/getConfig", {
+		$server.post("/getConfig", {
 			camera: cam
 		}).then(function (response) {
 			camPresets = response.data.camPresets;

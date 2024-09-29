@@ -9,10 +9,12 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import * as Tabs from "$lib/components/ui/tabs/index.js";
+	import { token, user, server } from '$lib/stores';
 	
 	import _ from 'lodash';
 
+
+	// import { userRole } from './stores';
 	const defaultCMD: string = "​";
 
 	export let config: Config;
@@ -31,7 +33,7 @@
 	let resize: HTMLElement;
 
 	async function sendCommand() {
-		axios.post('/send', {
+		$server.post('/send', {
 			command: commandText
 		}).then(function (response) {
 			console.log(response);
@@ -42,10 +44,20 @@
 		selector.cleanUp();
 	}
 
+	
+	
+	async function checkCache(e: any): Promise<string> {
+		
+		
+		let response = await $server.post('/CheckCache', {position: e.detail.position});
+
+		return response.data.camera as string
+	}
+
 	async function handleDoubleClick(e: any) {
 		console.log("double click registered highest level")
 		console.log(`ifWidth: ${ifWidth}, ifHeight: ${ifHeight}`)
-		axios.post('/getClickedCam', {
+		$server.post('/getClickedCam', {
 			x: e.detail.x,
 			y: e.detail.y,
 			frameWidth: ifWidth,
@@ -91,10 +103,33 @@
 		fit(resize, {min_size: 8});
 	}
 
-	var resizeText = _.throttle(resizeTextRaw, 50, { 'leading': true, 'trailing': false });
+	var resizeText = _.throttle(resizeTextRaw, 20, { 'leading': true, 'trailing': false });
 
 	let resizeObserverDefined = false;
 	onMount(() => {
+		 // Parse the fragment from the URL
+		const fragment = window.location.hash.substring(1);
+		const params = new URLSearchParams(fragment);
+
+		// Extract access_token
+		const accessToken = params.get("access_token");
+		const state = params.get("state");
+		const scope = params.get("scope");
+		$user = "merger3"
+		$token = `${accessToken}`
+
+		console.log($token)
+		//$token = `oauth:51esxuzacga63qijrpwczxq95m8ejc`
+
+		$server = axios.create({
+			timeout: 0,
+			auth: {
+				username: 'merger3',
+				password: 'Merger!23'
+			},
+			headers: {'X-Twitch-Token': $token}
+		});
+
 		window.ResizeObserver = ResizeObserver;
 		resizeObserverDefined = true;
 		jQuery(".movedown").on('wheel', handleWheel)

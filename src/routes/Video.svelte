@@ -10,6 +10,7 @@
 	import { press, type PressCustomEvent, pan, type PanCustomEvent, type GestureCustomEvent } from 'svelte-gestures';
 	import Radial from "./Radial.svelte";
 	import _ from 'lodash';
+	import { server } from '$lib/stores';
 
 	export let selector: Tangle;
 	export let commandText: string;
@@ -30,7 +31,8 @@
 		}
 		console.log("getting data")
 		console.log(`ifWidth: ${ifWidth}, ifHeight: ${ifHeight}`)
-		axios.post(clickRoute, {
+		
+		$server.post(clickRoute, {
 			x: rect.x(),
 			y: rect.y(),
 			width: rect.width(),
@@ -47,6 +49,8 @@
 			console.log(error);
 		});
 	}
+
+	
 
 	function makeSwaps(e: any) {
 		commandText = `!swap ${e.detail.swaps[0]} ${e.detail.swaps[1]}`
@@ -154,7 +158,7 @@
 	let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null}
 	function openMenu(coords: Coordinates) {
 		isRendered = true;
-		axios.post('/getSwapMenu', {
+		$server.post('/getSwapMenu', {
 			x: coords.x,
 			y: coords.y,
 			frameWidth: ifWidth,
@@ -485,7 +489,7 @@
 			<iframe
 				title="da cameras"
 				id="cams"
-				src="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0&autoplay=1&mute=0"
+				src="http://merger:Merger!23@74.208.238.87:8888/ptz-alv?controls=0&autoplay=1&mute=0"
 				class="unselectable"
 				allow="autoplay; fullscreen"
 				allowfullscreen

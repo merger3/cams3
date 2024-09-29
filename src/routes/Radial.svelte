@@ -5,6 +5,7 @@
 	import type { RadialPart, RadialMenu, Coordinates, CamPosition, SwapResponse, CamPresets } from '$types';
 	import axios from 'axios';
 	import _ from 'lodash';
+	import { server, user } from '$lib/stores';
 
 	const dispatch = createEventDispatcher();
 	const defaultCMD: string = "​";
@@ -128,7 +129,7 @@
 
 	async function send() {
 		if (commandText == defaultCMD) {
-			let response = await axios.post("/click", {x: menuDefinition.location.x, y: menuDefinition.location.y, width: 0, height: 0, frameWidth: ifWidth,frameHeight: ifHeight})
+			let response = await $server.post("/click", {x: menuDefinition.location.x, y: menuDefinition.location.y, width: 0, height: 0, frameWidth: ifWidth,frameHeight: ifHeight})
 			commandText = response.data.command;
 			
 			_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
@@ -189,7 +190,7 @@
 	}
 
 	async function loadNextCam(action: string) {
-		let response = await axios.post('/getSwapMenu', {x: menuDefinition.location.x, y: menuDefinition.location.y, frameWidth: ifWidth, frameHeight: ifHeight});
+		let response = await $server.post('/getSwapMenu', {x: menuDefinition.location.x, y: menuDefinition.location.y, frameWidth: ifWidth, frameHeight: ifHeight});
 		console.log(response)
 		let swaps: SwapResponse = response.data;
 
@@ -206,7 +207,7 @@
 	
 			_.delay(function(text) {dispatch(text)}, 1050, 'sendcmd');
 		} else if (action == "load") {
-			let presetResponse = await axios.post('/getConfig', {camera: swaps.swaps!.subentries![0].label});
+			let presetResponse = await $server.post('/getConfig', {camera: swaps.swaps!.subentries![0].label});
 			console.log(presetResponse)
 			camPresets = presetResponse.data.camPresets;
 		}
@@ -241,7 +242,7 @@
 
 	async function getCamCoordinates(coords: Coordinates, width: number, height: number): Promise<CamPosition> {
 		try {
-			let response = await axios.post('/getcam', {
+			let response = await $server.post('/getcam', {
 			x: coords.x,
 			y: coords.y,
 			frameWidth: width,

@@ -60,3 +60,10 @@ interface RadialPart {
 	submenu?: RadialMenu | undefined;
 	rotation?: number;
 }
+
+interface CamRequest {
+	coordinates: Coordinates;
+	width: number;
+	height: number;
+	index: number;
+}

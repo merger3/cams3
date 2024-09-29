@@ -12,6 +12,7 @@
 		"moduleResolution": "bundler",
 		"paths": {
 			"$types": ["./src/types"],
+			"$stores": ["./src/lib/stores.ts"],
 			"$lib": [
 				"./src/lib"
 			],
