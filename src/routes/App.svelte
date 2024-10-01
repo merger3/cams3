@@ -9,8 +9,7 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { token, user, server } from '$lib/stores';
-	
+	import { token, user, server, GetCam } from '$lib/stores';
 	import _ from 'lodash';
 
 
@@ -44,24 +43,18 @@
 		selector.cleanUp();
 	}
 
-	
-	
-	async function checkCache(e: any): Promise<string> {
-		
-		
-		let response = await $server.post('/CheckCache', {position: e.detail.position});
-
-		return response.data.camera as string
-	}
 
 	async function handleDoubleClick(e: any) {
 		console.log("double click registered highest level")
+		console.log(e)
 		console.log(`ifWidth: ${ifWidth}, ifHeight: ${ifHeight}`)
-		$server.post('/getClickedCam', {
-			x: e.detail.x,
-			y: e.detail.y,
-			frameWidth: ifWidth,
-			frameHeight: ifHeight
+
+		// Verify that e.detail.position is actually an integer before passing it
+		// Or verify that its in the zone group  
+		let cam = await GetCam({coordinates: {x: e.detail.x, y: e.detail.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: e.detail.position}, $server)
+		
+		$server.post('/camera/presets', {
+			camera: cam
 		}).then(function (response) {
 			camPresets = response.data.camPresets;
 			console.log(response);
@@ -103,7 +96,7 @@
 		fit(resize, {min_size: 8});
 	}
 
-	var resizeText = _.throttle(resizeTextRaw, 20, { 'leading': true, 'trailing': false });
+	var resizeText = _.throttle(resizeTextRaw, 20, { 'leading': true, 'trailing': true });
 
 	let resizeObserverDefined = false;
 	onMount(() => {
@@ -141,6 +134,17 @@
 
 
 </script>
+
+<svelte:head>
+	<script lang="ts">
+		const fragment = window.location.hash.substring(1);
+		const regex = new RegExp('access_token=\\w+');
+		if (fragment == "" || !regex.test(fragment)) {
+			console.log("redirecting")
+			window.location.replace("/login");
+		}
+	</script>
+</svelte:head>
 
 <div class="container-fluid" id="video-container">
 	<div class="row justify-content-between flex-nowrap ">

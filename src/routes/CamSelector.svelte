@@ -21,7 +21,7 @@
 	const cars = ["Saab", "Volvo", "BMW", "Hondaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "Toyota", "Nissan", "Ford", "Chevy", "GM", "Kia", "Hyundai", "Cadillac", "Lincoln", "Mini", "Audi", "Lexus", "Acura", "Porsche"];
 
 	function getConfig(cam: string) {
-		$server.post("/getConfig", {
+		$server.post("/camera/presets", {
 			camera: cam
 		}).then(function (response) {
 			camPresets = response.data.camPresets;

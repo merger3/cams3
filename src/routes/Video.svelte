@@ -129,7 +129,7 @@
 		// zones = [{x: origin, y: origin, height: height, width: width, zone: 1}];
 	}
 
-	var resizeIframe = _.throttle(resizeIframeRaw, 50, { 'leading': true, 'trailing': false });
+	var resizeIframe = _.throttle(resizeIframeRaw, 50, { 'leading': true, 'trailing': true });
 
 	let rightClickCoords: Coordinates = { x: 0, y: 0 };
 	let menuOpen: boolean = false;
@@ -158,7 +158,7 @@
 	let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null}
 	function openMenu(coords: Coordinates) {
 		isRendered = true;
-		$server.post('/getSwapMenu', {
+		$server.post('/camera/swaps', {
 			x: coords.x,
 			y: coords.y,
 			frameWidth: ifWidth,
@@ -286,9 +286,9 @@
 				if (zoom >= 100) {
 					zoom += 20;
 				} else if (zoom < 10) {
-					zoom += 2
+					zoom += 5;
 				} else {
-					zoom += 10;
+					zoom += 5;
 				}
 				if (zoom > maxZoom) {
 					zoom = 10000;
@@ -301,9 +301,9 @@
 					if (zoom > 100) {
 						zoom -= 20;
 					} else if (zoom <= 10) {
-						zoom -= 2
+						zoom -= 5;
 					} else {
-						zoom -= 10;
+						zoom -= 5;
 					}
 				} 
 				if (zoom < 0) {
@@ -317,9 +317,9 @@
 			}
 		} else if (commandText.startsWith("!ptzfocusr")) {
 			if (e.deltaY < 0) {
-				zoom += 50;
+				zoom += 25;
 			} else {
-				zoom -= 50;
+				zoom -= 25;
 			}
 			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
 		}
@@ -369,9 +369,9 @@
 				if (zoom >= 100) {
 					zoom += 20;
 				} else if (zoom < 10) {
-					zoom += 2
+					zoom += 5;
 				} else {
-					zoom += 10;
+					zoom += 5;
 				}
 				if (zoom > maxZoomTouch) {
 					zoom = 10000;
@@ -386,9 +386,9 @@
 					if (zoom > 100) {
 						zoom -= 20;
 					} else if (zoom <= 10) {
-						zoom -= 2
+						zoom -= 5;
 					} else {
-						zoom -= 10;
+						zoom -= 5;
 					}
 				} 
 				if (zoom < 0) {
@@ -399,11 +399,11 @@
 			}
 		} else {
 			if ((panDirection > 0) && (Math.abs(notchDelta) >= notchSizeUp)) {
-				zoom += 50
+				zoom += 25
 				lastNotch = gestureEvent.detail.y;
 				console.log(`move up`)
 			} else if ((panDirection < 0) && (Math.abs(notchDelta) >= notchSizeDown)) {
-				zoom -= 50;
+				zoom -= 25;
 				lastNotch = gestureEvent.detail.y;
 				console.log(`move down`)
 			}

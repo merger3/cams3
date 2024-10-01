@@ -240,14 +240,21 @@
 		if (clickTimeout) {
 			clearTimeout(clickTimeout);
 		}
+
 		stage.off('pointermove');
 		stage.off('pointerup');
 		stage.off("pointerdblclick", handleStageDblClick)
-		let mousePos = layer.getRelativePointerPosition();
+		let mousePos = stage.getPointerPosition();
 		console.log(mousePos?.x, mousePos?.y)
+		clickedShape = stage.getIntersection({x: mousePos!.x, y: mousePos!.y});
+		if (!clickedShape) {
+			console.log("no shape clicked")
+			return;
+		}
 		dispatch("doubleclick", {
 			x: mousePos!.x,
-			y: mousePos!.y
+			y: mousePos!.y,
+			position: clickedShape.name()
 		})
 	}
 
@@ -513,7 +520,7 @@
 	onMount(async () => {
 		await tick();
 		dispatch("forceiframeresize");
-		// layer.toggleHitCanvas();
+		layer.toggleHitCanvas();
    
  	});
 

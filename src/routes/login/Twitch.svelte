@@ -8,9 +8,8 @@
 
 <div>
     <button class="btn btn-outline-primary center">    
-        <a href={link}> Button </a>
+        <a href={link}> Log in </a>
     </button>
-    Hello World!
 </div>
 
 <style>
@@ -22,4 +21,4 @@
       -ms-transform: translate(-50%, -50%);
       transform: translate(-50%, -50%);
     }
-    </style>
+</style>

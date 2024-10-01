@@ -63,7 +63,7 @@ interface RadialPart {
 
 interface CamRequest {
 	coordinates: Coordinates;
-	width: number;
-	height: number;
-	index: number;
+	frameWidth: number;
+	frameHeight: number;
+	position: number;
 }
