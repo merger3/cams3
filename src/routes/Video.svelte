@@ -205,7 +205,7 @@
 	function pressHandler(event: PressCustomEvent) {
 		console.log("Press registered")
 		console.log(event)
-		if (!stagePressed || panning || rightClick) {
+		if (!stagePressed || panning) {
 			console.log(`Returning early. stagePressed: ${stagePressed}, panning: ${panning}`)
 			return;
 		}
