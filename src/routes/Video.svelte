@@ -39,9 +39,6 @@
 			frameWidth: ifWidth,
 			frameHeight: ifHeight
 		}).then(function (response) {
-			if (isClick) {
-				zoom = 100;
-			}
 			commandText = response.data.command;
 			console.log(response);
 		}).catch(function (error) {
