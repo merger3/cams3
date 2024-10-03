@@ -2,7 +2,6 @@
 	import { onMount, createEventDispatcher } from 'svelte';
 	import Konva from "konva";
 	import Tangle from './Tangle.svelte';
-	import axios from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import ContextMenu from './ContextMenu.svelte';
 	import type { SwapResponse, Coordinates, Box, RadialPart, RadialMenu, CamPresets } from '$types';
@@ -10,7 +9,7 @@
 	import { press, type PressCustomEvent, pan, type PanCustomEvent, type GestureCustomEvent } from 'svelte-gestures';
 	import Radial from "./Radial.svelte";
 	import _ from 'lodash';
-	import { server } from '$lib/stores';
+	import { server, GetCam } from '$lib/stores';
 
 	export let selector: Tangle;
 	export let commandText: string;
@@ -104,7 +103,6 @@
 		initializeZones(ifHeight, ifWidth);
 
 		let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
-		console.log(overlayBox)
 		mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y, height: overlayBox.height, width: overlayBox.width}
 
 	}
@@ -156,13 +154,30 @@
 	let isRendered: boolean = true;
 
 	let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null}
-	function openMenu(coords: Coordinates) {
+	async function openMenu(coords: Coordinates, target: number | null = null) {
+		if (!target) {
+			let shape = selector.getClickedShape(coords)
+			if (!shape || !selector.testZone(shape)) {
+				console.log("Shape was not clicked")
+				if (shape) {
+					console.log(shape)
+				}
+				console.log(coords)
+				return;
+			}
+			target = Number(shape.name())
+		}
+
+		
+		let cam = await GetCam({coordinates: {x: coords.x, y: coords.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: target}, $server)
+	
+		if (!cam.found) {
+			return;
+		}
+
 		isRendered = true;
 		$server.post('/camera/swaps', {
-			x: coords.x,
-			y: coords.y,
-			frameWidth: ifWidth,
-			frameHeight: ifHeight
+			camera: cam.name
 		}).then(function (response) {
 			swaps = response.data;
 			console.log(response);
@@ -183,7 +198,7 @@
 	}
 
 	
-
+	// This shouldn't be global, pass it to the places that need it
 	let mainMenu: RadialMenu;
 	let radial: Radial;
 	function pressHandler(event: PressCustomEvent) {
@@ -191,6 +206,11 @@
 		console.log(event)
 		if (!stagePressed || panning) {
 			console.log(`Returning early. stagePressed: ${stagePressed}, panning: ${panning}`)
+			return;
+		}
+		let shape = selector.getClickedShape({x: event.detail.x, y: event.detail.y})
+		if (!shape || !selector.testZone(shape)) {
+			console.log("Shape was not clicked")
 			return;
 		}
 		console.log("remove handlers")
@@ -203,12 +223,13 @@
 			clearTimeout(clickTimeout);
 		}
 
-		setupRadials(event);
+		setupRadials(event, shape);
 		radial.redefine(mainMenu);
 		console.log("completed")
 	}
 
-	function setupRadials(event: PressCustomEvent) {
+	function setupRadials(event: PressCustomEvent, target: Konva.Shape) {
+		let zone = Number(target.name())
 		let rect = overlay.getBoundingClientRect()
 		
 		let moveParts: RadialPart[] = [
@@ -221,7 +242,7 @@
 			{angle: 45, action: "left", label: "left", icon: "arrow-left"},
 			{angle: 45, action: "upleft", label: "upleft", icon: "arrow-up-left"},
 		]
-		let moveMenu: RadialMenu = {color: "rgba(149, 91, 157, 1)", rotation: 22.5 - 135, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: moveParts}
+		let moveMenu: RadialMenu = {color: "rgba(149, 91, 157, 1)", rotation: 22.5 - 135, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: moveParts, target: zone}
 		radial.setRotations(moveMenu);
 
 		let irParts: RadialPart[] = [
@@ -230,7 +251,7 @@
 			{angle: 90, action: "iron", label: "on", icon: "lightbulb-fill"},
 			{angle: 90, action: "irauto", label: "auto", icon: "sunrise"},
 		]
-		let irMenu: RadialMenu = {color: "#212529", rotation: 45, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: irParts}
+		let irMenu: RadialMenu = {color: "#212529", rotation: 45, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: irParts, target: zone}
 		radial.setRotations(irMenu);
 
 		let swapParts: RadialPart[] = [
@@ -239,7 +260,7 @@
 			{angle: 120, action: "nextload", label: "load", icon: "download"},
 			{angle: 60, action: "swap", label: "swap", icon: "menu-button-wide"},
 		]
-		let swapMenu: RadialMenu = {color: "#212529", rotation: 30, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: swapParts}
+		let swapMenu: RadialMenu = {color: "#212529", rotation: 30, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: swapParts, target: zone}
 		radial.setRotations(swapMenu);
 
 		let parts: RadialPart[] = [
@@ -250,7 +271,7 @@
 			{angle: 30, action: "submenu", label: "ir", icon: "lightbulb", submenu: irMenu},
 			{angle: 60, action: "reset", label: "reset", icon: "arrow-repeat"},
 		]
-		mainMenu = {color: "#212529", rotation: -90, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, previousMenu: undefined, parts: parts}
+		mainMenu = {color: "#212529", rotation: -90, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, previousMenu: undefined, parts: parts, target: zone}
 		radial.setRotations(mainMenu);
 
 		moveMenu.previousMenu = mainMenu;
@@ -271,7 +292,7 @@
 		selector.removeHandlers();
 
 		stageOverlay.dispatchEvent(rightClickEvent);
-		openMenu(e.detail.camCoordinates);
+		openMenu(e.detail.camCoordinates, e.detail.zone);
 		console.log("completed")
 	}
 
@@ -489,7 +510,7 @@
 			<iframe
 				title="da cameras"
 				id="cams"
-				src="http://merger:Merger!23@74.208.238.87:8888/ptz-alv?controls=0&autoplay=1&mute=0"
+				src="http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0&autoplay=1&mute=0"
 				class="unselectable"
 				allow="autoplay; fullscreen"
 				allowfullscreen

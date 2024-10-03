@@ -47,6 +47,7 @@ interface RadialMenu {
 	color: string;
 	rotation: number;
 	location: Coordinates;
+	target: number;
 	previousMenu?: RadialMenu | undefined;
 	parts: RadialPart[];
 }
@@ -66,4 +67,11 @@ interface CamRequest {
 	frameWidth: number;
 	frameHeight: number;
 	position: number;
+}
+
+interface CamResponse {
+	found: boolean;
+	name: string;
+	position: number;
+	cacheHit: boolean;
 }

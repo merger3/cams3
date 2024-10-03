@@ -2,10 +2,9 @@
 	import { Arc, Group, Shape, Text, TextPath } from "svelte-konva";
 	import Konva from "konva";
 	import { createEventDispatcher, onMount, tick } from 'svelte';
-	import type { RadialPart, RadialMenu, Coordinates, CamPosition, SwapResponse, CamPresets } from '$types';
-	import axios from 'axios';
+	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, CamPresets } from '$types';
 	import _ from 'lodash';
-	import { server, user } from '$lib/stores';
+	import { server, GetCam } from '$lib/stores';
 
 	const dispatch = createEventDispatcher();
 	const defaultCMD: string = "​";
@@ -132,66 +131,80 @@
 		if (commandText == defaultCMD) {
 			let response = await $server.post("/click", {x: menuDefinition.location.x, y: menuDefinition.location.y, width: 0, height: 0, frameWidth: ifWidth,frameHeight: ifHeight})
 			commandText = response.data.command;
-			
-			_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
-		} else {
-			dispatch("sendcmd");
+			// _.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
 		}
+
+		dispatch("sendcmd");
 	}
 
 	function swapMenu() {
+		// let layer = stage.findOne('#mainlayer') as Konva.Layer;
+		// let mousePos = layer.getRelativePointerPosition();
+
 		let mousePos = stage.getPointerPosition();
 		if (!mousePos) {
 			return;
 		}
 		dispatch("openmenu", {
 			camCoordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y},
+			zone: menuDefinition.target,
 			menuPosition: {x: mousePos.x, y: mousePos.y}
 		});
 	}
 
 	async function resetCam() {
-		let camera = await getCam({x: menuDefinition.location.x, y: menuDefinition.location.y}, ifWidth, ifHeight);
-		if (!camera.found) {
+		let cam = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
+	
+		if (!cam.found) {
 			return;
 		}
 
-		commandText = `!resetcam ${camera.cam}`
-		_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
+		commandText = `!resetcam ${cam.name}`
+		if (cam.cacheHit) {
+			dispatch('sendcmd');
+		} else {
+			_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
+		}
 	}
 	
 	async function moveCMD(direction: string) {
-		let camera = await getCam({x: menuDefinition.location.x, y: menuDefinition.location.y}, ifWidth, ifHeight);
+		let camera = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
 		if (!camera.found) {
 			return;
 		}
 
-		commandText = `!ptzmove ${camera.cam} ${direction}`
-		_.delay(function(text) {dispatch(text)}, 1050, 'sendcmd');
+		commandText = `!ptzmove ${camera.name} ${direction}`
+		if (camera.cacheHit) {
+			dispatch('sendcmd');
+		} else {
+			_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
+		}
 	}
 
 	async function irCMD(state: string) {
-		let camera = await getCam({x: menuDefinition.location.x, y: menuDefinition.location.y}, ifWidth, ifHeight);
+		let camera = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
 		if (!camera.found) {
 			return;
 		}
 
-		commandText = `!ptzir ${camera.cam} ${state}`
+		commandText = `!ptzir ${camera.name} ${state}`
 	}
 
 	async function focusCam() {
-		let camera = await getCam({x: menuDefinition.location.x, y: menuDefinition.location.y}, ifWidth, ifHeight);
+		let camera = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
 		if (!camera.found) {
 			return;
 		}
 
-		commandText = `!ptzfocusr ${camera.cam} 0`
+		commandText = `!ptzfocusr ${camera.name} 0`
 
 		dispatch('resetfocus');
 	}
 
 	async function loadNextCam(action: string) {
-		let response = await $server.post('/camera/swaps', {x: menuDefinition.location.x, y: menuDefinition.location.y, frameWidth: ifWidth, frameHeight: ifHeight});
+		let cam = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
+		let response = await $server.post('/camera/swaps', {camera: cam.name});
+
 		console.log(response)
 		let swaps: SwapResponse = response.data;
 
@@ -205,10 +218,13 @@
 
 		if (action == "swap") {
 			commandText = `!swap ${swaps.cam} ${swaps.swaps!.subentries![0].label}`
-	
-			_.delay(function(text) {dispatch(text)}, 1050, 'sendcmd');
+			if (cam.cacheHit) {
+				dispatch('sendcmd');
+			} else {
+				_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
+			}
 		} else if (action == "load") {
-			let presetResponse = await $server.post('/getConfig', {camera: swaps.swaps!.subentries![0].label});
+			let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps!.subentries![0].label});
 			console.log(presetResponse)
 			camPresets = presetResponse.data.camPresets;
 		}
@@ -238,21 +254,6 @@
 				part.color = menu.color;
 			}
 			currentRotation += part.angle;
-		}
-	}
-
-	async function getCam(coords: Coordinates, width: number, height: number): Promise<CamPosition> {
-		try {
-			let response = await $server.post('/camera', {
-			x: coords.x,
-			y: coords.y,
-			frameWidth: width,
-			frameHeight: height
-			});
-			return response.data;
-		} catch (error) {
-			console.log(error);
-			return { found: false, cam: "", position: 0 };
 		}
 	}
 

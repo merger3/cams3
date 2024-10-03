@@ -31,6 +31,14 @@
 		stage.size({width: width, height: height});
 	}
 
+	export function getClickedShape(coordinates: Coordinates) {
+		return stage.getIntersection(coordinates)
+	}
+
+	export function testZone(shape: Konva.Shape) {
+		return shape.getParent() == boxGroup
+	}
+
 	export function cleanUp(resetHitbox: boolean = false) {
 		arrow?.remove();
 		dot?.remove();
@@ -177,13 +185,9 @@
 		
 
 		if (konvaEvent.evt.button == 2) {
-			let relativePos = layer.getRelativePointerPosition();
-			if (!relativePos) {
-				return;
-			}
 			dispatch("rightclick", {
-				x: relativePos.x,
-				y: relativePos.y
+				x: mousePos.x,
+				y: mousePos.y
 			})
 			return;
 		}
@@ -520,7 +524,7 @@
 	onMount(async () => {
 		await tick();
 		dispatch("forceiframeresize");
-		layer.toggleHitCanvas();
+		// layer.toggleHitCanvas();
    
  	});
 

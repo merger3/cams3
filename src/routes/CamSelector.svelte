@@ -4,8 +4,7 @@
 	import 'simplebar'; // or "import SimpleBar from 'simplebar';" if you want to use it manually.
 	import 'simplebar/dist/simplebar.css';
 	import type { CamList, CamPresets } from '$types';
-	import axios from 'axios';
-	import { server, user } from '$lib/stores';
+	import { server } from '$lib/stores';
 
 	import ResizeObserver from 'resize-observer-polyfill';
 	

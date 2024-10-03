@@ -9,9 +9,8 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { token, user, server, GetCam } from '$lib/stores';
+	import { token, server, GetCam } from '$lib/stores';
 	import _ from 'lodash';
-
 
 	// import { userRole } from './stores';
 	const defaultCMD: string = "​";
@@ -54,7 +53,7 @@
 		let cam = await GetCam({coordinates: {x: e.detail.x, y: e.detail.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: e.detail.position}, $server)
 		
 		$server.post('/camera/presets', {
-			camera: cam
+			camera: cam.name
 		}).then(function (response) {
 			camPresets = response.data.camPresets;
 			console.log(response);
@@ -106,9 +105,8 @@
 
 		// Extract access_token
 		const accessToken = params.get("access_token");
-		const state = params.get("state");
-		const scope = params.get("scope");
-		$user = "merger3"
+		// const state = params.get("state");
+		// const scope = params.get("scope");
 		$token = `${accessToken}`
 
 		console.log($token)
@@ -123,6 +121,17 @@
 			headers: {'X-Twitch-Token': $token}
 		});
 
+		$server.post('/authorize').then(function (response) {
+			console.log(response);
+			if (response.data.authorized) {
+				authorized = true;
+			} else {
+				window.location.replace("/login");
+			}
+		}).catch(function (error) {
+			console.log(error);
+		});
+
 		window.ResizeObserver = ResizeObserver;
 		resizeObserverDefined = true;
 		jQuery(".movedown").on('wheel', handleWheel)
@@ -132,44 +141,51 @@
 	});
 	$: resizeObserverDefined && commandText && resizeText();
 
-
+	let authorized: boolean = false;
 </script>
 
 <svelte:head>
 	<script lang="ts">
-		const fragment = window.location.hash.substring(1);
-		const regex = new RegExp('access_token=\\w+');
-		if (fragment == "" || !regex.test(fragment)) {
+		const fragmentCheck = window.location.hash.substring(1);
+		const regex = new RegExp('access_token=\\w+&scope=[\\w%+]+&token_type=bearer');
+		if (fragmentCheck == "" || !regex.test(fragmentCheck)) {
 			console.log("redirecting")
 			window.location.replace("/login");
 		}
 	</script>
 </svelte:head>
 
-<div class="container-fluid" id="video-container">
-	<div class="row justify-content-between flex-nowrap ">
-		<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1 z-30 movedown" id="camselector">
-			<div style="min-height: {commandHeight}px;max-height: {commandHeight}px;">
-				<CamSelector bind:spacerHeight bind:spacerWidth bind:commandHeight bind:camPresets bind:camList={config.camlist} />
-			</div>
-			<div id="spacer" bind:clientHeight={spacerHeight} bind:clientWidth={spacerWidth}>
-				{#if camPresets}
+{#if !authorized}
+	<div id="cover" class="d-flex justify-content-center align-items-center">
+		<div id="spinner" class="spinner-grow text-info" style="width: 7rem; height: 7rem;"  role="status">
+			<span class="visually-hidden">Loading...</span>
+		</div>	  
+	</div>
+{:else}
+	<div class="container-fluid" id="video-container">
+		<div class="row justify-content-between flex-nowrap ">
+			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1 z-30 movedown" id="camselector">
+				<div style="min-height: {commandHeight}px;max-height: {commandHeight}px;">
+					<CamSelector bind:spacerHeight bind:spacerWidth bind:commandHeight bind:camPresets bind:camList={config.camlist} />
+				</div>
+				<div id="spacer" bind:clientHeight={spacerHeight} bind:clientWidth={spacerWidth}>
+					{#if camPresets}
 					<Presets bind:spacerHeight bind:spacerWidth bind:commandText bind:camPresets on:sendcmd={sendCommand} />
-				{/if}
-
+					{/if}
+					
+				</div>
+				<div id="sendcontainer" style="{parent_style}max-height: {ifHeight * .15}px;">
+					<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-30 movedown"> {commandText == defaultCMD ? " Send " : " " + commandText + " "} </button>
+				</div>
 			</div>
-			<div id="sendcontainer" style="{parent_style}max-height: {ifHeight * .15}px;">
-				<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-30 movedown"> {commandText == defaultCMD ? " Send " : " " + commandText + " "} </button>
+			<div class="col-auto g-0" id="wrapper">
+				<Video bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth bind:zoom bind:camPresets on:doubleclick={handleDoubleClick} on:resizecommand={resizeText} on:sendcmd={sendCommand} />
 			</div>
-		</div>
-		<div class="col-auto g-0" id="wrapper">
-			<Video bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth bind:zoom bind:camPresets on:doubleclick={handleDoubleClick} on:resizecommand={resizeText} on:sendcmd={sendCommand} />
 		</div>
 	</div>
-</div>
-<Chat bind:ifHeight={commandHeight}/>
-
-
+	<Chat bind:ifHeight={commandHeight}/>
+{/if}
+	
 <style>
 	#spacer {
 		height: 100%;
@@ -191,5 +207,13 @@
 		white-space: pre;
 		position: relative;
 	}
-	
+	#cover {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(77, 76, 76, 0.5); /* Translucent grey */
+		z-index: 9999; /* Ensures it sits above all other elements */
+	}
 </style>
