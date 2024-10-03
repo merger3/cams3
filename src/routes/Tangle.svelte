@@ -14,6 +14,7 @@
 	export let ifWidth: number;
 	export let ifHeight: number;
 	export let camPresets: CamPresets;
+	export let rightClick: boolean;
 
 	let dot: Konva.Circle;
 	let arrow: Konva.Arrow;
@@ -189,6 +190,7 @@
 				x: mousePos.x,
 				y: mousePos.y
 			})
+			rightClick = true;
 			return;
 		}
 
@@ -420,6 +422,7 @@
 		}
 
 		stagePressed = true;
+		rightClick = false;
 		stage.off('pointermove');
 		stage.off('pointerup');
 		selectedBox?.off("pointerleave", unhighlightShape)
