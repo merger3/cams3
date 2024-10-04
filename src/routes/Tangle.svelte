@@ -47,6 +47,7 @@
 		transformer?.nodes([]);
 
 		rectShown = true;
+		rightClick = false;
 
 		zoneBoxes.forEach(node => {
 			if (resetHitbox) {
