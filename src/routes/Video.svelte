@@ -308,9 +308,9 @@
 				if (zoom >= 100) {
 					zoom += 20;
 				} else if (zoom < 10) {
-					zoom += 5;
+					zoom += 10;
 				} else {
-					zoom += 5;
+					zoom += 10;
 				}
 				if (zoom > maxZoom) {
 					zoom = 10000;
@@ -323,9 +323,9 @@
 					if (zoom > 100) {
 						zoom -= 20;
 					} else if (zoom <= 10) {
-						zoom -= 5;
+						zoom -= 10;
 					} else {
-						zoom -= 5;
+						zoom -= 10;
 					}
 				} 
 				if (zoom < 0) {
