@@ -103,8 +103,11 @@
 	}
 
 	function nop() {
-		console.log("calling function");
-
+		menuDefinition.parts = [];
+		label.hide();
+		dispatch("closemenu");
+		jQuery('.movedown').css('z-index', '');
+		stage.off("pointerup");
 	};
 
 	function loadSubmenu(submenu: RadialMenu) {
