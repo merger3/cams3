@@ -128,7 +128,7 @@
 			label.hide();
 			redefine(menuDefinition.previousMenu);
 		} else {
-			alert("Should not have gotten here!");
+			nop();
 		}
 	}
 	
