@@ -37,7 +37,7 @@
 
 <div class="dropdown z-40 movedown">
 	<button style="position: absolute;min-height: {commandHeight}px;max-height: {commandHeight}px;right: 0;top: 0;" id="dropdown-button" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-		Dropdown button
+		Settings (wip)
 	</button>
 	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-2 border-danger-subtle shadow " style="max-height: {spacerHeight - 5}px; max-width: {spacerWidth}px;" data-simplebar>
 		{#each camList as cam, i}

@@ -3,35 +3,7 @@
       import type { Config } from '$types';
 
     let config: Config = {
-        camlist: [
-            {
-                name: "pasture",
-                cameras: ["pasture"]
-            },
-            {
-                name: "crows",
-                cameras: [
-                    "crowout",
-                    "crowin",
-                    "crowmulti",
-                    "crowmulti2"
-                ]
-            },
-            {
-                name: "wolves",
-                cameras: [
-                    "wolf",
-                    "wolfcorner",
-                    "wolfinside",
-                    "wolfden",
-                    "wolfden2",
-                    "wolfmulti",
-                    "wolfmulti2",
-                    "wolfdenmulti",
-                    "wolfdenmulti2"
-                ]
-            }
-        ]
+        camlist: []
     };
   </script>
   
