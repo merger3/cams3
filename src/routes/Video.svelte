@@ -500,7 +500,7 @@
 		<div class="ratio ratio-16x9">
 
 				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
-					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel}  use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
+					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
 					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 223, 0);" bind:this={overlay} />
 				</ContextMenu>
 
