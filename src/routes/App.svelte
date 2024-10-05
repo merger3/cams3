@@ -119,7 +119,7 @@
 				username: 'merger3',
 				password: 'Merger!23'
 			},
-			baseURL: 'https://https://alvsanc-cams.app/',
+			baseURL: 'https://https://alvsanc-cams.app/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
