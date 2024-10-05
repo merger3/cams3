@@ -35,7 +35,6 @@
 			command: commandText
 		}).then(function (response) {
 			console.log(response);
-			zoom = 100;
 		}).catch(function (error) {
 			console.log(error);
 		});
