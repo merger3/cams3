@@ -26,6 +26,7 @@
 		if (!definition) {
 			return [];
 		}
+		cancelMenu = false;
 		color = definition.color;
 		location = definition.location;
 		innerRadius = window.innerHeight * .08;
@@ -71,6 +72,7 @@
 	
 	let label: Konva.Text;
 	let hoverTimeout: number;
+	let cancelMenu: boolean = false;
 	function highlightRadial(e: CustomEvent, r: RadialPart) {
 		console.log(e.detail.target);
 		console.log(e.detail.target.offsetX());
@@ -83,11 +85,11 @@
 		label.text(r.label);
 		label.show();
 
-		if (r.action == "back") {
+		if (r.action == "back" && !cancelMenu) {
 			hoverTimeout = setTimeout(() => {
 				loadPreviousMenu();
 			}, 500);
-		} else if (r.action == "submenu") {
+		} else if (r.action == "submenu"  && !cancelMenu) {
 			hoverTimeout = setTimeout(() => {
 				loadSubmenu(r.submenu!);
 			}, 500);
@@ -103,6 +105,7 @@
 	}
 
 	function nop() {
+		cancelMenu = true;
 		menuDefinition.parts = [];
 		label.hide();
 		dispatch("closemenu");
