@@ -105,6 +105,9 @@
 	}
 
 	function nop() {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
 		cancelMenu = true;
 		menuDefinition.parts = [];
 		label.hide();
