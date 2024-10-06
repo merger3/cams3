@@ -40,11 +40,11 @@
 		{#if e.label == "separator"}
 			<ContextMenu.Separator class="bg-cyan-700 mx-1"/>
 		{:else}
-			<ContextMenu.Item class="h-9" on:click={() => handleClick(cam, e.label)}>{e.label}</ContextMenu.Item>
+			<ContextMenu.Item class="h-[1.2rem]" on:click={() => handleClick(cam, e.label)}>{e.label}</ContextMenu.Item>
 		{/if}
 	{:else}
 		<ContextMenu.Sub>
-			<ContextMenu.SubTrigger class="h-9" inset>{e.label}</ContextMenu.SubTrigger>
+			<ContextMenu.SubTrigger class="h-[1.2rem]" inset>{e.label}</ContextMenu.SubTrigger>
 			<ContextMenu.SubContent class="w-4 overflow-visible text-right">
 				<SubContextMenu on:clickentry={bubbleClick} entries={e.subentries} cam={cam}/>
 			</ContextMenu.SubContent>
