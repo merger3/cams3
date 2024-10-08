@@ -6,11 +6,10 @@
 	import ContextMenu from './ContextMenu.svelte';
 	import type { SwapResponse, Coordinates, Box, RadialPart, RadialMenu, CamPresets } from '$types';
 	import { Motion } from 'svelte-motion'
-	import { press, type PressCustomEvent, pan, type PanCustomEvent, type GestureCustomEvent } from 'svelte-gestures';
+	import { pinch, press, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent } from 'svelte-gestures';
 	import Radial from "./Radial.svelte";
 	import _ from 'lodash';
 	import { server, GetCam } from '$lib/stores';
-	import PinchZoom from "pinch-zoom-js"
 
 
 	export let selector: Tangle;
@@ -477,8 +476,6 @@
 			clearTimeout(doit);
 			doit = setTimeout(resizeIframe, 50);
 		};
-		let pz = new PinchZoom(jQuery('#zoomarea')[0]);
-		pz.enable();
 
 		window.addEventListener('resize', resizeIframe);
 		return () => {
@@ -486,6 +483,10 @@
 		};
 		
 	});
+
+	function pinchHandler(event: PinchCustomEvent) {
+	console.log(event);
+  }
 </script>
 
 <svelte:head>
@@ -504,7 +505,7 @@
 		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-40 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
 	</div>
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px; overflow: hidden;">
-		<div id="zoomarea">
+		<div id="zoomarea" use:pinch on:pinch="{pinchHandler}">
 			<div class="ratio ratio-16x9">
 
 					<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
