@@ -10,6 +10,8 @@
 	import Radial from "./Radial.svelte";
 	import _ from 'lodash';
 	import { server, GetCam } from '$lib/stores';
+	import PinchZoom from "pinch-zoom-js"
+
 
 	export let selector: Tangle;
 	export let commandText: string;
@@ -63,7 +65,7 @@
 		commandText = `!swap ${e.detail.cam} ${e.detail.target}`
 	}
 
-	let mainLayerConfig = {id: "mainlayer", x: 0, y: 0, height: 0, width: 0};
+	let mainLayerConfig = {id: "mainlayer", x: 0, y: 0};
 	var zones: Box[];
 	let clickTimeout: number | undefined;
 
@@ -102,8 +104,10 @@
 		selector.resizeStage(winWidth, winHeight)
 		initializeZones(ifHeight, ifWidth);
 
+		
 		let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
-		mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y, height: overlayBox.height, width: overlayBox.width}
+		mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y}
+		// mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y, height: overlayBox.height, width: overlayBox.width}
 
 	}
 
@@ -473,11 +477,14 @@
 			clearTimeout(doit);
 			doit = setTimeout(resizeIframe, 50);
 		};
+		let pz = new PinchZoom(jQuery('#zoomarea')[0]);
+		pz.enable();
+
 		window.addEventListener('resize', resizeIframe);
 		return () => {
 			window.removeEventListener('resize', resizeIframe);
 		};
-
+		
 	});
 </script>
 
@@ -496,26 +503,28 @@
 		</Motion>
 		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-40 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
 	</div>
-	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px;">
-		<div class="ratio ratio-16x9">
+	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px; overflow: hidden;">
+		<div id="zoomarea">
+			<div class="ratio ratio-16x9">
 
-				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
-					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
-					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 223, 0);" bind:this={overlay} />
-				</ContextMenu>
+					<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
+						<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
+						<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 223, .5); height: {ifHeight}; width: {ifWidth};" bind:this={overlay} />
+					</ContextMenu>
 
-			<!-- <Tangle bind:this={selector} bind:commandText bind:stagePressed bind:rightClick bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu} on:resetfocus={(e) => {zoom = 0;}}/> -->
+				<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:rightClick bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu} on:resetfocus={(e) => {zoom = 0;}}/>
 
-			<!-- <div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/>  http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0&autoplay=1&mute=0-->
+				<!-- <div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/>  http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0&autoplay=1&mute=0-->
 
-			<iframe
-				title="da cameras"
-				id="cams"
-				src="https://alvsanc-cams.app/ptz-alv?controls=0&autoplay=1&mute=0"
-				class="unselectable"
-				allow="autoplay; fullscreen"
-				allowfullscreen
-			></iframe>
+				<iframe
+					title="da cameras"
+					id="cams"
+					src="https://alvsanc-cams.app/ptz-alv?controls=0&autoplay=1&mute=0"
+					class="unselectable"
+					allow="autoplay; fullscreen"
+					allowfullscreen
+				></iframe>
+			</div>
 		</div>
 	</div>
 </div>

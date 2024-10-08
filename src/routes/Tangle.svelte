@@ -4,6 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { Box, Coordinates, CamPresets } from '$types';
 	import Radial from "./Radial.svelte";
+	
 
 	export let stageWidth: number;
 	export let stageHeight: number;
