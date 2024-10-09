@@ -16,6 +16,7 @@
 	export let ifHeight: number;
 	export let camPresets: CamPresets;
 	export let rightClick: boolean;
+	export let panAndZoomInitialized: boolean;
 
 	let dot: Konva.Circle;
 	let arrow: Konva.Arrow;
@@ -169,6 +170,9 @@
 	let clickedShape: Konva.Shape | null;
 	function handleStageMouseDown(e: any) {
 		console.log("stage pointer down")
+		if (panAndZoomInitialized) {
+			return;
+		}
 		const konvaEvent = e.detail;
 		let mousePos = stage.getPointerPosition();
 		if (!mousePos) {

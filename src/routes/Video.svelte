@@ -2,6 +2,7 @@
 	import { onMount, createEventDispatcher } from 'svelte';
 	import Konva from "konva";
 	import Tangle from './Tangle.svelte';
+	import Zoomable from './Zoomable.svelte';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import ContextMenu from './ContextMenu.svelte';
 	import type { SwapResponse, Coordinates, Box, RadialPart, RadialMenu, CamPresets } from '$types';
@@ -15,6 +16,8 @@
 	export let selector: Tangle;
 	export let commandText: string;
 	export let camPresets: CamPresets;
+
+	let panAndZoomInitialized: boolean;
 
 	const dispatch = createEventDispatcher();
 
@@ -104,8 +107,8 @@
 		initializeZones(ifHeight, ifWidth);
 
 		
-		let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
-		mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y}
+		// let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
+		// mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y}
 		// mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y, height: overlayBox.height, width: overlayBox.width}
 
 	}
@@ -484,9 +487,7 @@
 		
 	});
 
-	function pinchHandler(event: PinchCustomEvent) {
-	console.log(event);
-  }
+
 </script>
 
 <svelte:head>
@@ -505,28 +506,27 @@
 		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-40 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
 	</div>
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px; overflow: hidden;">
-		<div id="zoomarea" use:pinch on:pinch="{pinchHandler}">
+		<Zoomable bind:commandText bind:panAndZoomInitialized>
 			<div class="ratio ratio-16x9">
-
-					<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
-						<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
-						<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 223, .5); height: {ifHeight}; width: {ifWidth};" bind:this={overlay} />
-					</ContextMenu>
-
-				<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:rightClick bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu} on:resetfocus={(e) => {zoom = 0;}}/>
-
-				<!-- <div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/>  http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0&autoplay=1&mute=0-->
-
+				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
+					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
+					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 1); height: {ifHeight}; width: {ifWidth};" bind:this={overlay} />
+				</ContextMenu>
+				
+				<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:rightClick bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets bind:panAndZoomInitialized on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu} on:resetfocus={(e) => {zoom = 0;}}/>
+					
+					<!-- <div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/>  http://merger:Merger!23@74.208.238.87:8889/ptz-alv?controls=0&autoplay=1&mute=0-->
+					
 				<iframe
-					title="da cameras"
-					id="cams"
-					src="https://alvsanc-cams.app/ptz-alv?controls=0&autoplay=1&mute=0"
-					class="unselectable"
-					allow="autoplay; fullscreen"
-					allowfullscreen
+				title="da cameras"
+				id="cams"
+				src="https://alvsanc-cams.app/ptz-alv?controls=0&autoplay=1&mute=0"
+				class="unselectable"
+				allow="autoplay; fullscreen"
+				allowfullscreen
 				></iframe>
 			</div>
-		</div>
+		</Zoomable>
 	</div>
 </div>
 
