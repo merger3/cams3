@@ -506,7 +506,7 @@
 		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-40 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
 	</div>
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px; overflow: hidden;">
-		<!-- <Zoomable bind:commandText bind:panAndZoomInitialized> -->
+		<Zoomable bind:commandText bind:panAndZoomInitialized>
 			<div class="ratio ratio-16x9">
 				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
 					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
@@ -526,7 +526,7 @@
 				allowfullscreen
 				></iframe>
 			</div>
-		<!-- </Zoomable> -->
+		</Zoomable>
 	</div>
 </div>
 
