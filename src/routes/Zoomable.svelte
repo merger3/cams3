@@ -67,6 +67,7 @@
 
 		scale = savedScale * event.detail.scale;
 		scale = scale < 1 ? 1 : scale;
+		// origin = {x: origin.x / scale, y: origin.y / scale};
   	}
 
 
@@ -96,14 +97,22 @@
 	}
 
 
+	let lastEventCoords: Coordinates = {x: -1, y: -1}
 	function panMoveHandler(e: GestureCustomEvent) {
 		// Also check that scale is not less than 1 so panning is only possible when zoomed in
 		if (!isZoomable() || !panAndZoomInitialized) {
 			return;
 		}
 
-		// console.log(`X: ${e.detail.x}, Y: ${e.detail.y}`)
-		console.log(e)
+		if (e.detail.x == lastEventCoords.x && e.detail.y == lastEventCoords.y) {
+			lastEventCoords = {x: e.detail.x, y: e.detail.y}
+			return;
+		}
+		
+		lastEventCoords = {x: e.detail.x, y: e.detail.y}
+
+		console.log(`X: ${e.detail.x}, Y: ${e.detail.y}`)
+		// console.log(e)
 		const adjustedX = e.detail.x / scale;
     	const adjustedY = e.detail.y / scale;
 
@@ -130,6 +139,8 @@
 			translation = {x: 0, y: 0};
 		}
 		points = [];
+		lastEventCoords = {x: -1, y: -1}
+
 		savedScale = scale;
 		panAndZoomInitialized = false;
 	}
