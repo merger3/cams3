@@ -13,7 +13,7 @@
 	let origin: Coordinates = {x: 0, y: 0};
 	let points: Coordinates[];
 
-	let relativeTranslation: Coordinates = {x: 0, y: 0};
+	let savedTranslation: Coordinates = {x: 0, y: 0};
 	let translation: Coordinates = {x: 0, y: 0};
 
 	let scale: number = 1;
@@ -118,16 +118,6 @@
 
 		points.push({x: adjustedX, y: adjustedY});
 
-		if (points.length == 2) {
-			// console.log(points)
-			let midpoint = getPointsMidpoint(points);
-			relativeTranslation = {x: (midpoint.x - origin.x), y: (midpoint.y - origin.y)};
-
-			translation.x += relativeTranslation.x;
-			translation.y += relativeTranslation.y;
-			points = [];
-		}
-
 
 	}
 
@@ -153,6 +143,7 @@
 
 
 	import { setPointerControls, getCenterOfTwoPoints } from 'svelte-gestures';
+	import { transform } from 'svelte-motion';
 
 	function getPointersDistance(activeEvents: PointerEvent[]) {
 		return Math.hypot(
@@ -229,29 +220,38 @@
 
 
 	function downhandler(event: any) {
-		origin = event.detail.center;
+		const adjustedX = event.detail.center.x / scale;
+    	const adjustedY = event.detail.center.y / scale;
+		origin = {x: adjustedX, y: adjustedY};
+		console.log(origin);
 		panAndZoomInitialized = true;
   	}
 
-	  function movehandler(event: any) {
+	let zoomDebounce = 0;
+	function movehandler(event: any) {
 		// console.log(event)
 		const adjustedX = event.detail.center.x / scale;
     	const adjustedY = event.detail.center.y / scale;
-		translation.x = adjustedX;
-		translation.y = adjustedY;
-		scale = savedScale * event.detail.scale;
-		scale = scale < 1 ? 1 : scale;
-		// console.log(translation)
+		// translation.x = savedTranslation.x + adjustedX;
+		// translation.y = savedTranslation.y + adjustedY;
+		// console.log(`X: ${translation.x}, Y: ${translation.y}`)
+		if (zoomDebounce > 2) {
+			scale = savedScale * event.detail.scale;
+			scale = scale < 1 ? 1 : scale;
+		} else {
+			zoomDebounce++;
+		}
+		console.log(scale)
   	}
 
 	  function uphandler(e: any) {
 		if (scale <= 1) {
-			scale = 1;
-			translation = {x: 0, y: 0};
+			// scale = 1;
+			// translation = {x: 0, y: 0};
 		}
 		points = [];
-		lastEventCoords = {x: -1, y: -1}
-
+		savedTranslation = {x: translation.x, y: translation.y}
+		zoomDebounce = 0;
 		savedScale = scale;
 		panAndZoomInitialized = false;
 	}
@@ -263,8 +263,10 @@
    
 
 <!-- <div id="zoomarea" bind:this={zoomarea} use:pinch on:pinch={pinchHandler} on:wheel={wheelHandler} use:pan on:pandown={panDownHandler} on:panmove={panMoveHandler} on:panup={panUpHandlerDebounced} style="transform: scale({scale}) translate({translation.x}px, {translation.y}px); transform-origin: {origin.x}px {origin.y}px;">   -->
-<div id="zoomarea" bind:this={zoomarea} use:multiTouch on:multiTouchDown={downhandler} on:multiTouchMove={movehandler} on:multiTouchUp={uphandler} style="transform: scale({scale}) translate({translation.x}px, {translation.y}px); transform-origin: {origin.x}px {origin.y}px;">  
-	<slot></slot>
+<div id="zoomarea" bind:this={zoomarea} use:multiTouch on:multiTouchDown={downhandler} on:multiTouchMove={movehandler} on:multiTouchUp={uphandler} style="transform: scale({scale}); transform-origin: {origin.x}px {origin.y}px;">  
+	<div id="panarea" style="transform: translate({translation.x}px, {translation.y}px); transform-origin: 0px 0px;">
+		<slot></slot>
+	</div>
 </div>
 
 
