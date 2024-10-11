@@ -10,6 +10,6 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
+	
 }
-
 export {};
