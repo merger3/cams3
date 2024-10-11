@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { pinch, press, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent } from 'svelte-gestures';
+	import { pinch, press, composedGesture, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent, type RegisterGestureType, type GestureCallback } from 'svelte-gestures';
 	import type { Coordinates, Point } from '$types';
 	import _ from 'lodash';
 	import Page from './+page.svelte';
@@ -147,13 +147,123 @@
 
 	var panUpHandlerDebounced = _.debounce(panUpHandler, 5, { 'leading': true, 'trailing': false });
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	import { setPointerControls, getCenterOfTwoPoints } from 'svelte-gestures';
+
+	function getPointersDistance(activeEvents: PointerEvent[]) {
+		return Math.hypot(
+			activeEvents[0].clientX - activeEvents[1].clientX,
+			activeEvents[0].clientY - activeEvents[1].clientY
+		);
+	}
+
+	export function multiTouch(node: HTMLElement) {
+		const gestureName = 'multiTouch';
+		const touchCount = 2;
+		let origin: Coordinates;
+		let initDistance = 0;
+		let prevDistance: number | undefined;
+		let scale = 1;
+		let prevScale = 1;
+
+		function onUp(activeEvents: PointerEvent[], event: PointerEvent) {
+			if (activeEvents.length === 1) {
+				prevDistance = undefined;
+			}
+			node.dispatchEvent(
+				new CustomEvent(`${gestureName}Up`, {
+					detail: { target: event.target },
+				})
+			);	
+		}
+			
+			
+
+		function onDown(activeEvents: PointerEvent[], event: PointerEvent) {
+			if (activeEvents.length == touchCount) {
+				let midX = (activeEvents[0].clientX + activeEvents[1].clientX) / 2;
+				let midY = (activeEvents[0].clientY + activeEvents[1].clientY) / 2;
+				initDistance = getPointersDistance(activeEvents);
+
+				origin = {x: midX, y: midY};
+				node.dispatchEvent(
+					new CustomEvent(`${gestureName}Down`, {
+					detail: { center: origin, target: event.target },
+					})
+				);	
+			}
+		}
+
+		function onMove(activeEvents: PointerEvent[], event: PointerEvent) {
+			if (activeEvents.length == touchCount) {
+				let midX = (activeEvents[0].clientX + activeEvents[1].clientX) / 2;
+				let midY = (activeEvents[0].clientY + activeEvents[1].clientY) / 2;
+
+				const curDistance = getPointersDistance(activeEvents);
+
+				if (prevDistance !== undefined && curDistance !== prevDistance) {
+					scale = curDistance / initDistance;
+				} else {
+					scale = prevScale;
+				}
+				prevScale = scale;
+				prevDistance = curDistance;
+
+				node.dispatchEvent(
+					new CustomEvent(`${gestureName}Move`, {
+					detail: { center: {x: midX - origin.x, y: midY - origin.y}, scale: scale, target: event.target },
+					})
+				);	
+			}
+			return false;
+		}
+
+	
+
+		return setPointerControls(gestureName, node, onMove, onDown, onUp);
+	}
+
+
+	function downhandler(event: any) {
+		origin = event.detail.center;
+		panAndZoomInitialized = true;
+  	}
+
+	  function movehandler(event: any) {
+		// console.log(event)
+		const adjustedX = event.detail.center.x / scale;
+    	const adjustedY = event.detail.center.y / scale;
+		translation.x = adjustedX;
+		translation.y = adjustedY;
+		scale = savedScale * event.detail.scale;
+		scale = scale < 1 ? 1 : scale;
+		// console.log(translation)
+  	}
+
+	  function uphandler(e: any) {
+		if (scale <= 1) {
+			scale = 1;
+			translation = {x: 0, y: 0};
+		}
+		points = [];
+		lastEventCoords = {x: -1, y: -1}
+
+		savedScale = scale;
+		panAndZoomInitialized = false;
+	}
+
 	onMount(() => {
 		console.log("Zoomable mounted")
 	});
   </script>
    
 
-<div id="zoomarea" bind:this={zoomarea} use:pinch on:pinch={pinchHandler} on:wheel={wheelHandler} use:pan on:pandown={panDownHandler} on:panmove={panMoveHandler} on:panup={panUpHandlerDebounced} style="transform: scale({scale}) translate({translation.x}px, {translation.y}px); transform-origin: {origin.x}px {origin.y}px;">  
+<!-- <div id="zoomarea" bind:this={zoomarea} use:pinch on:pinch={pinchHandler} on:wheel={wheelHandler} use:pan on:pandown={panDownHandler} on:panmove={panMoveHandler} on:panup={panUpHandlerDebounced} style="transform: scale({scale}) translate({translation.x}px, {translation.y}px); transform-origin: {origin.x}px {origin.y}px;">   -->
+<div id="zoomarea" bind:this={zoomarea} use:multiTouch on:multiTouchDown={downhandler} on:multiTouchMove={movehandler} on:multiTouchUp={uphandler} style="transform: scale({scale}) translate({translation.x}px, {translation.y}px); transform-origin: {origin.x}px {origin.y}px;">  
 	<slot></slot>
 </div>
 
