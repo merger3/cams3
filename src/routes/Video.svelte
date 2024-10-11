@@ -107,8 +107,8 @@
 		initializeZones(ifHeight, ifWidth);
 
 		
-		// let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
-		// mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y}
+		let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
+		mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y}
 		// mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y, height: overlayBox.height, width: overlayBox.width}
 
 	}
@@ -510,7 +510,7 @@
 			<div class="ratio ratio-16x9">
 				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
 					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
-					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 1); height: {ifHeight}; width: {ifWidth};" bind:this={overlay} />
+					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 0); height: {ifHeight}; width: {ifWidth};" bind:this={overlay} />
 				</ContextMenu>
 				
 				<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:rightClick bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets bind:panAndZoomInitialized on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu} on:resetfocus={(e) => {zoom = 0;}}/>
