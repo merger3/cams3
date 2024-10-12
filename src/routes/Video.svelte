@@ -520,7 +520,7 @@
 				<iframe
 				title="da cameras"
 				id="cams"
-				src="https://alvsanc-cams.app/ptz-alv?controls=0&autoplay=1&mute=0"
+				src="https://camops.ptz.app:8889/ptz-alv?controls=0&autoplay=1&mute=0"
 				class="unselectable"
 				allow="autoplay; fullscreen"
 				allowfullscreen
