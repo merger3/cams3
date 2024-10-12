@@ -4,6 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { Box, Coordinates, CamPresets } from '$types';
 	import Radial from "./Radial.svelte";
+	import { drawing } from '$lib/stores';
 	
 
 	export let stageWidth: number;
@@ -173,6 +174,9 @@
 		if (panAndZoomInitialized) {
 			return;
 		}
+
+		
+
 		const konvaEvent = e.detail;
 		let mousePos = stage.getPointerPosition();
 		if (!mousePos) {
@@ -334,6 +338,7 @@
 		// event.stopPropagation();
 		let mousePos = stage.getPointerPosition();
 		if (mousePos) {
+			$drawing = true;
 			var shape = stage.getIntersection({x: stage.getPointerPosition()!.x, y: stage.getPointerPosition()!.y});
 			if (shape && shape.getParent() == boxGroup) {
 				if (shape != clickedShape) {
@@ -429,6 +434,7 @@
 
 		stagePressed = true;
 		rightClick = false;
+		$drawing = false;
 		stage.off('pointermove');
 		stage.off('pointerup');
 		selectedBox?.off("pointerleave", unhighlightShape)

@@ -4,16 +4,16 @@
 	import type { Coordinates, Point } from '$types';
 	import _ from 'lodash';
 	import Panzoom from '@panzoom/panzoom'
-	const dispatch = createEventDispatcher();
+	import {type PanzoomObject} from '@panzoom/panzoom'
+	import { setPointerControls, getCenterOfTwoPoints } from 'svelte-gestures';
+	import { drawing } from '$lib/stores';
 	
 	export let commandText: string;
+	export let panAndZoomInitialized: boolean = false;
 
 	let zoomarea: any;
 
 	let origin: Coordinates = {x: 0, y: 0};
-	let savedOrigin: Coordinates = {x: 0, y: 0};
-	let originDelta: Coordinates = {x: 0, y:0};
-	let points: Coordinates[];
 
 	let savedTranslation: Coordinates = {x: 0, y: 0};
 	let translation: Coordinates = {x: 0, y: 0};
@@ -22,130 +22,14 @@
 	let savedScale: number = 1;
 
 	function isZoomable(): boolean {
-		if (commandText.startsWith("!ptzclick") || commandText.startsWith("!ptzfocusr")) {
+		if (commandText.startsWith("!ptzclick") || commandText.startsWith("!ptzfocusr") || $drawing) {
 			return false
 		}
 		return true
 	}
 
 
-	function getPointsMidpoint(points: Coordinates[]): Coordinates {
-		if (points.length != 2) {
-			console.log("points was not 2")
-			return {x: 0, y: 0};
-		}
-		if (points[0].x == points[1].x && points[0].y == points[1].y) {
-			// console.log("points were identical")
-			// return {x: 0, y: 0};
-		} else {
-			// console.log("not a match")
-		}
-
-		let midX = (points[0].x + points[1].x) / 2;
-		let midY = (points[0].y + points[1].y) / 2;
-
-		return {x: midX, y: midY};
-	}
-
-
-	function wheelHandler(e: any) {
-		if (!isZoomable()) {
-			return;
-		}
-
-		if (e.deltaY < 0) {
-			// Scroll up
-		} else {
-			// Scroll down
-		}
-	}
-
-
-
-	function pinchHandler(event: PinchCustomEvent) {
-		if (!isZoomable()) {
-			return;
-		}
-
-		scale = savedScale * event.detail.scale;
-		scale = scale < 1 ? 1 : scale;
-		// origin = {x: origin.x / scale, y: origin.y / scale};
-  	}
-
-
-	export let panAndZoomInitialized: boolean = false;
-	function panDownHandler(e: GestureCustomEvent) {
-		if (!isZoomable()) {
-			return;
-		}
-
-		console.log("pan down")
-		console.log(e)
-
-		const adjustedX = e.detail.x / scale;
-    	const adjustedY = e.detail.y / scale;
-
-		points.push({x: adjustedX, y: adjustedY});
-
-		if (points.length == 2) {
-			origin = getPointsMidpoint(points);
-			points = [];
-			panAndZoomInitialized = true;
-		} else if (points.length > 2) {
-			points = [];
-			panAndZoomInitialized = false;
-		}
-
-	}
-
-
-	let lastEventCoords: Coordinates = {x: -1, y: -1}
-	function panMoveHandler(e: GestureCustomEvent) {
-		// Also check that scale is not less than 1 so panning is only possible when zoomed in
-		if (!isZoomable() || !panAndZoomInitialized) {
-			return;
-		}
-
-		if (e.detail.x == lastEventCoords.x && e.detail.y == lastEventCoords.y) {
-			lastEventCoords = {x: e.detail.x, y: e.detail.y}
-			return;
-		}
-		
-		lastEventCoords = {x: e.detail.x, y: e.detail.y}
-
-		console.log(`X: ${e.detail.x}, Y: ${e.detail.y}`)
-		// console.log(e)
-		const adjustedX = e.detail.x / scale;
-    	const adjustedY = e.detail.y / scale;
-
-		points.push({x: adjustedX, y: adjustedY});
-
-
-	}
-
-	// var panMoveHandlerThrottled = _.throttle(panMoveHandler, 10, { 'leading': true, 'trailing': true });
-
-	function panUpHandler(e: GestureCustomEvent) {
-		if (scale <= 1) {
-			scale = 1;
-			translation = {x: 0, y: 0};
-		}
-		points = [];
-		lastEventCoords = {x: -1, y: -1}
-
-		savedScale = scale;
-		panAndZoomInitialized = false;
-	}
-
-	var panUpHandlerDebounced = _.debounce(panUpHandler, 5, { 'leading': true, 'trailing': false });
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-	import { setPointerControls, getCenterOfTwoPoints } from 'svelte-gestures';
-	import { transform } from 'svelte-motion';
+	
 
 	function getPointersDistance(activeEvents: PointerEvent[]) {
 		return Math.hypot(
@@ -164,6 +48,7 @@
 		let prevScale = 1;
 
 		function onUp(activeEvents: PointerEvent[], event: PointerEvent) {
+			console.log(activeEvents)
 			if (activeEvents.length === 1) {
 				prevDistance = undefined;
 			}
@@ -216,62 +101,46 @@
 			return false;
 		}
 
-	
-
 		return setPointerControls(gestureName, node, onMove, onDown, onUp);
 	}
 
 
 	function downhandler(event: any) {
-		const adjustedX = event.detail.center.x / scale;
-    	const adjustedY = event.detail.center.y / scale;
-		if (savedOrigin.x != 0 && savedOrigin.y != 0) {
-			originDelta = {x: adjustedX - savedOrigin.x, y: adjustedY - savedOrigin.y};
+		if (isZoomable()) {
+			panAndZoomInitialized = true;
+			panzoom.setOptions({ disablePan: false, disableZoom: false })
 		}
-		origin = {x: adjustedX, y: adjustedY};
-		console.log(origin);
-		panAndZoomInitialized = true;
   	}
 
 	let zoomDebounce = 0;
+	let panScaler: number = 1.2;
 	function movehandler(event: any) {
-		// console.log(event)
-		const adjustedX = event.detail.center.x / scale;
-    	const adjustedY = event.detail.center.y / scale;
-		
-		// translation.x = savedTranslation.x + adjustedX;
-		// translation.y = savedTranslation.y + adjustedY;
-		// console.log(`X: ${translation.x}, Y: ${translation.y}`)
-		if (zoomDebounce > 2) {
-			scale = savedScale * event.detail.scale;
-			scale = scale < 1 ? 1 : scale;
-		} else {
-			zoomDebounce++;
+		if (isZoomable()) {
+
 		}
-		console.log(scale)
   	}
 
 	  function uphandler(e: any) {
-		if (scale <= 1) {
-			// scale = 1;
-			// translation = {x: 0, y: 0};
-		}
-		savedTranslation = translation;
-		// savedOrigin = origin;
-		savedScale = scale;
+		panzoom.setOptions({ disablePan: true, disableZoom: true })
 		zoomDebounce = 0;
+		if (panzoom.getScale() <= 1.3) {
+			panzoom.reset();
+			
+		}
+	
 		panAndZoomInitialized = false;
 	}
-	let panzoom: any;
+	var upHandlerDebounced = _.debounce(uphandler, 10, { 'leading': false, 'trailing': true });
+	let panzoom: PanzoomObject;
 	onMount(() => {
-		panzoom = Panzoom(zoomarea, { noBind: true })
+		panzoom = Panzoom(zoomarea, { noBind: false, cursor: 'default', pinchAndPan: true, disablePan: true, disableZoom: true, panOnlyWhenZoomed: true })
 		console.log("Zoomable mounted")
 	});
   </script>
    
 
-<!-- <div id="zoomarea" bind:this={zoomarea} use:pinch on:pinch={pinchHandler} on:wheel={wheelHandler} use:pan on:pandown={panDownHandler} on:panmove={panMoveHandler} on:panup={panUpHandlerDebounced} style="transform: scale({scale}) translate({translation.x}px, {translation.y}px); transform-origin: {origin.x}px {origin.y}px;">   -->
-<div id="zoomarea" bind:this={zoomarea} use:multiTouch on:multiTouchDown={downhandler} on:multiTouchMove={movehandler} on:multiTouchUp={uphandler} style="transform: scale({scale}) translate({translation.x}px, {translation.y}px); transform-origin: {origin.x}px {origin.y}px;">  
+<div id="zoomarea" bind:this={zoomarea} use:multiTouch on:multiTouchDown={downhandler} on:multiTouchMove={movehandler} on:multiTouchUp={upHandlerDebounced}>  
+<!-- <div id="zoomarea" bind:this={zoomarea} >   -->
 	<slot></slot>
 </div>
 
