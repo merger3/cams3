@@ -3,7 +3,7 @@
 	import { pinch, press, composedGesture, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent, type RegisterGestureType, type GestureCallback } from 'svelte-gestures';
 	import type { Coordinates, Point } from '$types';
 	import _ from 'lodash';
-	import Page from './+page.svelte';
+	import Panzoom from '@panzoom/panzoom'
 	const dispatch = createEventDispatcher();
 	
 	export let commandText: string;
@@ -11,6 +11,8 @@
 	let zoomarea: any;
 
 	let origin: Coordinates = {x: 0, y: 0};
+	let savedOrigin: Coordinates = {x: 0, y: 0};
+	let originDelta: Coordinates = {x: 0, y:0};
 	let points: Coordinates[];
 
 	let savedTranslation: Coordinates = {x: 0, y: 0};
@@ -181,6 +183,7 @@
 				initDistance = getPointersDistance(activeEvents);
 
 				origin = {x: midX, y: midY};
+
 				node.dispatchEvent(
 					new CustomEvent(`${gestureName}Down`, {
 					detail: { center: origin, target: event.target },
@@ -222,6 +225,9 @@
 	function downhandler(event: any) {
 		const adjustedX = event.detail.center.x / scale;
     	const adjustedY = event.detail.center.y / scale;
+		if (savedOrigin.x != 0 && savedOrigin.y != 0) {
+			originDelta = {x: adjustedX - savedOrigin.x, y: adjustedY - savedOrigin.y};
+		}
 		origin = {x: adjustedX, y: adjustedY};
 		console.log(origin);
 		panAndZoomInitialized = true;
@@ -232,6 +238,7 @@
 		// console.log(event)
 		const adjustedX = event.detail.center.x / scale;
     	const adjustedY = event.detail.center.y / scale;
+		
 		// translation.x = savedTranslation.x + adjustedX;
 		// translation.y = savedTranslation.y + adjustedY;
 		// console.log(`X: ${translation.x}, Y: ${translation.y}`)
@@ -249,24 +256,23 @@
 			// scale = 1;
 			// translation = {x: 0, y: 0};
 		}
-		points = [];
-		savedTranslation = {x: translation.x, y: translation.y}
-		zoomDebounce = 0;
+		savedTranslation = translation;
+		// savedOrigin = origin;
 		savedScale = scale;
+		zoomDebounce = 0;
 		panAndZoomInitialized = false;
 	}
-
+	let panzoom: any;
 	onMount(() => {
+		panzoom = Panzoom(zoomarea, { noBind: true })
 		console.log("Zoomable mounted")
 	});
   </script>
    
 
 <!-- <div id="zoomarea" bind:this={zoomarea} use:pinch on:pinch={pinchHandler} on:wheel={wheelHandler} use:pan on:pandown={panDownHandler} on:panmove={panMoveHandler} on:panup={panUpHandlerDebounced} style="transform: scale({scale}) translate({translation.x}px, {translation.y}px); transform-origin: {origin.x}px {origin.y}px;">   -->
-<div id="zoomarea" bind:this={zoomarea} use:multiTouch on:multiTouchDown={downhandler} on:multiTouchMove={movehandler} on:multiTouchUp={uphandler} style="transform: scale({scale}); transform-origin: {origin.x}px {origin.y}px;">  
-	<div id="panarea" style="transform: translate({translation.x}px, {translation.y}px); transform-origin: 0px 0px;">
-		<slot></slot>
-	</div>
+<div id="zoomarea" bind:this={zoomarea} use:multiTouch on:multiTouchDown={downhandler} on:multiTouchMove={movehandler} on:multiTouchUp={uphandler} style="transform: scale({scale}) translate({translation.x}px, {translation.y}px); transform-origin: {origin.x}px {origin.y}px;">  
+	<slot></slot>
 </div>
 
 
