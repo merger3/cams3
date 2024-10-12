@@ -6,7 +6,7 @@
 	import Panzoom from '@panzoom/panzoom'
 	import {type PanzoomObject} from '@panzoom/panzoom'
 	import { setPointerControls, getCenterOfTwoPoints } from 'svelte-gestures';
-	import { drawing } from '$lib/stores';
+	import { drawing, panzoom } from '$lib/stores';
 	
 	export let commandText: string;
 	export let panAndZoomInitialized: boolean = false;
@@ -108,7 +108,7 @@
 	function downhandler(event: any) {
 		if (isZoomable()) {
 			panAndZoomInitialized = true;
-			panzoom.setOptions({ disablePan: false, disableZoom: false })
+			$panzoom.setOptions({ disablePan: false, disableZoom: false })
 		}
   	}
 
@@ -121,19 +121,18 @@
   	}
 
 	  function uphandler(e: any) {
-		panzoom.setOptions({ disablePan: true, disableZoom: true })
+		$panzoom.setOptions({ disablePan: true, disableZoom: true })
 		zoomDebounce = 0;
-		if (panzoom.getScale() <= 1.3) {
-			panzoom.reset();
+		if ($panzoom.getScale() <= 1.3) {
+			$panzoom.reset();
 			
 		}
 	
 		panAndZoomInitialized = false;
 	}
 	var upHandlerDebounced = _.debounce(uphandler, 10, { 'leading': false, 'trailing': true });
-	let panzoom: PanzoomObject;
 	onMount(() => {
-		panzoom = Panzoom(zoomarea, { noBind: false, cursor: 'default', pinchAndPan: true, disablePan: true, disableZoom: true, panOnlyWhenZoomed: true })
+		$panzoom = Panzoom(zoomarea, { noBind: false, cursor: 'default', pinchAndPan: true, disablePan: true, disableZoom: true, panOnlyWhenZoomed: true })
 		console.log("Zoomable mounted")
 	});
   </script>

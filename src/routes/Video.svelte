@@ -10,7 +10,7 @@
 	import { pinch, press, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent } from 'svelte-gestures';
 	import Radial from "./Radial.svelte";
 	import _ from 'lodash';
-	import { server, GetCam } from '$lib/stores';
+	import { server, panzoom, GetCam } from '$lib/stores';
 
 
 	export let selector: Tangle;
@@ -215,7 +215,7 @@
 			console.log(`Returning early. stagePressed: ${stagePressed}, panning: ${panning}`)
 			return;
 		}
-		let shape = selector.getClickedShape({x: event.detail.x, y: event.detail.y})
+		let shape = selector.getClickedShape({x: event.detail.x / $panzoom.getScale(), y: event.detail.y / $panzoom.getScale()})
 		if (!shape || !selector.testZone(shape)) {
 			console.log("Shape was not clicked")
 			return;
@@ -237,7 +237,6 @@
 
 	function setupRadials(event: PressCustomEvent, target: Konva.Shape) {
 		let zone = Number(target.name())
-		let rect = overlay.getBoundingClientRect()
 		
 		let moveParts: RadialPart[] = [
 			{angle: 45, action: "up", label: "up", icon: "arrow-up"},
@@ -249,7 +248,7 @@
 			{angle: 45, action: "left", label: "left", icon: "arrow-left"},
 			{angle: 45, action: "upleft", label: "upleft", icon: "arrow-up-left"},
 		]
-		let moveMenu: RadialMenu = {color: "rgba(149, 91, 157, 1)", rotation: 22.5 - 135, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: moveParts, target: zone}
+		let moveMenu: RadialMenu = {color: "rgba(149, 91, 157, 1)", rotation: 22.5 - 135, location: {x: event.detail.x, y: event.detail.y}, parts: moveParts, target: zone}
 		radial.setRotations(moveMenu);
 
 		let irParts: RadialPart[] = [
@@ -258,7 +257,7 @@
 			{angle: 90, action: "iron", label: "on", icon: "lightbulb-fill"},
 			{angle: 90, action: "irauto", label: "auto", icon: "sunrise"},
 		]
-		let irMenu: RadialMenu = {color: "#212529", rotation: 45, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: irParts, target: zone}
+		let irMenu: RadialMenu = {color: "#212529", rotation: 45, location: {x: event.detail.x, y: event.detail.y}, parts: irParts, target: zone}
 		radial.setRotations(irMenu);
 
 		let swapParts: RadialPart[] = [
@@ -267,7 +266,7 @@
 			{angle: 120, action: "nextload", label: "load", icon: "download"},
 			{angle: 60, action: "swap", label: "swap", icon: "menu-button-wide"},
 		]
-		let swapMenu: RadialMenu = {color: "#212529", rotation: 30, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, parts: swapParts, target: zone}
+		let swapMenu: RadialMenu = {color: "#212529", rotation: 30, location: {x: event.detail.x, y: event.detail.y}, parts: swapParts, target: zone}
 		radial.setRotations(swapMenu);
 
 		let parts: RadialPart[] = [
@@ -276,9 +275,9 @@
 			{angle: 60, action: "focus", label: "focus", icon: "eye"},
 			{angle: 30, action: "submenu", label: "move", icon: "arrows-move", submenu: moveMenu},
 			{angle: 30, action: "submenu", label: "ir", icon: "lightbulb", submenu: irMenu},
-			{angle: 60, action: "reset", label: "reset", icon: "arrow-repeat"},
+			{angle: 60, action: "reset", label: "reset", icon: "arrow-repeat"},	
 		]
-		mainMenu = {color: "#212529", rotation: -90, location: {x: event.detail.x - rect.left, y: event.detail.y - rect.top}, previousMenu: undefined, parts: parts, target: zone}
+		mainMenu = {color: "#212529", rotation: -90, location: {x: event.detail.x / $panzoom.getScale(), y: event.detail.y / $panzoom.getScale()}, previousMenu: undefined, parts: parts, target: zone}
 		radial.setRotations(mainMenu);
 
 		moveMenu.previousMenu = mainMenu;
@@ -505,12 +504,12 @@
 		</Motion>
 		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-40 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
 	</div>
-	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px; overflow: hidden;">
+	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px; overflow: visible;">
 		<Zoomable bind:commandText bind:panAndZoomInitialized>
 			<div class="ratio ratio-16x9">
 				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
 					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
-					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 1); height: {ifHeight}; width: {ifWidth};" bind:this={overlay} />
+					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 0); height: {ifHeight}; width: {ifWidth};" bind:this={overlay} />
 				</ContextMenu>
 				
 				<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:rightClick bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets bind:panAndZoomInitialized on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu} on:resetfocus={(e) => {zoom = 0;}}/>
