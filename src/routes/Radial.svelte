@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, CamPresets } from '$types';
 	import _ from 'lodash';
-	import { server, GetCam } from '$lib/stores';
+	import { server, panzoom, GetCam } from '$lib/stores';
 
 	const dispatch = createEventDispatcher();
 	const defaultCMD: string = "​";
@@ -22,6 +22,16 @@
 	let innerRadius: number = window.innerHeight * .08;
 	let outerRadius: number = (window.innerHeight * .08) + (window.innerHeight * .13);
 	
+
+	function getRelativeZoom(): number {
+		if ($panzoom.getScale() <= 1.5) {
+			return $panzoom.getScale()
+		} else {
+			return $panzoom.getScale() * .8
+		}
+		
+	}
+
 	function builder(definition: RadialMenu): RadialPart[] {
 		if (!definition) {
 			return [];
@@ -29,7 +39,7 @@
 		cancelMenu = false;
 		color = definition.color;
 		location = definition.location;
-		innerRadius = window.innerHeight * .08;
+		innerRadius = (window.innerHeight * .08);
 		outerRadius = (window.innerHeight * .08) + (window.innerHeight * .13);
 
 		return definition.parts;
@@ -60,7 +70,7 @@
 		y: 0,
 		width: 200,
 		text: "",
-		fontSize: 2 * parseFloat(getComputedStyle(document.documentElement).fontSize),
+		fontSize: 2 * parseFloat(getComputedStyle(document.documentElement).fontSize) / getRelativeZoom(),
 		padding: 5,
 		fill: "white",
 		stroke: 'black',
@@ -283,8 +293,8 @@
 			}
 		}
 		return {
-			x: r*Math.cos(theta),
-			y: r*Math.sin(theta),
+			x: r*Math.cos(theta) / getRelativeZoom(),
+			y: r*Math.sin(theta) / getRelativeZoom(),
 		}
 	}
 
@@ -307,12 +317,12 @@
 		<Arc config={{
 			x: menuDefinition.location.x,
 			y: menuDefinition.location.y,
-			innerRadius: innerRadius,
-			outerRadius: outerRadius,
+			innerRadius: innerRadius / getRelativeZoom(),
+			outerRadius: outerRadius / getRelativeZoom(),
 			angle: r.angle,
 			fill: r.color,
 			stroke: 'darkgrey',
-			strokeWidth: 2,
+			strokeWidth: 2 / getRelativeZoom(),
 			rotation: r.rotation,
 			name: "radialpart",
 			hitFunc: arcCustomHitbox
