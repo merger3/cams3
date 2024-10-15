@@ -22,9 +22,9 @@
 	<div class="offcanvas-header p-2">
 	 
 		<Tabs.List class="grid w-full grid-cols-3 w-100 ms-1 me-0">
-			<Tabs.Trigger value="agg">AGG</Tabs.Trigger>
 			<Tabs.Trigger value="alveus">Alveus</Tabs.Trigger>
-			<Tabs.Trigger value="both">Chat</Tabs.Trigger>
+			<Tabs.Trigger value="agg">AGG</Tabs.Trigger>
+			<Tabs.Trigger value="both">Both</Tabs.Trigger>
 		</Tabs.List>
 		<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 	</div>

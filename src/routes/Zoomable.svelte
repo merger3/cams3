@@ -61,7 +61,7 @@
 			} 
 		}
 
-		$panzoom.zoomToPoint(zoom, {clientX: (e.clientX - $panzoom.getPan().x), clientY: (e.clientY - $panzoom.getPan().y)}, {maxScale: 3, minScale: 1, force: true});
+		$panzoom.zoomToPoint(zoom, {clientX: (e.clientX - $panzoom.getPan().x), clientY: (e.clientY - $panzoom.getPan().y)}, {maxScale: 4, minScale: 1, force: true});
 		if ($panzoom.getScale() <= 1.1) {
 			$panzoom.reset();
 			zoom = 1;
@@ -117,7 +117,7 @@
 			let scale: number = prevScale * event.detail.scale;
 			scale = scale < 1 ? 1 : scale;
 			if (zoomDebounce > 2) {
-				$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x - $panzoom.getPan().x), clientY: (event.detail.center.y - $panzoom.getPan().y)})
+				$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x - $panzoom.getPan().x), clientY: (event.detail.center.y - $panzoom.getPan().y)}, {minScale: 1, maxScale: 4})
 				// $panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x), clientY: (event.detail.center.y)})
 			} else {
 				zoomDebounce++;
