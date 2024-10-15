@@ -5,6 +5,7 @@
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, CamPresets } from '$types';
 	import _ from 'lodash';
 	import { server, panzoom, GetCam } from '$lib/stores';
+	import { ClickTangle } from '$lib/rect';
 
 	const dispatch = createEventDispatcher();
 	const defaultCMD: string = "​";
@@ -148,8 +149,8 @@
 
 	async function send() {
 		if (commandText == defaultCMD) {
-			let response = await $server.post("/click", {x: menuDefinition.location.x, y: menuDefinition.location.y, width: 0, height: 0, frameWidth: ifWidth,frameHeight: ifHeight})
-			commandText = response.data.command;
+			let response = ClickTangle({X: menuDefinition.location.x, Y: menuDefinition.location.y, Width: 0, Height: 0, FrameWidth: ifWidth,FrameHeight: ifHeight})
+			commandText = response.command;
 			// _.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
 		}
 

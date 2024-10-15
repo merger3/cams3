@@ -59,7 +59,6 @@
 	function getData(e: any) {
 		let rect: Konva.Rect = e.detail.rect;
 		let isClick: boolean = (rect.width() == 0 && rect.height() == 0);
-		let clickRoute: string = isClick ? "/click" : "/draw";
 
 		let response: any;
 		if (isClick) {
@@ -87,7 +86,7 @@
 		
 		console.log(response);
 		
-		commandText = response.data.command;
+		commandText = response.command;
 	}
 	
 
