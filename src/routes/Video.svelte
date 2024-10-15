@@ -10,7 +10,8 @@
 	import { pinch, press, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent } from 'svelte-gestures';
 	import Radial from "./Radial.svelte";
 	import _ from 'lodash';
-	import { server, panzoom, GetCam } from '$lib/stores';
+	import { server, panzoom, gesturing, GetCam, multiTouchPan } from '$lib/stores';
+	import { ClickTangle, DrawTangle } from '$lib/rect';
 
 
 	export let selector: Tangle;
@@ -22,38 +23,72 @@
 	const dispatch = createEventDispatcher();
 
 
+	// let tangle: Konva.Rect;
+	// function getData(e: any) {
+	// 	let rect: Konva.Rect = e.detail.rect;
+	// 	let isClick: boolean = (rect.width() == 0 && rect.height() == 0);
+	// 	let clickRoute: string = isClick ? "/click" : "/draw";
+	// 	if (isClick) {
+	// 		clickRoute = "/click";
+	// 	} else {
+	// 		clickRoute = "/draw";
+	// 	}
+	// 	console.log("getting data")
+	// 	console.log(`ifWidth: ${ifWidth}, ifHeight: ${ifHeight}`)
+		
+	// 	$server.post(clickRoute, {
+	// 		x: rect.x(),
+	// 		y: rect.y(),
+	// 		width: rect.width(),
+	// 		height: rect.height(),
+	// 		frameWidth: ifWidth,
+	// 		frameHeight: ifHeight
+	// 	}).then(function (response) {
+	// 		if (isClick) {
+	// 			zoom = 100;
+	// 		}
+	// 		commandText = response.data.command;
+	// 		console.log(response);
+	// 	}).catch(function (error) {
+	// 		console.log(error);
+	// 	});
+		
+	// }
+
 	let tangle: Konva.Rect;
 	function getData(e: any) {
 		let rect: Konva.Rect = e.detail.rect;
 		let isClick: boolean = (rect.width() == 0 && rect.height() == 0);
 		let clickRoute: string = isClick ? "/click" : "/draw";
+
+		let response: any;
 		if (isClick) {
-			clickRoute = "/click";
+			response = ClickTangle({
+				X: rect.x(),
+				Y: rect.y(),
+				Width: rect.width(),
+				Height: rect.height(),
+				FrameWidth: ifWidth,
+				FrameHeight: ifHeight
+			})
+			zoom = 100;
 		} else {
-			clickRoute = "/draw";
+			response = DrawTangle({
+				X: rect.x(),
+				Y: rect.y(),
+				Width: rect.width(),
+				Height: rect.height(),
+				FrameWidth: ifWidth,
+				FrameHeight: ifHeight
+			})
 		}
 		console.log("getting data")
 		console.log(`ifWidth: ${ifWidth}, ifHeight: ${ifHeight}`)
 		
-		$server.post(clickRoute, {
-			x: rect.x(),
-			y: rect.y(),
-			width: rect.width(),
-			height: rect.height(),
-			frameWidth: ifWidth,
-			frameHeight: ifHeight
-		}).then(function (response) {
-			if (isClick) {
-				zoom = 100;
-			}
-			commandText = response.data.command;
-			console.log(response);
-		}).catch(function (error) {
-			console.log(error);
-		});
+		console.log(response);
 		
+		commandText = response.data.command;
 	}
-
 	
 
 	function makeSwaps(e: any) {
@@ -213,7 +248,7 @@
 	function pressHandler(event: PressCustomEvent) {
 		console.log("Press registered")
 		console.log(event)
-		if (!stagePressed || panning || rightClick || middleClick) {
+		if (!stagePressed || panning || rightClick || middleClick || $gesturing) {
 			console.log(`Returning early. stagePressed: ${stagePressed}, panning: ${panning}`)
 			return;
 		}
@@ -354,61 +389,37 @@
 		}
 	}
 
-	let notchSizeUp: number, notchSizeDown: number;
 	let panning: boolean = false;
-	let panInitialized: boolean = false;
-	function panDown(gestureEvent: GestureCustomEvent) {
-		if (gestureEvent.detail.pointersCount < 2) {
-			return;
-		}
+	function panDown(event: GestureCustomEvent) {
 		console.log("panning true")
 		panning = true;
 		selector.removeHandlers();
 		if (!commandText.startsWith("!ptzclick") && !commandText.startsWith("!ptzfocusr")) {
+			panning = false;
 			return;
 		}
-		notchSizeUp = Math.round(window.innerHeight / 2 * .05);
-		notchSizeDown =  Math.round(window.innerHeight / 2 * .05);
-		lastTime = gestureEvent.timeStamp;
 	}
 
-	let lastNotch: number, lastTime: number, lastY: number = -1;
-	let lastX: number | null;
-	function panMove(gestureEvent: GestureCustomEvent) {
-		if (!panning || gestureEvent.detail.pointersCount < 2 || lastY == gestureEvent.detail.y || gestureEvent.timeStamp == lastTime) {
+	function panMove(event: any) {
+		if (!panning || (!commandText.startsWith("!ptzclick") && !commandText.startsWith("!ptzfocusr"))) {
 			return;
 		}
-		if (!commandText.startsWith("!ptzclick") && !commandText.startsWith("!ptzfocusr")) {
-			return;
-		}
-		if (!panInitialized) {
-			lastY = gestureEvent.detail.y;
-			lastX = null;
-			lastNotch = gestureEvent.detail.y;
-			panInitialized = true;
-		}
-		if (lastX && (Math.abs(lastX - gestureEvent.detail.x) > 5)) {
-			return;
-		}
+		// console.log(event.detail.notch)
 		let forceResize: boolean = false;
-		let panDirection = lastY - gestureEvent.detail.y;
-		let notchDelta = lastNotch - gestureEvent.detail.y;
 		if (commandText.startsWith("!ptzclick")) {
-			if ((panDirection > 0) && (Math.abs(notchDelta) >= notchSizeUp)) {
+			if (event.detail.notch == 1) {
 				if (zoom >= 100) {
 					zoom += 20;
 				} else if (zoom < 10) {
 					zoom += 5;
 				} else {
-					zoom += 5;
+					zoom += 10;
 				}
 				if (zoom > maxZoomTouch) {
 					zoom = 10000;
 					forceResize = true;
 				}
-				lastNotch = gestureEvent.detail.y;
-				console.log(`move up`)
-			} else if ((panDirection < 0) && (Math.abs(notchDelta) >= notchSizeDown)) {
+			} else if (event.detail.notch == -1) {
 				if (zoom >= 10000) {
 					zoom = maxZoomTouch;			
 				} else if (zoom > 0) {
@@ -417,24 +428,18 @@
 					} else if (zoom <= 10) {
 						zoom -= 5;
 					} else {
-						zoom -= 5;
+						zoom -= 10;
 					}
 				} 
 				if (zoom < 0) {
 					zoom = 0;
 				}
-				lastNotch = gestureEvent.detail.y;
-				console.log(`move down`)
 			}
 		} else {
-			if ((panDirection > 0) && (Math.abs(notchDelta) >= notchSizeUp)) {
+			if (event.detail.notch == 1) {
 				zoom += 25
-				lastNotch = gestureEvent.detail.y;
-				console.log(`move up`)
-			} else if ((panDirection < 0) && (Math.abs(notchDelta) >= notchSizeDown)) {
+			} else if (event.detail.notch == -1) {
 				zoom -= 25;
-				lastNotch = gestureEvent.detail.y;
-				console.log(`move down`)
 			}
 		}
 		
@@ -442,14 +447,13 @@
 		if (forceResize) {
 			dispatch('resizecommand');
 		}
-		lastTime = gestureEvent.timeStamp;
-		lastX = gestureEvent.detail.x;
-		lastY = gestureEvent.detail.y;
 	}
+	// var panMoveThrottled = _.throttle(panMove, 1, { 'leading': true, 'trailing': false });
+
+
 
 	function panUp(gestureEvent: GestureCustomEvent) {
 		panning = false;
-		panInitialized = false;
 		jQuery('.movedown').css('z-index', '');
 	}
 
@@ -510,7 +514,15 @@
 		<Zoomable bind:commandText bind:panAndZoomInitialized bind:middleClick bind:selector>
 			<div class="ratio ratio-16x9">
 				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
-					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
+					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} 
+						on:wheel={handleWheel} 
+						use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}}
+						on:multiTouchDown={panDown} 
+						on:multiTouchMove={panMove} 
+						on:multiTouchUp={panUp} 
+						use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} 
+						on:press={pressHandler}
+					/>
 					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 0); height: {ifHeight}; width: {ifWidth};" bind:this={overlay} />
 				</ContextMenu>
 				

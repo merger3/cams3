@@ -9,7 +9,7 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { token, server, GetCam } from '$lib/stores';
+	import { token, server, gesturing, GetCam } from '$lib/stores';
 	import _ from 'lodash';
 
 	// import { userRole } from './stores';
@@ -133,6 +133,7 @@
 			console.log(error);
 		});
 
+		$gesturing = false;
 		window.ResizeObserver = ResizeObserver;
 		resizeObserverDefined = true;
 		jQuery(".movedown").on('wheel', handleWheel)

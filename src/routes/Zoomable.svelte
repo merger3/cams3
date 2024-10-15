@@ -7,7 +7,7 @@
 	import Panzoom from '@panzoom/panzoom'
 	import {type PanzoomObject} from '@panzoom/panzoom'
 	import { setPointerControls, getCenterOfTwoPoints } from 'svelte-gestures';
-	import { drawing, panzoom, multiTouch } from '$lib/stores';
+	import { drawing, panzoom, multiTouch, tripleTouch } from '$lib/stores';
 
 	
 	export let commandText: string;
@@ -100,67 +100,12 @@
 
 	
 
-	export function tripleTouch(node: HTMLElement, params: BaseParams = {composed: false, touchAction: "none"}) {
-		const gestureName = 'tripleTouch';
-		const touchCount = 3;
-		let origin: Coordinates;
-		let prevDistance: number | undefined;
-
-		function onUp(activeEvents: PointerEvent[], event: PointerEvent) {
-			// fix this cleanup
-			if (activeEvents.length === 1) {
-				prevDistance = undefined;
-			}
-			node.dispatchEvent(
-				new CustomEvent(`${gestureName}Up`, {
-					detail: { target: event.target },
-				})
-			);	
-		}
-		
-			
-
-		function onDown(activeEvents: PointerEvent[], event: PointerEvent) {
-			if (activeEvents.length == touchCount) {
-				let midX = (activeEvents[0].clientX + activeEvents[activeEvents.length - 1].clientX) / 2;
-				let midY = (activeEvents[0].clientY + activeEvents[activeEvents.length - 1].clientY) / 2;
-
-				origin = {x: midX, y: midY};
-
-				node.dispatchEvent(
-					new CustomEvent(`${gestureName}Down`, {
-					detail: { center: origin, target: event.target },
-					})
-				);	
-			}
-		}
-
-		function onMove(activeEvents: PointerEvent[], event: PointerEvent) {
-			if (activeEvents.length == touchCount) {
-				let midX = (activeEvents[0].clientX + activeEvents[activeEvents.length - 1].clientX) / 2;
-				let midY = (activeEvents[0].clientY + activeEvents[activeEvents.length - 1].clientY) / 2;
-
-				node.dispatchEvent(
-					new CustomEvent(`${gestureName}Move`, {
-					detail: { center: {x: midX, y: midY}, delta: {x: midX - origin.x, y: midY - origin.y}, target: event.target },
-					})
-				);	
-			}
-			return false;
-		}
-
-		if (params.composed) {
-			return { onMove, onDown, onUp};
-		}
-
-
-		return setPointerControls(gestureName, node, onMove, onDown, onUp);
-	}
+	
 
 	let zoomInitialized: boolean = false;
 	function doubleDownHandler(event: any) {
+		selector.removeHandlers();
 		if (isZoomable()) {
-			selector.removeHandlers();
 			setZoomState(true);
 		}
   	}
@@ -196,8 +141,8 @@
 
 	let panInitialized: boolean = false;
 	function tripleDownHandler(event: any) {
+		selector.removeHandlers();
 		if (isZoomable()) {
-			selector.removeHandlers();
 			prevPan = {x: $panzoom.getPan().x, y: $panzoom.getPan().y};
 			setPanState(true);
 		}
@@ -264,7 +209,6 @@
 		on:mousedown={wheelDownHandler}
 		on:mousemove={wheelMoveHandler}
 		on:mouseup={wheelUpHandler}>
-<!-- <div id="zoomarea" bind:this={zoomarea} >   -->
 	<slot></slot>
 </div>
 
