@@ -51,6 +51,7 @@
 		}).catch(function (error) {
 			console.log(error);
 		});
+		
 	}
 
 	
@@ -208,10 +209,11 @@
 	let mainMenu: RadialMenu;
 	let radial: Radial;
 	let rightClick: boolean;
+	let middleClick: boolean;
 	function pressHandler(event: PressCustomEvent) {
 		console.log("Press registered")
 		console.log(event)
-		if (!stagePressed || panning || rightClick) {
+		if (!stagePressed || panning || rightClick || middleClick) {
 			console.log(`Returning early. stagePressed: ${stagePressed}, panning: ${panning}`)
 			return;
 		}
@@ -505,7 +507,7 @@
 		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-40 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
 	</div>
 	<div id="vid" class="ms-auto" style="width:{ifWidth}px; height:{ifHeight}px; overflow: visible;">
-		<Zoomable bind:commandText bind:panAndZoomInitialized>
+		<Zoomable bind:commandText bind:panAndZoomInitialized bind:middleClick bind:selector>
 			<div class="ratio ratio-16x9">
 				<ContextMenu bind:isRendered bind:isOpen bind:entry={swaps} on:openmenu={registerMenuClick} on:closemenu={closeMenu} on:clickentry={handleClickedEntry} >
 					<div id="stage" class="unselectable z-20" bind:this={stageOverlay} on:wheel={handleWheel} use:pan on:pandown={panDown} on:panmove={panMove} on:panup={panUp} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} on:press={pressHandler}/>
@@ -575,6 +577,6 @@
 		left: 0;         /* Aligns the div with the left of the viewport */
 		width: 100vw;    /* 100% of the viewport width */
 		height: 100vh;   /* 100% of the viewport height */
-		background-color: rgba(255, 12, 223, 0); /* Optional: a semi-transparent background */
+		background-color: rgba(190, 51, 172, 0); /* Optional: a semi-transparent background */
 	}
 </style>

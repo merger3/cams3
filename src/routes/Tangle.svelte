@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { Box, Coordinates, CamPresets } from '$types';
 	import Radial from "./Radial.svelte";
-	import { drawing } from '$lib/stores';
+	import { drawing, panzoom } from '$lib/stores';
 	
 
 	export let stageWidth: number;
@@ -169,21 +169,21 @@
 	let placeholderArrow: Konva.Arrow | null;
 	let clickedCoords: Coordinates | null;
 	let clickedShape: Konva.Shape | null;
+	let pointers: number = 0;
 	function handleStageMouseDown(e: any) {
 		console.log("stage pointer down")
-		if (panAndZoomInitialized) {
+		console.log(e)
+		console.log(`Button: ${e.detail.evt.button}, Buttons: ${e.detail.evt.buttons}`)
+		if (panAndZoomInitialized || (e.detail.evt.button != 0 && e.detail.evt.button != 2)) {
+			console.log("returning out of pointer down early")
 			return;
 		}
-
 		
-
 		const konvaEvent = e.detail;
 		let mousePos = stage.getPointerPosition();
 		if (!mousePos) {
 			return;
 		}
-
-		
 
 		clickedCoords = {x: mousePos.x, y: mousePos.y};
 		console.log(clickedCoords)
@@ -192,8 +192,6 @@
 			console.log("Unrecoverable state")
 			return;
 		}
-
-		
 
 		if (konvaEvent.evt.button == 2) {
 			dispatch("rightclick", {
@@ -246,7 +244,11 @@
 			stage.on("pointermove", watchForDrag);
 		} else {
 			stagePressed = false;
+			// stage.on("pointerup", endDrawingCheck);
+
 		}
+		
+
 	}
 
 	function handleStageDblClick(e: any) {
@@ -393,7 +395,7 @@
 
 			transformer.nodes([tangle]);
 			transformer.anchorSize(Math.max(Math.min((transformer?.width() / 6), 15), 3))
-
+			
 			dispatch('finishdrawing', {
 				rect: tangle
 			});
@@ -435,6 +437,7 @@
 		stagePressed = true;
 		rightClick = false;
 		$drawing = false;
+		
 		stage.off('pointermove');
 		stage.off('pointerup');
 		selectedBox?.off("pointerleave", unhighlightShape)
@@ -457,7 +460,8 @@
 		clickTimeout = setTimeout(() => {
 			finshEndDrawing(event);
 		}, 200);
-		
+
+
 	};
 
 	function handleDrag() {
@@ -471,6 +475,7 @@
 
 	function endDrag() {
 		calcDraw(layer.getRelativePointerPosition());
+
 		dispatch('finishdrawing', {
 			rect: tangle
 		});
@@ -517,6 +522,7 @@
 			crushSize = true;
 		}
 
+
 		dispatch('finishdrawing', {
 			rect: tangle
 		});
@@ -539,6 +545,39 @@
 	onMount(async () => {
 		await tick();
 		dispatch("forceiframeresize");
+		stage.on("touchstart", (e: any) => {
+			console.log(e)
+			// for (let i = 0; i < e.evt.changedTouches.length; i++) {}
+			pointers++;
+			console.log(`pointers: ${pointers}`)
+		});
+		stage.on("touchend", (e: any) => {
+			console.log(e)
+			for (let i = 0; i < e.evt.changedTouches.length; i++) {
+				if (pointers > 0) {
+					pointers--;
+				}
+			}
+
+			console.log(`pointers: ${pointers}`)
+		});
+		stage.on("mousedown", (e: any) => {
+			if (e.evt.button == 0) {
+				console.log(e)
+				// for (let i = 0; i < e.evt.changedTouches.length; i++) {}
+				pointers++;
+				console.log(`pointers: ${pointers}`)
+
+			}
+		});
+		stage.on("mouseup", (e: any) => {
+			if (e.evt.button == 0) {
+				console.log(e)
+				pointers--;
+
+				console.log(`pointers: ${pointers}`)
+			}
+		});
 		// layer.toggleHitCanvas();
    
  	});
