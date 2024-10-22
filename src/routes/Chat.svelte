@@ -30,7 +30,7 @@
 	</div>
 	<div class="offcanvas-body h-100 p-0">
 			<Tabs.Content value="alveus" class="h-100 m-0">
-				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app"
+				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
 				title="chat"
 				class="ml-auto"
 				height=94%
@@ -38,7 +38,7 @@
 				/>
 			</Tabs.Content>
 			<Tabs.Content value="agg" class="h-100 m-0">
-				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app"
+				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
 				title="chat"
 				class="ml-auto"
 				height=94%
@@ -47,13 +47,13 @@
 				
 			</Tabs.Content>
 			<Tabs.Content value="both" class="h-100 m-0">
-				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app"
+				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
 				title="chat"
 				class="ml-auto"
 				height=47%
 				width=95%
 				/>
-				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app"
+				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
 				title="chat"
 				class="ml-auto"
 				height=47%
