@@ -4,6 +4,7 @@ import type { CamRequest, CamResponse, Coordinates } from '$types';
 import {type PanzoomObject} from '@panzoom/panzoom'
 import { pinch, press, composedGesture, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent, type RegisterGestureType, type GestureCallback, type BaseParams, type GestureReturnType} from 'svelte-gestures';
 import { setPointerControls, getCenterOfTwoPoints } from 'svelte-gestures';
+import type { States, Action, ActionsManager } from '$lib/actions';
 
 
 export let token = writable<string>();
@@ -12,6 +13,12 @@ export let drawing = writable<boolean>();
 export let gesturing = writable<boolean>();
 export let panzoom = writable<PanzoomObject>();
 
+export let am = writable<ActionsManager>();
+
+export function InitializeAM() {
+	let newAM: ActionsManager = {Actions: [], ActiveAction: null};
+	am.set(newAM);
+}
 
 export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamResponse> {
 	let response = await a.post("/camera", {x: r.coordinates.x, y: r.coordinates.y, width: 0, height: 0, frameWidth: r.frameWidth, frameHeight: r.frameHeight, position: Number(r.position)});

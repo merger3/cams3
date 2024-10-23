@@ -12,6 +12,7 @@
 	import _ from 'lodash';
 	import { server, panzoom, gesturing, GetCam, multiTouchPan } from '$lib/stores';
 	import { ClickTangle, DrawTangle } from '$lib/rect';
+	import TangleLite from './TangleLite.svelte';
 
 
 	export let selector: Tangle;
@@ -525,7 +526,7 @@
 					<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 0); height: {ifHeight}; width: {ifWidth};" bind:this={overlay} />
 				</ContextMenu>
 				
-				<Tangle bind:this={selector} bind:commandText bind:stagePressed bind:rightClick bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets bind:panAndZoomInitialized on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu} on:resetfocus={(e) => {zoom = 0;}}/>
+				<TangleLite bind:this={selector} bind:commandText bind:stagePressed bind:rightClick bind:ifWidth bind:ifHeight bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:mainLayerConfig bind:zones bind:tangle bind:clickTimeout bind:radialMenu={radial} bind:camPresets bind:panAndZoomInitialized on:finishdrawing={getData} on:finishdrawingline={makeSwaps} on:doubleclick={doubleClick} on:rightclick={registerCanvasClick} on:sendcmd={bubbleSend} on:forceiframeresize={resizeIframe} on:openmenu={simulateMenu} on:resetfocus={(e) => {zoom = 0;}}/>
 					
 					<!-- <div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/> -->
 					

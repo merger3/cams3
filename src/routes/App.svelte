@@ -5,7 +5,7 @@
 	import Chat from './Chat.svelte';
 	import CamSelector from "./CamSelector.svelte";
 	import axios from 'axios';
-	import Video from "./Video.svelte";
+	import VideoLite from './VideoLite.svelte';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
@@ -181,11 +181,11 @@
 				</div>
 			</div>
 			<div class="col-auto g-0" id="wrapper">
-				<Video bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth bind:zoom bind:camPresets on:doubleclick={handleDoubleClick} on:resizecommand={resizeText} on:sendcmd={sendCommand} />
+				<VideoLite bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth />
 			</div>
 		</div>
 	</div>
-	<Chat bind:ifHeight={commandHeight}/>
+	<!-- <Chat bind:ifHeight={commandHeight}/> -->
 {/if}
 	
 <style>
