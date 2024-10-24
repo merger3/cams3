@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Tangle from './Tangle.svelte';
+	import TangleLite from './TangleLite.svelte';
 	import Presets from './Presets.svelte';
 	import Chat from './Chat.svelte';
 	import CamSelector from "./CamSelector.svelte";
@@ -9,21 +9,19 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { token, server, gesturing, GetCam } from '$lib/stores';
+	import { commandText, token, server, GetCam, InitializeAM, ifDimensions } from '$lib/stores';
 	import _ from 'lodash';
 
 	// import { userRole } from './stores';
 	const defaultCMD: string = "​";
 
 	export let config: Config;
-	let selector: Tangle;
-	let commandText: string = defaultCMD;
+	let selector: TangleLite;
+	$commandText = defaultCMD;
 	
 	let camPresets: CamPresets;
 
 	let commandHeight: number;
-	let ifHeight: number;
-	let ifWidth: number;
 
 	let spacerHeight: number;
 	let spacerWidth: number;
@@ -32,13 +30,13 @@
 
 	async function sendCommand() {
 		$server.post('/send', {
-			command: commandText
+			command: $commandText
 		}).then(function (response) {
 			console.log(response);
 		}).catch(function (error) {
 			console.log(error);
 		});
-		commandText = defaultCMD;
+		$commandText = defaultCMD;
 		selector.cleanUp();
 	}
 
@@ -46,11 +44,11 @@
 	async function handleDoubleClick(e: any) {
 		console.log("double click registered highest level")
 		console.log(e)
-		console.log(`ifWidth: ${ifWidth}, ifHeight: ${ifHeight}`)
+		console.log(`$ifDimensions.width: ${$ifDimensions.width}, $ifDimensions.height: ${$ifDimensions.height}`)
 
 		// Verify that e.detail.position is actually an integer before passing it
 		// Or verify that its in the zone group  
-		let cam = await GetCam({coordinates: {x: e.detail.x, y: e.detail.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: e.detail.position}, $server)
+		let cam = await GetCam({coordinates: {x: e.detail.x, y: e.detail.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: e.detail.position}, $server)
 		
 		$server.post('/camera/presets', {
 			camera: cam.name
@@ -65,7 +63,7 @@
 	let zoom: number = 100;
 	function handleWheel(event: any) {
 		let e = event.originalEvent as WheelEvent;
-		if (commandText.startsWith("!ptzclick")) {
+		if ($commandText.startsWith("!ptzclick")) {
 			let forceResize: boolean = false;
 			if (e.deltaY < 0) {
 				zoom += 10;
@@ -81,7 +79,7 @@
 					zoom = 0;
 				}
 			}
-			commandText = `${commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
 			if (forceResize) {
 				resizeText();
 			}
@@ -89,8 +87,8 @@
 	}
 
 	function resizeTextRaw() {
-		if (commandText == "<br>") {
-			commandText = defaultCMD;
+		if ($commandText == "<br>") {
+			$commandText = defaultCMD;
 		}
 		fit(resize, {min_size: 8});
 	}
@@ -109,7 +107,7 @@
 		// const scope = params.get("scope");
 		$token = `${accessToken}`
 
-		console.log($token)
+		// console.log($token)
 		//$token = `oauth:51esxuzacga63qijrpwczxq95m8ejc`
 
 		$server = axios.create({
@@ -122,38 +120,40 @@
 			headers: {'X-Twitch-Token': $token}
 		});
 
-		$server.post('/authorize').then(function (response) {
-			console.log(response);
-			if (response.data.authorized) {
-				authorized = true;
-			} else {
-				window.location.replace("/login");
-			}
-		}).catch(function (error) {
-			console.log(error);
-		});
+		// $server.post('/authorize').then(function (response) {
+		// 	console.log(response);
+		// 	if (response.data.authorized) {
+		// 		authorized = true;
+		// 	} else {
+		// 		window.location.replace("/login");
+		// 	}
+		// }).catch(function (error) {
+		// 	console.log(error);
+		// });
 
-		$gesturing = false;
+		InitializeAM();
 		window.ResizeObserver = ResizeObserver;
 		resizeObserverDefined = true;
+		window.addEventListener(`contextmenu`, (e) => e.preventDefault());
+
 		jQuery(".movedown").on('wheel', handleWheel)
-		if (commandText) {
+		if ($commandText) {
 			resizeText();
 		}
 	});
-	$: resizeObserverDefined && commandText && resizeText();
+	$: resizeObserverDefined && $commandText && resizeText();
 
-	let authorized: boolean = false;
+	let authorized: boolean = true;
 </script>
 
 <svelte:head>
 	<script lang="ts">
-		const fragmentCheck = window.location.hash.substring(1);
-		const regex = new RegExp('access_token=\\w+&scope=[\\w%+]+&token_type=bearer');
-		if (fragmentCheck == "" || !regex.test(fragmentCheck)) {
-			console.log("redirecting")
-			window.location.replace("/login");
-		}
+		// const fragmentCheck = window.location.hash.substring(1);
+		// const regex = new RegExp('access_token=\\w+&scope=[\\w%+]+&token_type=bearer');
+		// if (fragmentCheck == "" || !regex.test(fragmentCheck)) {
+		// 	console.log("redirecting")
+		// 	window.location.replace("/login");
+		// }
 	</script>
 </svelte:head>
 
@@ -166,32 +166,33 @@
 {:else}
 	<div class="container-fluid" id="video-container">
 		<div class="row justify-content-between flex-nowrap ">
-			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1 z-30 movedown" id="camselector">
+			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector">
 				<div style="min-height: {commandHeight}px;max-height: {commandHeight}px;">
 					<CamSelector bind:spacerHeight bind:spacerWidth bind:commandHeight bind:camPresets bind:camList={config.camlist} />
 				</div>
 				<div id="spacer" bind:clientHeight={spacerHeight} bind:clientWidth={spacerWidth}>
 					{#if camPresets}
-					<Presets bind:spacerHeight bind:spacerWidth bind:commandText bind:camPresets on:sendcmd={sendCommand} />
+					<Presets bind:spacerHeight bind:spacerWidth bind:camPresets on:sendcmd={sendCommand} />
 					{/if}
 					
 				</div>
-				<div id="sendcontainer" style="{parent_style}max-height: {ifHeight * .15}px;">
-					<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-30 movedown"> {commandText == defaultCMD ? " Send " : " " + commandText + " "} </button>
+				<div id="sendcontainer" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
+					<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown"> {$commandText == defaultCMD ? " Send " : " " + $commandText + " "} </button>
 				</div>
 			</div>
 			<div class="col-auto g-0" id="wrapper">
-				<VideoLite bind:commandText bind:selector bind:commandHeight bind:ifHeight bind:ifWidth />
+				<VideoLite bind:selector bind:commandHeight />
 			</div>
 		</div>
 	</div>
-	<!-- <Chat bind:ifHeight={commandHeight}/> -->
+	<!-- <Chat bind:$ifDimensions.height={commandHeight}/> -->
 {/if}
 	
 <style>
 	#spacer {
 		height: 100%;
 		/* background-color: aqua; */
+		z-index: 0;
 	}
 	#camselector {
 		/* background-color: rebeccapurple; */

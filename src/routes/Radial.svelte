@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, CamPresets } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 
 	const dispatch = createEventDispatcher();
@@ -13,8 +13,6 @@
 
 	export let stage: Konva.Stage;
 	export let commandText: string;
-	export let ifWidth: number;
-	export let ifHeight: number;
 	export let camPresets: CamPresets;
 
 	let menuDefinition: RadialMenu;
@@ -149,7 +147,7 @@
 
 	async function send() {
 		if (commandText == defaultCMD) {
-			let response = ClickTangle({X: menuDefinition.location.x, Y: menuDefinition.location.y, Width: 0, Height: 0, FrameWidth: ifWidth,FrameHeight: ifHeight})
+			let response = ClickTangle({X: menuDefinition.location.x, Y: menuDefinition.location.y, Width: 0, Height: 0, FrameWidth: $ifDimensions.width,FrameHeight: $ifDimensions.height})
 			commandText = response.command;
 			// _.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
 		}
@@ -173,7 +171,7 @@
 	}
 
 	async function resetCam() {
-		let cam = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
+		let cam = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: menuDefinition.target}, $server)
 	
 		if (!cam.found) {
 			return;
@@ -188,7 +186,7 @@
 	}
 	
 	async function moveCMD(direction: string) {
-		let camera = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
+		let camera = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: menuDefinition.target}, $server)
 		if (!camera.found) {
 			return;
 		}
@@ -202,7 +200,7 @@
 	}
 
 	async function irCMD(state: string) {
-		let camera = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
+		let camera = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: menuDefinition.target}, $server)
 		if (!camera.found) {
 			return;
 		}
@@ -211,7 +209,7 @@
 	}
 
 	async function focusCam() {
-		let camera = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
+		let camera = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: menuDefinition.target}, $server)
 		if (!camera.found) {
 			return;
 		}
@@ -222,7 +220,7 @@
 	}
 
 	async function loadNextCam(action: string) {
-		let cam = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: ifWidth, frameHeight: ifHeight, position: menuDefinition.target}, $server)
+		let cam = await GetCam({coordinates: {x: menuDefinition.location.x, y: menuDefinition.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: menuDefinition.target}, $server)
 		let response = await $server.post('/camera/swaps', {camera: cam.name});
 
 		console.log(response)

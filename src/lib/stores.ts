@@ -1,12 +1,13 @@
 import { writable } from 'svelte/store';
 import axios, { Axios, type AxiosInstance } from 'axios';
-import type { CamRequest, CamResponse, Coordinates } from '$types';
+import type { CamRequest, CamResponse, Coordinates, Dimensions } from '$types';
 import {type PanzoomObject} from '@panzoom/panzoom'
 import { pinch, press, composedGesture, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent, type RegisterGestureType, type GestureCallback, type BaseParams, type GestureReturnType} from 'svelte-gestures';
 import { setPointerControls, getCenterOfTwoPoints } from 'svelte-gestures';
-import type { States, Action, ActionsManager } from '$lib/actions';
+import { type States, type Action, type ActionsManager } from '$lib/actions';
 
-
+export let commandText = writable<string>();
+export let ifDimensions = writable<Dimensions>({width: 0, height: 0});
 export let token = writable<string>();
 export let server = writable<AxiosInstance>();
 export let drawing = writable<boolean>();
@@ -16,7 +17,38 @@ export let panzoom = writable<PanzoomObject>();
 export let am = writable<ActionsManager>();
 
 export function InitializeAM() {
-	let newAM: ActionsManager = {Actions: [], ActiveAction: null};
+	let newAM: ActionsManager = {
+		Actions: {}, 
+		ActiveAction: null, 
+		ActiveStates: new Set(),
+		IsAvailable: function (actionName: string): boolean {
+			let action = this.Actions[actionName];
+			if (action == undefined) {
+				return false;
+			}
+			return (action.ActiveConditions.isSubsetOf(this.ActiveStates) && (action.InactiveConditions.intersection(this.ActiveStates).size == 0));
+		},
+		CallAction: function (actionName: string, origin: Coordinates): void {
+			let action = this.Actions[actionName];
+			if (action == undefined) {
+				return;
+			}
+			if (this.IsAvailable(actionName) && !action.IsActive) {
+				action.Enable({x: origin.x, y: origin.y})
+			} else if (!this.IsAvailable(actionName) && action.IsActive) {
+				action.Cancel();
+			}
+		},
+		CheckActions: function (origin: Coordinates): void {
+			for (let [name, action] of Object.entries(this.Actions)) {
+				if (this.IsAvailable(name) && !action.IsActive) {
+					action.Enable({x: origin.x, y: origin.y})
+				} else if (!this.IsAvailable(name) && action.IsActive) {
+					action.Cancel();
+				}
+			}
+		}
+ 	};
 	am.set(newAM);
 }
 

@@ -35,6 +35,11 @@ interface Coordinates {
 	y: number;
 }
 
+interface Dimensions {
+	width: number;
+	height: number;
+}
+
 interface Point {
 	position: Coordinates;
 	initialized: boolean;

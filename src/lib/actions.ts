@@ -1,24 +1,33 @@
 import type { Coordinates } from '$types';
 
-export interface States {
-	StageMouseDown: boolean;
-	StageMouseUp: boolean;
-	StageDragging: boolean;
-	ZoneClicked: boolean;
+export enum States {
+	StagePointerDown,
+	StagePointerUp,
+	StageDragging,
+	StageDraggingBuffered,
+	ZoneHit,
+	OnePointer,
+	TwoPointers,
+	ThreePointers,
+	OverThreePointers
 }
 
 export interface Action {
 	Name: string;
-	State: {
-		[key: string]: boolean;
-	};
+	ActiveConditions: Set<States>;
+	InactiveConditions: Set<States>;
 	IsActive: boolean;
-	IsAvailable(): boolean;
 	Enable(origin: Coordinates): void;
 	Cancel(): void;
 }
 
 export interface ActionsManager {
-	Actions: Action[];
+	ActiveStates: Set<States>;
+	Actions: {
+		[key: string]: Action;
+	};
 	ActiveAction: Action | null;
+	IsAvailable(actionName: string): boolean;
+	CallAction(actionName: string, origin: Coordinates): void;
+	CheckActions(origin: Coordinates): void;
 }

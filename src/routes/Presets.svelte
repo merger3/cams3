@@ -2,10 +2,10 @@
     import type { CamPresets } from '$types';
     import { createEventDispatcher } from 'svelte';
 	import { ScrollArea } from "bits-ui";
+	import { commandText } from '$lib/stores';
 
     export let spacerHeight: number;
 	export let spacerWidth: number;
-    export let commandText: string;
 	export let camPresets: CamPresets;
 
 	const dispatch = createEventDispatcher();
@@ -14,10 +14,10 @@
 
     function buildCommand(preset: string) {
 		let newCommand: string = `!ptzload ${camPresets.name} ${preset}`;
-		if (newCommand == commandText) {
+		if (newCommand == $commandText) {
 			dispatch("sendcmd");
 		} else {
-			commandText =  newCommand;
+			$commandText =  newCommand;
 		}
     }
     

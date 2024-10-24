@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import Konva from "konva";
-	import Tangle from './Tangle.svelte';
+	import { commandText, ifDimensions } from '$lib/stores';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
-	import type { SwapResponse, Coordinates, Box, RadialPart, RadialMenu, CamPresets } from '$types';
+	import type { Box } from '$types';
 	import { Motion } from 'svelte-motion'
 	import _ from 'lodash';
 	import TangleLite from './TangleLite.svelte';
 
-	export let selector: Tangle;
-	export let commandText: string;
+	export let selector: TangleLite;
 
 	const dispatch = createEventDispatcher();
 
@@ -19,8 +17,6 @@
 	let winWidth: number, winHeight: number;
 	export let commandHeight: number;
 
-	export let ifWidth: number;
-	export let ifHeight: number;
 
 	function resizeIframeRaw() {
 		winWidth = window.innerWidth;
@@ -32,32 +28,25 @@
 		let fullHeight: number = fullWidth / (16/9) ;
 
 		if (fullHeight <= maxHeight) {
-			ifWidth = fullWidth;
-			ifHeight = fullHeight;
+			$ifDimensions.width = fullWidth;
+			$ifDimensions.height = fullHeight;
 		} else {
-			ifHeight = maxHeight;
-			ifWidth = ifHeight * (16/9);
+			$ifDimensions.height = maxHeight;
+			$ifDimensions.width = $ifDimensions.height * (16/9);
 		}
 
-		commandHeight = ifHeight * .06;
+		commandHeight = $ifDimensions.height * .06;
 
 		let trailingHeight: number = maxHeight - commandHeight;
 
-		if (ifHeight > trailingHeight) {
-			ifHeight = trailingHeight;
-			ifWidth = ifHeight * (16/9);
+		if ($ifDimensions.height > trailingHeight) {
+			$ifDimensions.height = trailingHeight;
+			$ifDimensions.width = $ifDimensions.height * (16/9);
 		}
-		selector.cleanUp();
-		selector.resizeStage(winWidth, winHeight)
-		initializeZones(ifHeight, ifWidth);
-
-		console.log(ifHeight)
-		console.log(ifWidth)
+		initializeZones($ifDimensions.height, $ifDimensions.width);
 		
-		// let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
-		// mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y}
-		// mainLayerConfig = {id: "mainlayer", x: overlayBox.x, y: overlayBox.y, height: overlayBox.height, width: overlayBox.width}
-
+		let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
+		selector.resizeZones(overlayBox.x, overlayBox.y)
 	}
 
 	function initializeZones(height: number, width: number) {
@@ -97,11 +86,9 @@
 	var player: any;
 	onMount(() => {
 		// player = new Twitch.Player("cams", {width: "100%", height: "100%", channel: "alveussanctuary", parent: ["not"]});
-		// console.log(player.getQualities());
 		winWidth = window.innerWidth;
 		winHeight = window.innerHeight;
 		resizeIframeRaw();
-		// initializeZones(ifHeight, ifWidth);
 		window.onresize = function() {
 			clearTimeout(doit);
 			doit = setTimeout(resizeIframe, 50);
@@ -114,7 +101,6 @@
 		
 	});
 
-	let stageOverlay: any;
 </script>
 
 <svelte:head>
@@ -125,35 +111,38 @@
 		<Motion whileFocus={{ scale: 1.3 }} let:motion>
 			<div style={parent_style}height:{commandHeight}px;>
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
-				<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-30 movedown" id="command" style="max-width:{ifWidth}px; white-space: pre;" bind:innerHTML={commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} >
-					{commandText}
+				<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;" bind:innerHTML={$commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} >
+					{$commandText}
 				</div>
 			</div>
 		</Motion>
-		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-40 movedown" style="height: {commandHeight}px; width: {ifWidth / 5}px;"> Send </button>
+		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown" style="height: {commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
 	</div>
-	<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{ifWidth}px;">
+	<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 
 
-		<div id="stage" class="unselectable z-20" bind:this={stageOverlay} />
-		<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 0); height: {ifHeight}; width: {ifWidth};" />
+		<div id="stage" class="unselectable z-30" />
+		<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 0); height: {$ifDimensions.height}; width: {$ifDimensions.width};" />
 
-		<TangleLite bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones/>
+		<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframe} />
 			
-			<!-- <div id="cams" class="unselectable" style="height: {ifHeight}px; width: {ifWidth}px;"/> -->
+		<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
 			
-		<iframe
+		<!-- <iframe
 		title="da cameras"
 		id="cams"
 		src="https://helenkellersimulator.org/"
 		class="unselectable"
 		allow="autoplay; fullscreen"
 		allowfullscreen
-		></iframe>
+		></iframe> -->
 	</div>
 </div>
 
 <style>
+	/* #cams {
+		pointer-events: none;
+	} */
 	[contenteditable="true"]:focus {
 		outline: none;
 	}
@@ -169,9 +158,6 @@
 		width: 100%;
 		height: 100%;
 		position: relative;
-	}
-	#cams {
-		pointer-events: none;
 	}
 	#wrapper {
 		flex-grow: 0;
