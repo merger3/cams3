@@ -6,14 +6,18 @@
 	import Radial from "./Radial.svelte";
 	import Draw from "$lib/actions/Draw.svelte";
 	import Click from "$lib/actions/Click.svelte";
-	import { am } from '$lib/stores';
+	import Scroll from "$lib/actions/Scroll.svelte";
+	import DoubleClick from "$lib/actions/DoubleClick.svelte";
+	import { am, commandText, panzoom } from '$lib/stores';
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
+	import _ from 'lodash';
+
+	let log = false;
 	export let stageWidth: number;
 	export let stageHeight: number;
 
-	let transformer: Konva.Transformer;
-	let stage: Konva.Stage;
+	export let stage: Konva.Stage;
 	var layer: Konva.Layer;
 	var boxGroup: Konva.Group;
 
@@ -21,12 +25,31 @@
 	let zoneBoxes: Konva.Rect[] = [new Konva.Rect(), new Konva.Rect(), new Konva.Rect(), new Konva.Rect(), new Konva.Rect(), new Konva.Rect()];
 	const dispatch = createEventDispatcher();
 
-	function isDragging(position: Coordinates): boolean {
+	function isDragging(position: Coordinates) {
 		if (origin) {
-			return Math.hypot(position.x - origin.x, position.y - origin.y) >= (stage.width() * .015);
-		} 
+			let distance = Math.hypot(position.x - origin.x, position.y - origin.y);
+			if (distance >= (stage.width() * .015)) {
+				$am.ActiveStates.add(States.StageDraggingBuffered)
+			} else {
+				$am.ActiveStates.delete(States.StageDraggingBuffered)
+			}
 
-		return false;
+			if (distance >= 5) {
+				$am.ActiveStates.add(States.StageDraggingDejittered)
+			} else {
+				$am.ActiveStates.delete(States.StageDraggingDejittered)
+			}
+		} else {
+			$am.ActiveStates.delete(States.StageDraggingBuffered)
+			$am.ActiveStates.delete(States.StageDraggingDejittered)
+		}
+	}
+
+	function setCommandState() {
+		$am.ActiveStates.delete(States.CommandScrollable)
+		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzfocusr")) {
+			$am.ActiveStates.add(States.CommandScrollable)
+		}
 	}
 
 	function setPointerCountStates(activePointers: number) {
@@ -48,7 +71,6 @@
 		default:
 			if (activePointers > 3) {
 				$am.ActiveStates.add(States.OverThreePointers);
-
 			}
 			break;
 		}
@@ -79,7 +101,8 @@
 	let origin: Coordinates | null;
 	function handlePointerDown(e: KonvaPointerEvent) {
 		$am.ActiveStates.add(States.StagePointerDown);
-		origin = {x: e.evt.clientX, y: e.evt.clientY};
+		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+		origin = {x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()};
 
 		if (e.evt.pointerType != 'mouse') {
 			pointers++;
@@ -88,36 +111,60 @@
 		}
 		setPointerCountStates(pointers);
 
-		let hitZone = stage.getIntersection(origin);
-		if (hitZone && e.target.getParent() == boxGroup) {
-			$am.ActiveStates.add(States.ZoneHit);
+		let hitNode = stage.getIntersection(origin);
+		if (hitNode) {
+			$am.ActiveStates.add(States.NodeHit);
+			if (hitNode.getParent() == boxGroup) {
+				$am.ActiveStates.add(States.ZoneHit);
+			} else if (hitNode == stage.findOne('.tangle') || hitNode == stage.findOne('.transformer')) {
+				$am.ActiveStates.add(States.TangleHit);
+			}
 		}
 
-		console.log(printStates($am.ActiveStates))
+		if (e.evt.button == 0) {
+			$am.ActiveStates.add(States.LeftMouseButtonPressed);
+		} else if (e.evt.button == 1) {
+			$am.ActiveStates.add(States.MiddleMouseButtonPressed);
+		}  else if (e.evt.button == 2) {
+			$am.ActiveStates.add(States.RightMouseButtonPressed);
+		}
+
+		isDragging({x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()})
+		setCommandState()
+
+		if (log) {
+			console.log(printStates($am.ActiveStates))
+		}
 		$am.CheckActions({x: origin!.x, y: origin!.y});
-
-		
-		// $am.CallAction("click", {x: origin!.x, y: origin!.y});
-
 	}
 	
+
+
 	function handlePointerMove(e: KonvaPointerEvent) {
 		if ($am.ActiveStates.has(States.StagePointerDown)) {
 			$am.ActiveStates.add(States.StageDragging);
-			if (isDragging({x: e.evt.clientX, y: e.evt.clientY})) {
-				$am.ActiveStates.add(States.StageDraggingBuffered)
-			} else {
-				$am.ActiveStates.delete(States.StageDraggingBuffered)
+
+			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+			let coords = {x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()}
+			isDragging(coords)
+			setCommandState()
+
+			let hoverZone = stage.getIntersection(coords);
+			if (hoverZone) {
+				$am.ActiveStates.add(States.NodeDragHover);
+				if (hoverZone.getParent() == boxGroup) {
+					$am.ActiveStates.add(States.ZoneDragHover);
+				} else if (hoverZone == stage.findOne('.tangle') || hoverZone == stage.findOne('.transformer')) {
+					$am.ActiveStates.add(States.TangleDragHover);
+				}
 			}
-			console.log(printStates($am.ActiveStates))
-			// console.log(printStates($am.Actions["draw"].Condition))
-			// $am.CallAction("click", {x: origin!.x, y: origin!.y});
-			// $am.CallAction("draw", {x: origin!.x, y: origin!.y});
+
+			if (log) {
+				console.log(printStates($am.ActiveStates))
+			}
+
 			$am.CheckActions({x: origin!.x, y: origin!.y});
-
 		}
-
-		
 	}
 
 	function handlePointerUp(e: KonvaPointerEvent) {
@@ -127,8 +174,17 @@
 				pointers = 0;
 			} 
 		}
-		
+
+		if (e.evt.button == 0) {
+			$am.ActiveStates.delete(States.LeftMouseButtonPressed);
+		} else if (e.evt.button == 1) {
+			$am.ActiveStates.delete(States.MiddleMouseButtonPressed);
+		}  else if (e.evt.button == 2) {
+			$am.ActiveStates.delete(States.RightMouseButtonPressed);
+		}
+
 		setPointerCountStates(pointers);
+		setCommandState();
 
 		if (pointers == 0) {
 			$am.ActiveStates.delete(States.StagePointerDown);
@@ -137,10 +193,67 @@
 			$am.ActiveStates.delete(States.StageDragging);
 			$am.ActiveStates.delete(States.StageDraggingBuffered);
 			$am.ActiveStates.delete(States.ZoneHit);
+			$am.ActiveStates.delete(States.ZoneDragHover);
 		} 
 		
-		console.log(printStates($am.ActiveStates))
+		if (log) {
+				console.log(printStates($am.ActiveStates))
+			}
 
+	}
+
+	function handlePointerDoubleClick(e: KonvaPointerEvent) {
+		console.log(e)
+		$am.ActiveStates.add(States.StageDoubleClick);
+		let hitZone = stage.getIntersection({x: e.evt.clientX, y: e.evt.clientY});
+		if (hitZone && hitZone.getParent() == boxGroup) {
+			$am.ActiveStates.add(States.ZoneHit);
+		}
+
+		console.log(printStates($am.ActiveStates))
+		$am.CheckActions({x: e.evt.clientX, y: e.evt.clientY});
+
+		$am.ActiveStates.delete(States.ZoneHit);
+		$am.ActiveStates.delete(States.StageDoubleClick);
+	}
+
+	function wheelHandler(e: any) {
+		$am.ActiveStates.add(States.WheelScrolling);
+		if (e.evt.deltaY < 0) {
+			$am.ActiveStates.delete(States.WheelScrollDown);
+			$am.ActiveStates.add(States.WheelScrollUp);
+		} else {
+			$am.ActiveStates.delete(States.WheelScrollUp);
+			$am.ActiveStates.add(States.WheelScrollDown);
+		}
+
+		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+		let coords = {x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()}
+
+		let hoverZone = stage.getIntersection(coords);
+		if (hoverZone) {
+			$am.ActiveStates.add(States.NodeScrollHover);
+			if (hoverZone.getParent() == boxGroup) {
+				$am.ActiveStates.add(States.ZoneScrollHover);
+			} else if (hoverZone == stage.findOne('.tangle') || hoverZone == stage.findOne('.transformer')) {
+				$am.ActiveStates.add(States.TangleScrollHover);
+			}
+		}
+
+
+		setPointerCountStates(pointers);
+		setCommandState();
+
+		if (log) {
+			console.log(printStates($am.ActiveStates))
+		}
+
+		$am.CheckActions({x: e.evt.clientX, y: e.evt.clientY});
+
+		$am.ActiveStates.delete(States.WheelScrolling);
+		$am.ActiveStates.delete(States.WheelScrollUp);
+		$am.ActiveStates.delete(States.WheelScrollDown);
+		$am.ActiveStates.delete(States.ZoneScrollHover);
 	}
 
 	let pointers = 0;
@@ -148,30 +261,11 @@
 		await tick();
 		dispatch("forceiframeresize");
 
-		stage.on("pointerdown.stage", handlePointerDown)
-		stage.on("pointermove.stage", handlePointerMove)
-		stage.on("pointerup.stage", handlePointerUp)
-		
-		// stage.on("touchstart", (e: any) => {
-		// 	pointers++;
-		// 	setPointerCountStates(pointers);
-		// });
-		// stage.on("touchend", (e: any) => {
-		// 	for (let i = 0; i < e.evt.changedTouches.length; i++) {
-		// 		if (pointers > 0) {
-		// 			pointers--;
-		// 		}
-		// 	}
-		// 	setPointerCountStates(pointers);
-		// });
-		// stage.on("mousedown", (e: any) => {
-		// 	pointers++;
-		// 	setPointerCountStates(pointers);
-		// });
-		// stage.on("mouseup", (e: any) => {
-		// 	pointers--;
-		// 	setPointerCountStates(pointers);
-		// });
+		stage.on("pointerdown.stage", handlePointerDown);
+		stage.on("pointermove.stage", handlePointerMove);
+		stage.on("pointerup.stage", handlePointerUp);
+		stage.on("pointerdblclick.stage", handlePointerDoubleClick);
+		stage.on("wheel.stage", wheelHandler);
 
 		// layer.toggleHitCanvas();
    
@@ -182,7 +276,7 @@
 <Stage
 	bind:handle={stage}
 	config={{
-		container: 'stage',
+		container: 'overlay',
 		x: 0,
 		y: 0,
 		width: stageWidth,
@@ -245,5 +339,7 @@
 		</Group>
 		<Draw bind:stage />
 		<Click bind:stage />
+		<DoubleClick />
+		<Scroll />
 	</Layer>
 </Stage>

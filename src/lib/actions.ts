@@ -5,20 +5,38 @@ export enum States {
 	StagePointerUp,
 	StageDragging,
 	StageDraggingBuffered,
+	StageDraggingDejittered,
+	NodeHit,
 	ZoneHit,
+	TangleHit,
+	NodeScrollHover,
+	ZoneScrollHover,
+	TangleScrollHover,
+	NodeDragHover,
+	ZoneDragHover,
+	TangleDragHover,
 	OnePointer,
 	TwoPointers,
 	ThreePointers,
-	OverThreePointers
+	OverThreePointers,
+	StageDoubleClick,
+	CommandScrollable,
+	LeftMouseButtonPressed,
+	RightMouseButtonPressed,
+	MiddleMouseButtonPressed,
+	WheelScrolling,
+	WheelScrollUp,
+	WheelScrollDown
 }
 
 export interface Action {
 	Name: string;
 	ActiveConditions: Set<States>;
 	InactiveConditions: Set<States>;
+	MustCancel: string[];
 	IsActive: boolean;
 	Enable(origin: Coordinates): void;
-	Cancel(): void;
+	Cancel(mod?: any): void;
 }
 
 export interface ActionsManager {

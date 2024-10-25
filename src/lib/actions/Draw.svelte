@@ -19,16 +19,25 @@
 		ActiveConditions: new Set([
 			States.StagePointerDown,
 			States.OnePointer,
+			States.LeftMouseButtonPressed,
 			States.ZoneHit,
 			States.StageDraggingBuffered
 		]),
-		InactiveConditions: new Set(),
+		InactiveConditions: new Set([
+			States.TwoPointers,
+			States.ThreePointers,
+			States.OverThreePointers
+		]),
+		MustCancel: ["click"],
 		IsActive: false,
 		Cancel: cancel,
 		Enable: enable
 	}
 
 	function enable(this: Action, origin: Coordinates) {
+		this.MustCancel.forEach(function (actionName) {
+			$am.Actions[actionName].Cancel(false);
+		});
 		transformer.nodes([]);
 		tangle.size({
 			height: 0,
@@ -68,10 +77,9 @@
 
 
 	function writeCommand() {
-		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		$commandText = DrawTangle({
-			X: tangle.x() - ifOverlay.left,
-			Y: tangle.y() - ifOverlay.top,
+			X: tangle.x(),
+			Y: tangle.y(),
 			Width: tangle.width(),
 			Height: tangle.height(),
 			FrameWidth: $ifDimensions.width,
@@ -94,6 +102,10 @@
 	}
 
 	function finshDrawing(e: Konva.KonvaPointerEvent) {
+		$am.Actions[name].MustCancel.forEach(function (actionName) {
+			$am.Actions[actionName].Cancel()
+		});
+
 		stage.off('pointermove.draw')
 		stage.off('pointerup.draw')
 
@@ -170,13 +182,13 @@
 		y: 0,
 		width: 0,
 		height: 0,
+		name: "tangle",
 		fill: 'rgba(250, 128, 114, 0.3)',
 		stroke: 'rgba(255, 0, 0, 0.5)',
 		strokeWidth: 1.5,
 		strokeScaleEnabled: false,
 		draggable: true,
-		visible: false,
-		listening: false
+		visible: false
 	}} 
 	on:dragmove={handleTangleDrag}
 	on:dragend={endTangleDrag}
@@ -197,6 +209,7 @@
 	}} 
 />
 <Transformer bind:handle={transformer} on:transformend={handleTransformEnd} config={{
+	name: "transformer",
 	keepRatio: false,
 	anchorSize: Math.max(Math.min((transformer?.width() / 6), 15), 3),
 	rotateEnabled: false,

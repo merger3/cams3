@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { commandText, ifDimensions } from '$lib/stores';
+	import { commandText, ifDimensions, multiTouchPan } from '$lib/stores';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { Box } from '$types';
 	import { Motion } from 'svelte-motion'
 	import _ from 'lodash';
+	import Konva from "konva";
 	import TangleLite from './TangleLite.svelte';
+	import Zoomable from './Zoomable.svelte';
 
 	export let selector: TangleLite;
+	let stage: Konva.Stage;
 
 	const dispatch = createEventDispatcher();
 
@@ -45,8 +48,8 @@
 		}
 		initializeZones($ifDimensions.height, $ifDimensions.width);
 		
-		let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
-		selector.resizeZones(overlayBox.x, overlayBox.y)
+		// let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
+		// selector.resizeZones(overlayBox.x, overlayBox.y)
 	}
 
 	function initializeZones(height: number, width: number) {
@@ -118,25 +121,26 @@
 		</Motion>
 		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown" style="height: {commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
 	</div>
-	<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
-
-
-		<div id="stage" class="unselectable z-30" />
-		<div id="overlay" class="unselectable z-10" style="background-color: rgba(255, 255, 100, 0); height: {$ifDimensions.height}; width: {$ifDimensions.width};" />
-
-		<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframe} />
+	<!-- <div id="stage" class="unselectable z-30" /> -->
+	<Zoomable bind:stage>
+		<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 			
-		<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
-			
-		<!-- <iframe
-		title="da cameras"
-		id="cams"
-		src="https://helenkellersimulator.org/"
-		class="unselectable"
-		allow="autoplay; fullscreen"
-		allowfullscreen
-		></iframe> -->
-	</div>
+			<div id="overlay" class="unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}}/>
+
+			<TangleLite bind:this={selector} bind:stage bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframe} />
+				
+			<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
+				
+			<!-- <iframe
+			title="da cameras"
+			id="cams"
+			src="https://helenkellersimulator.org/"
+			class="unselectable"
+			allow="autoplay; fullscreen"
+			allowfullscreen
+			></iframe> -->
+		</div>
+	</Zoomable>
 </div>
 
 <style>
@@ -154,11 +158,6 @@
 		position: relative;
 		color: rgb(204, 212, 219);
 	}
-	#vid {
-		width: 100%;
-		height: 100%;
-		position: relative;
-	}
 	#wrapper {
 		flex-grow: 0;
 	}
@@ -168,7 +167,7 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		background: transparent;
+		background-color: rgba(255, 255, 100, 0);
 	}
 	.unselectable {
 		-webkit-touch-callout: none;
@@ -179,12 +178,12 @@
 		-o-user-select: none;
 		user-select: none;
 	}
-	#stage {
-		position: fixed; /* Ensure the div stays in place while scrolling */
-		top: 0;          /* Aligns the div with the top of the viewport */
-		left: 0;         /* Aligns the div with the left of the viewport */
-		width: 100vw;    /* 100% of the viewport width */
-		height: 100vh;   /* 100% of the viewport height */
-		background-color: rgba(190, 51, 172, 0); /* Optional: a semi-transparent background */
-	}
+	/* #stage {
+		position: fixed; 
+		top: 0;          
+		left: 0;      
+		width: 100vw; 
+		height: 100vh;
+		background-color: rgba(190, 51, 172, 0);
+	} */
 </style>

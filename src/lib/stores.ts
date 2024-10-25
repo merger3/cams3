@@ -10,9 +10,11 @@ export let commandText = writable<string>();
 export let ifDimensions = writable<Dimensions>({width: 0, height: 0});
 export let token = writable<string>();
 export let server = writable<AxiosInstance>();
+export let clickZoom = writable<number>(100);
 export let drawing = writable<boolean>();
 export let gesturing = writable<boolean>();
 export let panzoom = writable<PanzoomObject>();
+export let clickTimer = writable<number>();
 
 export let am = writable<ActionsManager>();
 
@@ -44,7 +46,7 @@ export function InitializeAM() {
 				if (this.IsAvailable(name) && !action.IsActive) {
 					action.Enable({x: origin.x, y: origin.y})
 				} else if (!this.IsAvailable(name) && action.IsActive) {
-					action.Cancel();
+					// action.Cancel();
 				}
 			}
 		}
@@ -78,8 +80,7 @@ export function multiTouch(node: HTMLElement, params: BaseParams = {composed: fa
 	let prevScale = 1;
 
 	function onUp(activeEvents: PointerEvent[], event: PointerEvent) {
-		gesturing.set(false);
-		if (activeEvents.length === 1) {
+		if (activeEvents.length == 0) {
 			prevDistance = undefined;
 		}
 		node.dispatchEvent(
@@ -93,7 +94,6 @@ export function multiTouch(node: HTMLElement, params: BaseParams = {composed: fa
 
 	function onDown(activeEvents: PointerEvent[], event: PointerEvent) {
 		if (activeEvents.length == touchCount) {
-			gesturing.set(true);
 
 			let midX = (activeEvents[0].clientX + activeEvents[1].clientX) / 2;
 			let midY = (activeEvents[0].clientY + activeEvents[1].clientY) / 2;
@@ -110,6 +110,7 @@ export function multiTouch(node: HTMLElement, params: BaseParams = {composed: fa
 	}
 
 	function onMove(activeEvents: PointerEvent[], event: PointerEvent) {
+		// console.log(event)
 		if (activeEvents.length == touchCount) {
 			let midX = (activeEvents[0].clientX + activeEvents[1].clientX) / 2;
 			let midY = (activeEvents[0].clientY + activeEvents[1].clientY) / 2;
@@ -158,7 +159,6 @@ export function tripleTouch(node: HTMLElement, params: BaseParams = {composed: f
 	let prevDistance: number | undefined;
 
 	function onUp(activeEvents: PointerEvent[], event: PointerEvent) {
-		gesturing.set(false);
 		// fix this cleanup
 		if (activeEvents.length === 1) {
 			prevDistance = undefined;
@@ -174,7 +174,7 @@ export function tripleTouch(node: HTMLElement, params: BaseParams = {composed: f
 
 	function onDown(activeEvents: PointerEvent[], event: PointerEvent) {
 		if (activeEvents.length == touchCount) {
-			gesturing.set(true);
+
 
 			let midX = (activeEvents[0].clientX + activeEvents[activeEvents.length - 1].clientX) / 2;
 			let midY = (activeEvents[0].clientY + activeEvents[activeEvents.length - 1].clientY) / 2;
@@ -221,7 +221,6 @@ export function multiTouchPan(node: HTMLElement, params = {notchSize: 0}) {
 	let toggle: boolean = true;
 
 	function onUp(activeEvents: PointerEvent[], event: PointerEvent) {
-		gesturing.set(false);
 		node.dispatchEvent(
 			new CustomEvent(`${gestureName}Up`, {
 				detail: { target: event.target },
@@ -233,7 +232,6 @@ export function multiTouchPan(node: HTMLElement, params = {notchSize: 0}) {
 
 	function onDown(activeEvents: PointerEvent[], event: PointerEvent) {
 		if (activeEvents.length == touchCount) {
-			gesturing.set(true);
 			let midX = (activeEvents[0].clientX + activeEvents[1].clientX) / 2;
 			let midY = (activeEvents[0].clientY + activeEvents[1].clientY) / 2;
 

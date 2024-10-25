@@ -9,9 +9,9 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, GetCam, InitializeAM, ifDimensions } from '$lib/stores';
+	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom } from '$lib/stores';
 	import _ from 'lodash';
-
+	InitializeAM();
 	// import { userRole } from './stores';
 	const defaultCMD: string = "​";
 
@@ -28,6 +28,7 @@
 
 	let resize: HTMLElement;
 
+	let cancelActions = ["click", "draw"];
 	async function sendCommand() {
 		$server.post('/send', {
 			command: $commandText
@@ -37,7 +38,10 @@
 			console.log(error);
 		});
 		$commandText = defaultCMD;
-		selector.cleanUp();
+		$clickZoom = 100;
+		cancelActions.forEach(function (name) {
+			$am.Actions[name].Cancel()
+		});
 	}
 
 
@@ -131,7 +135,7 @@
 		// 	console.log(error);
 		// });
 
-		InitializeAM();
+	
 		window.ResizeObserver = ResizeObserver;
 		resizeObserverDefined = true;
 		window.addEventListener(`contextmenu`, (e) => e.preventDefault());
