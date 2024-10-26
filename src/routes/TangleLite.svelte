@@ -12,7 +12,7 @@
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
 	import _ from 'lodash';
-
+	
 	let log = false;
 	export let stageWidth: number;
 	export let stageHeight: number;
@@ -24,6 +24,10 @@
 	export let zones: Box[] = [];
 	let zoneBoxes: Konva.Rect[] = [new Konva.Rect(), new Konva.Rect(), new Konva.Rect(), new Konva.Rect(), new Konva.Rect(), new Konva.Rect()];
 	const dispatch = createEventDispatcher();
+
+	function bubbleResize(e: CustomEvent) {
+		dispatch('forceiframeresize');
+	}
 
 	function isDragging(position: Coordinates) {
 		if (origin) {
@@ -74,6 +78,14 @@
 			}
 			break;
 		}
+
+		if (pointers > prevPointers) {
+			$am.ActiveStates.add(States.PointerAdded);
+			$am.ActiveStates.delete(States.PointerRemoved);
+		} else if (pointers < prevPointers) {
+			$am.ActiveStates.add(States.PointerRemoved);
+			$am.ActiveStates.delete(States.PointerAdded);
+		}
 	}
 
 
@@ -104,6 +116,7 @@
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		origin = {x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()};
 
+		prevPointers = pointers;
 		if (e.evt.pointerType != 'mouse') {
 			pointers++;
 		} else if (e.evt.pointerType == 'mouse' && pointers == 0) {
@@ -138,9 +151,8 @@
 		$am.CheckActions({x: origin!.x, y: origin!.y});
 	}
 	
-
-
 	function handlePointerMove(e: KonvaPointerEvent) {
+		
 		if ($am.ActiveStates.has(States.StagePointerDown)) {
 			$am.ActiveStates.add(States.StageDragging);
 
@@ -168,11 +180,9 @@
 	}
 
 	function handlePointerUp(e: KonvaPointerEvent) {
+		prevPointers = pointers;
 		if (pointers > 0) {
 			pointers--;
-			if (pointers <= 1) {
-				pointers = 0;
-			} 
 		}
 
 		if (e.evt.button == 0) {
@@ -197,20 +207,22 @@
 		} 
 		
 		if (log) {
-				console.log(printStates($am.ActiveStates))
-			}
+			console.log(printStates($am.ActiveStates))
+		}
 
 	}
 
 	function handlePointerDoubleClick(e: KonvaPointerEvent) {
-		console.log(e)
 		$am.ActiveStates.add(States.StageDoubleClick);
 		let hitZone = stage.getIntersection({x: e.evt.clientX, y: e.evt.clientY});
 		if (hitZone && hitZone.getParent() == boxGroup) {
 			$am.ActiveStates.add(States.ZoneHit);
 		}
 
-		console.log(printStates($am.ActiveStates))
+		if (log) {
+			console.log(printStates($am.ActiveStates))
+		}
+
 		$am.CheckActions({x: e.evt.clientX, y: e.evt.clientY});
 
 		$am.ActiveStates.delete(States.ZoneHit);
@@ -244,8 +256,8 @@
 		setPointerCountStates(pointers);
 		setCommandState();
 
+		console.log(printStates($am.ActiveStates))
 		if (log) {
-			console.log(printStates($am.ActiveStates))
 		}
 
 		$am.CheckActions({x: e.evt.clientX, y: e.evt.clientY});
@@ -256,7 +268,27 @@
 		$am.ActiveStates.delete(States.ZoneScrollHover);
 	}
 
+	function handlePointerOut(e: PointerEvent) {
+		if (e.pointerType != "touch") {
+			prevPointers = pointers;
+			if (pointers > 0) {
+				pointers--;
+			}
+			
+			if (e.button == 0) {
+				$am.ActiveStates.delete(States.LeftMouseButtonPressed);
+			} else if (e.button == 1) {
+				$am.ActiveStates.delete(States.MiddleMouseButtonPressed);
+			}  else if (e.button == 2) {
+				$am.ActiveStates.delete(States.RightMouseButtonPressed);
+			}
+			
+			setPointerCountStates(pointers);
+		}
+	}
+
 	let pointers = 0;
+	let prevPointers = 0;
 	onMount(async () => {
 		await tick();
 		dispatch("forceiframeresize");
@@ -266,7 +298,11 @@
 		stage.on("pointerup.stage", handlePointerUp);
 		stage.on("pointerdblclick.stage", handlePointerDoubleClick);
 		stage.on("wheel.stage", wheelHandler);
+		// stage.on("pointerout.stage", pointerleave);
 
+		jQuery("#overlay")[0].addEventListener("pointerout",handlePointerOut);
+
+		// stage.on("pointerleave.stage", pointerleave);
 		// layer.toggleHitCanvas();
    
  	});
@@ -340,6 +376,6 @@
 		<Draw bind:stage />
 		<Click bind:stage />
 		<DoubleClick />
-		<Scroll />
+		<Scroll on:forceiframeresize={bubbleResize}/>
 	</Layer>
 </Stage>

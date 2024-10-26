@@ -127,7 +127,7 @@
 			
 			<div id="overlay" class="unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}}/>
 
-			<TangleLite bind:this={selector} bind:stage bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframe} />
+			<TangleLite bind:this={selector} bind:stage bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframeRaw} />
 				
 			<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
 				

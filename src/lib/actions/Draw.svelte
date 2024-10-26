@@ -19,9 +19,10 @@
 		ActiveConditions: new Set([
 			States.StagePointerDown,
 			States.OnePointer,
+			States.PointerAdded,
 			States.LeftMouseButtonPressed,
 			States.ZoneHit,
-			States.StageDraggingBuffered
+			States.StageDraggingBuffered,
 		]),
 		InactiveConditions: new Set([
 			States.TwoPointers,
@@ -119,7 +120,7 @@
 		}
 
 		transformer.nodes([tangle]);
-		transformer.anchorSize(Math.max(Math.min((transformer?.width() / 6), 15), 3))
+		transformer.anchorSize(Math.max(Math.min((transformer?.width() / 8), 15), 3))
 		tangle.listening(true);
 		$am.Actions[name].IsActive = false;
 
@@ -155,7 +156,7 @@
 			y: (tangle.y() + (tangle.height() / 2)),
 		})
 
-		transformer.anchorSize(Math.max(Math.min((transformer?.width() / 6), 15), 3))
+		transformer.anchorSize(Math.max(Math.min((transformer?.width() / 8), 15), 3))
 	}
 
 	function handleTransformEnd() {
@@ -211,7 +212,7 @@
 <Transformer bind:handle={transformer} on:transformend={handleTransformEnd} config={{
 	name: "transformer",
 	keepRatio: false,
-	anchorSize: Math.max(Math.min((transformer?.width() / 6), 15), 3),
+	anchorSize: Math.max(Math.min((transformer?.width() / 8), 15), 3),
 	rotateEnabled: false,
 	borderEnabled: false,
 	ignoreStroke: true,

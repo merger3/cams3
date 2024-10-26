@@ -17,19 +17,20 @@
 	function toggleTangle(state: boolean) {
 		let tangle = stage.findOne(".tangle");
 		if (tangle) {
+			tangle.draggable(state);
+			tangle.listening(state);
 			if (!state) {
 				tangle.stopDrag();
 			}
-			tangle.draggable(state);
-			tangle.listening(state);
 		}
 
 		let transformer = stage.findOne(".transformer") as Konva.Transformer;
 		if (transformer) {
+			transformer.listening(state)
+			transformer.resizeEnabled(state);
 			if (!state) {
 				transformer.stopTransform();
 			}
-			transformer.resizeEnabled(state);
 		}
 	}
 
@@ -38,6 +39,7 @@
 		Name: pinchName,
 		ActiveConditions: new Set([
 			States.TwoPointers,
+			States.PointerAdded,
 			States.NodeHit
 		]),
 		InactiveConditions: new Set([
@@ -51,51 +53,53 @@
 
 	function enablePinch(this: Action, origin: Coordinates) {
 		console.log("pinch enabled")
-		toggleTangle(false);
 		this.MustCancel.forEach(function (actionName) {
 			if ($am.Actions[actionName].IsActive) {
 				$am.Actions[actionName].Cancel();
 			}
 		});
+		toggleTangle(false);
+
+		zoomarea.addEventListener("multiTouchMove", doubleMoveHandler);
+		zoomarea.addEventListener("multiTouchUp", upHandlerDebounced);
 		this.IsActive = true;
+		console.log("pinch handlers bound")
 	}
 
 	function cancelPinch(this: Action) {
 		toggleTangle(true);
+		zoomarea.removeEventListener("multiTouchMove", doubleMoveHandler);
+		zoomarea.removeEventListener("multiTouchUp", upHandlerDebounced);
 		this.IsActive = false;
+		console.log("pinch handlers cancled")
 	}
-
-	function doubleDownHandler(event: any) {
-		if ($am.Actions[pinchName].IsActive) {}
-  	}
 
 	let zoomDebounce = 0;
 	let prevScale: number = 1;
 	function doubleMoveHandler(event: any) {
-		if ($am.Actions[pinchName].IsActive) {
-			let scale: number = prevScale * event.detail.scale;
-			scale = scale < 1 ? 1 : scale;
-			if (zoomDebounce > 2) {
-				$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x - $panzoom.getPan().x), clientY: (event.detail.center.y - $panzoom.getPan().y)}, {minScale: 1, maxScale: 4})
-			} else {
-				zoomDebounce++;
-			}
+		let scale: number = prevScale * event.detail.scale;
+		scale = scale < 1 ? 1 : scale;
+		if (zoomDebounce > 2) {
+			$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x - $panzoom.getPan().x), clientY: (event.detail.center.y - $panzoom.getPan().y)}, {minScale: 1, maxScale: 4})
+		} else {
+			zoomDebounce++;
 		}
   	}
 
-	function doubleUpHandler(e: any) {
-		if ($am.Actions[pinchName].IsActive) {
-			if ($clickTimer) {
-				clearTimeout($clickTimer);
-			}
-			zoomDebounce = 0;
-			if ($panzoom.getScale() <= 1.3) {
-				$panzoom.reset();
-			}
-			prevScale = $panzoom.getScale();
-			$am.Actions[pinchName].IsActive = false;
-			toggleTangle(true);
+	function doubleUpHandler(e: any) {	
+		if ($clickTimer) {
+			clearTimeout($clickTimer);
 		}
+		zoomDebounce = 0;
+		if ($panzoom.getScale() <= 1.3) {
+			$panzoom.reset();
+		}
+		prevScale = $panzoom.getScale();
+		zoomarea.removeEventListener("multiTouchMove", doubleMoveHandler);
+		zoomarea.removeEventListener("multiTouchUp", upHandlerDebounced);
+		toggleTangle(true);
+		$am.Actions[pinchName].IsActive = false;
+		console.log("pinch handlers unbound")
 	}
 	var upHandlerDebounced = _.debounce(doubleUpHandler, 10, { 'leading': false, 'trailing': true });
 
@@ -105,52 +109,52 @@
 		Name: panName,
 		ActiveConditions: new Set([
 			States.ThreePointers,
+			States.PointerAdded,
 			States.NodeHit
 		]),
 		InactiveConditions: new Set(),
-		MustCancel: ["draw", "click"],
+		MustCancel: ["draw", "click", "pinch"],
 		IsActive: false,
 		Enable: enablePan,
 		Cancel: cancelPan
 	}
-
+	
+	let prevPan: Coordinates = {x: 0, y: 0}
 	function enablePan(this: Action, origin: Coordinates) {
-		toggleTangle(false);
+		console.log("pan enabled")
 		this.MustCancel.forEach(function (actionName) {
 			if ($am.Actions[actionName].IsActive) {
 				$am.Actions[actionName].Cancel();
 			}
 		});
+		toggleTangle(false);
+		prevPan = {x: $panzoom.getPan().x, y: $panzoom.getPan().y};
+
+		zoomarea.addEventListener("tripleTouchMove", tripleMoveHandler);
+		zoomarea.addEventListener("tripleTouchUp", tripleUpHandlerDebounced);
 		this.IsActive = true;
 	}
 
 	function cancelPan(this: Action) {
 		toggleTangle(true);
+		zoomarea.removeEventListener("tripleTouchMove", tripleMoveHandler);
+		zoomarea.removeEventListener("tripleTouchUp", tripleUpHandlerDebounced);
 		this.IsActive = false;
 	}
 
-	function tripleDownHandler(event: any) {
-		if ($am.Actions[panName].IsActive) {
-			prevPan = {x: $panzoom.getPan().x, y: $panzoom.getPan().y};
-		}
-  	}
 
-
-	let prevPan: Coordinates = {x: 0, y: 0}
 	function tripleMoveHandler(event: any) {
-		if ($am.Actions[panName].IsActive) {
-			$panzoom.pan(prevPan.x + event.detail.delta.x, prevPan.y + event.detail.delta.y)
-		}
+		$panzoom.pan(prevPan.x + event.detail.delta.x, prevPan.y + event.detail.delta.y)
   	}
 
 	function tripleUpHandler(e: any) {
-		if ($am.Actions[panName].IsActive) {
-			if ($clickTimer) {
-				clearTimeout($clickTimer);
-			}
-			$am.Actions[panName].IsActive = false;
-			toggleTangle(true);
+		if ($clickTimer) {
+			clearTimeout($clickTimer);
 		}
+		toggleTangle(true);
+		zoomarea.removeEventListener("tripleTouchMove", tripleMoveHandler);
+		zoomarea.removeEventListener("tripleTouchUp", tripleUpHandlerDebounced);
+		$am.Actions[panName].IsActive = false;
 	}
 	var tripleUpHandlerDebounced = _.debounce(tripleUpHandler, 10, { 'leading': false, 'trailing': true });
 
@@ -264,13 +268,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div id="zoomarea" bind:this={zoomarea} 
 	use:multiTouch 
-		on:multiTouchDown={doubleDownHandler} 
-		on:multiTouchMove={doubleMoveHandler} 
-		on:multiTouchUp={upHandlerDebounced}
-	use:tripleTouch
-		on:tripleTouchDown={tripleDownHandler} 
-		on:tripleTouchMove={tripleMoveHandler} 
-		on:tripleTouchUp={tripleUpHandlerDebounced}>
+	use:tripleTouch>
 	<slot></slot>
 </div>
 

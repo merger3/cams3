@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, createEventDispatcher } from 'svelte';
 	import { am, commandText, clickZoom, clickTimer } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import _ from 'lodash';
 	
+	const dispatch = createEventDispatcher();
 	const maxZoom: number = 300;
 	const maxZoomTouch: number = 300;
 	
@@ -81,9 +82,9 @@
 			}
 		}
 		$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickZoom}`;
-		// if (forceResize) {
-		// 	dispatch('resizecommand');
-		// }
+		if (forceResize) {
+			dispatch('forceiframeresize');
+		}
 	}
 
 
