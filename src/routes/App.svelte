@@ -9,10 +9,10 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom } from '$lib/stores';
+	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom, clickFocus } from '$lib/stores';
 	import _ from 'lodash';
 	InitializeAM();
-	// import { userRole } from './stores';
+
 	const defaultCMD: string = "​";
 
 	export let config: Config;
@@ -39,6 +39,7 @@
 		});
 		$commandText = defaultCMD;
 		$clickZoom = 100;
+		$clickFocus = 0;
 		cancelActions.forEach(function (name) {
 			$am.Actions[name].Cancel()
 		});

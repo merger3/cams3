@@ -1,42 +1,313 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
-	import { createEventDispatcher, onMount } from 'svelte';
-	import type { Entry, SwapResponse } from '$types';
+	import { createEventDispatcher, onMount, tick } from 'svelte';
+	import type { SwapResponse, Coordinates } from '$types';
+	import { States, type Action } from '$lib/actions';
+	import { am, ifDimensions, GetZone, GetCam, server } from '$lib/stores';
 	import SubContextMenu from './SubContextMenu.svelte';
+	import type Konva from "konva";
 	const dispatch = createEventDispatcher();
 	
-	export let isRendered: boolean;
-	export let isOpen: boolean;
+	export let stage: Konva.Stage;
+	
+	let topEntry: SwapResponse = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
+	let isOpen: boolean;
+	let animationTimer: number;
 
-	export let entry: SwapResponse;
+	const name = "swaps";
+	$am.Actions[name] = {
+		Name: name,
+		ActiveConditions: new Set([
+			States.OnePointer,
+			States.NodeHit,
+			States.RightMouseButtonPressed
+		]),
+		InactiveConditions: new Set(),
+		MustCancel: ["draw"],
+		IsActive: false,
+		Enable: enable,
+		Cancel: cancel
+	}
 
-	function bubbleClick(e: any) {
-		dispatch('clickentry', e.detail);
+
+	let dataReady: boolean = false;
+	function enable(this: Action, origin: Coordinates) {
+		let target = GetZone(origin, stage);
+		if (!target) {
+			return;
+		}
+
+		loadMenu(origin, target)
+	}
+
+	function cancel(this: Action) {
+		topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
+		dataReady = false;
+		$am.Actions[name].IsActive = false;
+	}
+
+	async function loadMenu(coordinates: Coordinates, target: number) {
+		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: target}, $server)
+		if (!cam.found) {
+			return;
+		}
+
+		// topEntry = await $server.post('/camera/swaps', {camera: cam.name});
+		topEntry = JSON.parse(testString());
+		if (!topEntry.found || !topEntry.swaps.subentries) {
+			return;
+		}
+
+		
+		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: coordinates.x + ifOverlay.left, clientY: coordinates.y + ifOverlay.top});
+		
+		dataReady = true;
+		$am.Actions[name].IsActive = true;
+		await tick();
+
+
+		jQuery('#menutrigger')[0].dispatchEvent(rightClickEvent);
 	}
 
 	function opc(open: boolean) {
-		console.log("trigger recieved")
 		if (open) {
 			dispatch("openmenu");
 		} else {
-			dispatch("closemenu");
+			animationTimer = setTimeout(() => {
+				topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
+				dataReady = false;
+				$am.Actions[name].IsActive = false;
+			}, 200);
 		}
 	}
-	onMount(() => {
-		console.log("context menu")
-    });
-  </script>
+
+
+	function testString(): string {
+		return `{
+			"found": true,
+			"cam": "foxes",
+			"swaps": {
+				"label": "foxes",
+				"subentries": [
+				{
+					"label": "foxcorner",
+					"subentries": null
+				},
+				{
+					"label": "foxmulti",
+					"subentries": null
+				},
+				{
+					"label": "separator",
+					"subentries": null
+				},
+				{
+					"label": "wolves",
+					"subentries": [
+					{
+						"label": "wolf",
+						"subentries": null
+					},
+					{
+						"label": "wolfcorner",
+						"subentries": null
+					},
+					{
+						"label": "wolfinside",
+						"subentries": null
+					},
+					{
+						"label": "wolfden",
+						"subentries": null
+					},
+					{
+						"label": "wolfden2",
+						"subentries": null
+					},
+					{
+						"label": "wolfmultis",
+						"subentries": [
+						{
+							"label": "wolfmulti",
+							"subentries": null
+						},
+						{
+							"label": "wolfmulti2",
+							"subentries": null
+						},
+						{
+							"label": "wolfdenmulti",
+							"subentries": null
+						},
+						{
+							"label": "wolfdenmulti2",
+							"subentries": null
+						}
+						]
+					}
+					]
+				},
+				{
+					"label": "rats",
+					"subentries": [
+					{
+						"label": "rat1",
+						"subentries": null
+					},
+					{
+						"label": "rat2",
+						"subentries": null
+					},
+					{
+						"label": "rat3",
+						"subentries": null
+					},
+					{
+						"label": "ratmulti",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "reptiles",
+					"subentries": [
+					{
+						"label": "georgie",
+						"subentries": null
+					},
+					{
+						"label": "noodle",
+						"subentries": null
+					},
+					{
+						"label": "patchy",
+						"subentries": null
+					},
+					{
+						"label": "toast",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "insects",
+					"subentries": [
+					{
+						"label": "marty",
+						"subentries": null
+					},
+					{
+						"label": "bb",
+						"subentries": null
+					},
+					{
+						"label": "roaches",
+						"subentries": null
+					},
+					{
+						"label": "hank",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "crows",
+					"subentries": [
+					{
+						"label": "crowout",
+						"subentries": null
+					},
+					{
+						"label": "crowin",
+						"subentries": null
+					},
+					{
+						"label": "crowmulti",
+						"subentries": null
+					},
+					{
+						"label": "crowmulti2",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "marmosets",
+					"subentries": [
+					{
+						"label": "marmin",
+						"subentries": null
+					},
+					{
+						"label": "marmout",
+						"subentries": null
+					},
+					{
+						"label": "marmmulti",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "parrots",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "separator",
+					"subentries": null
+				},
+				{
+					"label": "swap",
+					"subentries": [
+					{
+						"label": "1",
+						"subentries": null
+					},
+					{
+						"label": "2",
+						"subentries": null
+					},
+					{
+						"label": "3",
+						"subentries": null
+					},
+					{
+						"label": "4",
+						"subentries": null
+					},
+					{
+						"label": "5",
+						"subentries": null
+					},
+					{
+						"label": "6",
+						"subentries": null
+					}
+					]
+				}
+				]
+			}
+		}`;
+	}
+
+
+</script>
    
    <!-- let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null} -->
 
 
 <ContextMenu.Root bind:open={isOpen} onOpenChange={opc}>
-	<ContextMenu.Trigger>
-		<slot></slot>
-	</ContextMenu.Trigger>
-	{#if isRendered && entry.found && entry.swaps && entry.swaps.subentries}
+	{#if $am.Actions[name].IsActive && dataReady}
+		<ContextMenu.Trigger>
+			<slot></slot>
+		</ContextMenu.Trigger>
 		<ContextMenu.Content class="w-52 dark:bg-slate-800 z-50" fitViewport={true} overlap={true}>
-			<SubContextMenu on:clickentry={bubbleClick} entries={entry.swaps.subentries} cam={{cam: entry.cam, position: entry.position, found: true, swaps: null}} />
+			<SubContextMenu entries={topEntry.swaps.subentries} cam={{cam: topEntry.cam, position: topEntry.position, found: true, swaps: {label: "", subentries: []}}} />
 		</ContextMenu.Content>
 	{/if}
 </ContextMenu.Root>

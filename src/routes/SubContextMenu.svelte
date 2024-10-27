@@ -2,36 +2,23 @@
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { createEventDispatcher, onMount } from 'svelte';
 	import type { Entry, SwapResponse } from '$types';
+	import { commandText } from '$lib/stores';
 	import SubContextMenu from './SubContextMenu.svelte';
-	const dispatch = createEventDispatcher();
-	
 
 	export let entries: Entry[];
 	export let cam: SwapResponse;
 	function handleClick(source: SwapResponse, target: string) {
 		target = target == "main" ? "1" : target;
 		let sourceCam = isNaN(Number(target)) ? source.cam : source.position
+
 		if (target == "1") {
-			dispatch('clickentry', {
-				cam: target,
-				target: sourceCam
-			});
+			$commandText = `!swap ${target} ${sourceCam}`
 		} else {
-			dispatch('clickentry', {
-				cam: sourceCam,
-				target: target
-			});
+			$commandText = `!swap ${sourceCam} ${target}`
 		}
 		
 	}
 
-	function bubbleClick(e: any) {
-		dispatch('clickentry', e.detail);
-	}
-
-	onMount(() => {
-		console.log(entries)
-    });
 </script>
 
 <!-- <ContextMenu.Item>an item</ContextMenu.Item> -->
@@ -46,7 +33,7 @@
 		<ContextMenu.Sub>
 			<ContextMenu.SubTrigger class="h-10" inset>{e.label}</ContextMenu.SubTrigger>
 			<ContextMenu.SubContent class="w-4 overflow-visible text-right">
-				<SubContextMenu on:clickentry={bubbleClick} entries={e.subentries} cam={cam}/>
+				<SubContextMenu entries={e.subentries} cam={cam}/>
 			</ContextMenu.SubContent>
 		</ContextMenu.Sub>
 	{/if}

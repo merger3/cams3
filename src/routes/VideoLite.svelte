@@ -8,7 +8,8 @@
 	import Konva from "konva";
 	import TangleLite from './TangleLite.svelte';
 	import Zoomable from './Zoomable.svelte';
-
+	import ContextMenu from './ContextMenu.svelte';
+	
 	export let selector: TangleLite;
 	let stage: Konva.Stage;
 
@@ -125,12 +126,16 @@
 	<Zoomable bind:stage>
 		<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 			
-			<div id="overlay" class="unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}}/>
+			<ContextMenu bind:stage>
+				<div id="menutrigger" class="overlay unselectable z-100" />
+			</ContextMenu>
+
+			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}}/>
 
 			<TangleLite bind:this={selector} bind:stage bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframeRaw} />
-				
+			
 			<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
-				
+			
 			<!-- <iframe
 			title="da cameras"
 			id="cams"
@@ -161,7 +166,7 @@
 	#wrapper {
 		flex-grow: 0;
 	}
-	#overlay {
+	.overlay {
 		position: absolute;
 		top: 0;
 		left: 0;

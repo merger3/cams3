@@ -300,7 +300,7 @@
 				context.beginPath();
 				context.rect(-xMargin / 2, -yMargin / 2, clickedShape!.width() + xMargin, clickedShape!.height() + yMargin);
 				context.closePath();
-				// important Konva method that fill and stroke shape from its properties
+				
 				context.fillStrokeShape(clickedShape);
 			});
 			clickedShape.moveToTop();

@@ -70,7 +70,11 @@
 			$am.Actions[name].IsActive = true;
 			dot.show();
 			$am.Actions[name].MustCancel.forEach(function (actionName) {
-				$am.Actions[actionName].Cancel()
+				if (actionName == "draw") {
+					$am.Actions[actionName].Cancel(false)
+				} else {
+					$am.Actions[actionName].Cancel()
+				}
 			});
 
 			dot.position({
@@ -88,7 +92,11 @@
 			
 
 			$am.Actions[name].MustCancel.forEach(function (actionName) {
-				$am.Actions[actionName].Cancel()
+				if (actionName == "draw") {
+					$am.Actions[actionName].Cancel(false)
+				} else {
+					$am.Actions[actionName].Cancel()
+				}
 			});
 
 			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
@@ -102,7 +110,7 @@
 
 			writeCommand();
 			$am.Actions[name].IsActive = false;
-		}, 200);
+		}, 150);
 	}
 
 	onMount(async () => {

@@ -14,14 +14,14 @@ export interface CamPresets {
 
 interface Entry {
 	label: string;
-	subentries: Entry[] | null;
+	subentries: Entry[];
 }
 
 interface SwapResponse {
 	found: boolean;
 	cam: string;
 	position: number;
-	swaps: Entry | null;
+	swaps: Entry;
 }
 
 interface CamPosition {

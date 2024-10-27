@@ -22,7 +22,6 @@
 	var boxGroup: Konva.Group;
 
 	export let zones: Box[] = [];
-	let zoneBoxes: Konva.Rect[] = [new Konva.Rect(), new Konva.Rect(), new Konva.Rect(), new Konva.Rect(), new Konva.Rect(), new Konva.Rect()];
 	const dispatch = createEventDispatcher();
 
 	function bubbleResize(e: CustomEvent) {
@@ -96,7 +95,7 @@
 		return s;
 	}
 
-	let zoneConfig = {x: 0, y: 0};
+	let zoneConfig = {x: 0, y: 0, id: "zones"};
 	export function resizeZones(x: number, y: number) {
 		zoneConfig.x = x;
 		zoneConfig.y = y;
@@ -152,7 +151,6 @@
 	}
 	
 	function handlePointerMove(e: KonvaPointerEvent) {
-		
 		if ($am.ActiveStates.has(States.StagePointerDown)) {
 			$am.ActiveStates.add(States.StageDragging);
 
@@ -209,7 +207,6 @@
 		if (log) {
 			console.log(printStates($am.ActiveStates))
 		}
-
 	}
 
 	function handlePointerDoubleClick(e: KonvaPointerEvent) {
@@ -256,8 +253,8 @@
 		setPointerCountStates(pointers);
 		setCommandState();
 
-		console.log(printStates($am.ActiveStates))
 		if (log) {
+			console.log(printStates($am.ActiveStates))
 		}
 
 		$am.CheckActions({x: e.evt.clientX, y: e.evt.clientY});
@@ -303,7 +300,7 @@
 		jQuery("#overlay")[0].addEventListener("pointerout",handlePointerOut);
 
 		// stage.on("pointerleave.stage", pointerleave);
-		// layer.toggleHitCanvas();
+		layer.toggleHitCanvas();
    
  	});
 </script>
@@ -334,7 +331,6 @@
 						strokeScaleEnabled: false,
 						name: String(z.zone)
 					}}
-					bind:handle={zoneBoxes[z.zone]}
 				/>
 				<Shape config={{
 					x: (z.x + (z.width / 2)),

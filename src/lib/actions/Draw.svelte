@@ -2,7 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
 	import { Circle, Rect, Transformer } from "svelte-konva";
-	import { am, commandText, ifDimensions } from '$lib/stores';
+	import { am, commandText, ifDimensions, GetZone, GrowZone, ResetZone, ResetZones } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import {  DrawTangle } from '$lib/rect';
@@ -35,10 +35,28 @@
 		Enable: enable
 	}
 
+	let children: any;
+	let layer: Konva.Layer;
+
+	let startZone: number | null;
 	function enable(this: Action, origin: Coordinates) {
+		// Optimization for GetZone in places that call it a lot
+		layer = stage.findOne('#mainlayer') as Konva.Layer;
+		children = layer.getChildren(function(node){
+			return node.id() != "zones" && node.listening();
+		});
+
+		startZone = GetZone(origin, stage, layer, children);
+		if (!startZone) {
+			return;
+		}
+		
+		GrowZone(stage, startZone);
+
 		this.MustCancel.forEach(function (actionName) {
 			$am.Actions[actionName].Cancel(false);
 		});
+
 		transformer.nodes([]);
 		tangle.size({
 			height: 0,
@@ -66,13 +84,16 @@
 		this.IsActive = true;
 	}
 
-	function cancel(this: Action) {
-		stage.off('pointermove.draw')
-		stage.off('pointerup.draw')
+	function cancel(this: Action, mod = true) {
+		stage.off('pointermove.draw');
+		stage.off('pointerup.draw');
 		tangle.listening(false);
 		transformer.nodes([]);
 		tangle.hide();
 		dot.hide();
+		if (mod && startZone != null) {
+			ResetZone(stage, startZone);		
+		}
 		this.IsActive = false;
 	}
 
@@ -91,6 +112,13 @@
 	function handleDrag(e: Konva.KonvaPointerEvent) {
 		let mousePos = stage.getPointerPosition();
 		if (mousePos) {
+			if (GetZone({x: mousePos.x, y: mousePos.y}, stage, layer, children) == startZone) {
+				tangle.show();
+				dot.show();
+			} else {
+				tangle.hide();
+				dot.hide();
+			}
 			tangle.size({
 				width: (mousePos.x - tangle.x()),
 				height: (mousePos.y - tangle.y())
@@ -110,21 +138,30 @@
 		stage.off('pointermove.draw')
 		stage.off('pointerup.draw')
 
-		if (tangle.width() < 0) {
-			tangle.x(tangle.x() + tangle.width())
-			tangle.width(Math.abs(tangle.width()))
-		}
-		if (tangle.height() < 0) {
-			tangle.y(tangle.y() + tangle.height()) 
-			tangle.height(Math.abs(tangle.height()))
-		}
+		let mousePos = stage.getPointerPosition();
 
-		transformer.nodes([tangle]);
-		transformer.anchorSize(Math.max(Math.min((transformer?.width() / 8), 15), 3))
-		tangle.listening(true);
-		$am.Actions[name].IsActive = false;
+		if (mousePos && GetZone({x: mousePos.x, y: mousePos.y}, stage, layer, children) == startZone) {
+			if (tangle.width() < 0) {
+				tangle.x(tangle.x() + tangle.width())
+				tangle.width(Math.abs(tangle.width()))
+			}
+			if (tangle.height() < 0) {
+				tangle.y(tangle.y() + tangle.height()) 
+				tangle.height(Math.abs(tangle.height()))
+			}
 
-		writeCommand();
+			transformer.nodes([tangle]);
+			transformer.anchorSize(Math.max(Math.min((transformer?.width() / 8), 15), 3))
+			tangle.listening(true);
+
+			// ResetZone(stage, startZone!);
+			ResetZones(stage);
+			writeCommand();
+
+			$am.Actions[name].IsActive = false;
+		} else {
+			$am.Actions[name].Cancel();
+		}
 	}
 
 	function handleTangleDrag(e: any) {
