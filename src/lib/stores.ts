@@ -58,7 +58,7 @@ export function InitializeAM() {
 }
 
 
-export function GetZone(origin: Coordinates, stage: Konva.Stage, layer: Konva.Layer | undefined = undefined, children: any | undefined = undefined): number | null {
+export function GetZone(origin: Coordinates, stage: Konva.Stage, layer: Konva.Layer | undefined = undefined, children: any | undefined = undefined): Konva.Rect | null {
 	// Draw and Swap could pull layer or children in enable and then avoid having to call them on move
 	let listening: Konva.Node[] = [];
 	
@@ -78,7 +78,7 @@ export function GetZone(origin: Coordinates, stage: Konva.Stage, layer: Konva.La
 	});
 	layer.draw();
 
-	let zone = stage.getIntersection(origin);
+	let zone = stage.getIntersection(origin) as Konva.Rect;
 	if (!zone || zone.name() == "") {
 		console.log("No zone clicked")
 		return null;
@@ -89,55 +89,31 @@ export function GetZone(origin: Coordinates, stage: Konva.Stage, layer: Konva.La
 	});
 	layer.draw();
 
-	return Number(zone.name());
+	return zone;
 }
 
-export function GrowZone(stage: Konva.Stage, zone: number) {
-	let targetZone = stage.findOne(`.${zone}`) as Konva.Rect;
-	if (targetZone) {
-		targetZone.hitFunc(function(context: any) {
-			let xMargin = stage.width() * .06
-			let yMargin = stage.height() * .07
-			context.beginPath();
-			context.rect(-xMargin / 2, -yMargin / 2, targetZone.width() + xMargin, targetZone.height() + yMargin);
-			context.closePath();
-			
-			context.fillStrokeShape(targetZone);
-		});
-		targetZone.moveToTop();
-	}
-}
-
-export function ResetZones(stage: Konva.Stage) {
-	let zoneGroup = stage.findOne('#zones') as Konva.Group;
-	let zones = zoneGroup.getChildren() as Konva.Rect[];
-	zones.forEach(function (node: Konva.Rect) {
-		node.hitFunc(function(context: any) {
-			context.beginPath();
-			context.rect(0, 0, node.width(), node.height());
-			context.closePath();
-			context.fillStrokeShape(node);
-		});
-		node.fill("rgba(0, 0, 0, 0)");
-		node.moveToBottom();
+export function GrowZone(stage: Konva.Stage, zone: Konva.Rect) {
+	zone.hitFunc(function(context: any) {
+		let xMargin = stage.width() * .06
+		let yMargin = stage.height() * .07
+		context.beginPath();
+		context.rect(-xMargin / 2, -yMargin / 2, zone.width() + xMargin, zone.height() + yMargin);
+		context.closePath();
+		
+		context.fillStrokeShape(zone);
 	});
+	zone.moveToTop();
 }
 
-export function ResetZone(stage: Konva.Stage, zone: number) {
-	let node = stage.findOne(`.${zone}`) as Konva.Rect;
-	if (node) {
-		console.log(node)
-		node.hitFunc(function(context: any) {
-			context.beginPath();
-			context.rect(0, 0, node.width(), node.height());
-			context.closePath();
-			context.fillStrokeShape(node);
-		});
-		node.fill("rgba(0, 0, 0, 0)");
-		node.moveToBottom();
-	}
+export function ResetZone(stage: Konva.Stage, zone: Konva.Rect) {
+	zone.hitFunc(function(context: any) {
+		context.beginPath();
+		context.rect(0, 0, zone.width(), zone.height());
+		context.closePath();
+		context.fillStrokeShape(zone);
+	});
+	zone.fill("rgba(0, 0, 0, 0)");
 }
-
 
 export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamResponse> {
 	return {found: true, name: "fox", position: 3, cacheHit: true};

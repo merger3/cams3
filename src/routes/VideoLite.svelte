@@ -7,8 +7,8 @@
 	import _ from 'lodash';
 	import Konva from "konva";
 	import TangleLite from './TangleLite.svelte';
-	import Zoomable from './Zoomable.svelte';
-	import ContextMenu from './ContextMenu.svelte';
+	import Zoomable from '$lib/actions/Zoomable.svelte';
+	import ContextMenu from '$lib/actions/ContextMenu.svelte';
 	
 	export let selector: TangleLite;
 	let stage: Konva.Stage;

@@ -20,7 +20,9 @@
 			States.LeftMouseButtonPressed,
 			States.ZoneHit
 		]),
-		InactiveConditions: new Set([States.StageDraggingBuffered]),
+		InactiveConditions: new Set([
+			States.StageDraggingBuffered
+		]),
 		MustCancel: ["draw"],
 		IsActive: false,
 		Cancel: cancel,
@@ -69,13 +71,7 @@
 		if (mousePos) {
 			$am.Actions[name].IsActive = true;
 			dot.show();
-			$am.Actions[name].MustCancel.forEach(function (actionName) {
-				if (actionName == "draw") {
-					$am.Actions[actionName].Cancel(false)
-				} else {
-					$am.Actions[actionName].Cancel()
-				}
-			});
+			$am.Actions["draw"].Cancel(false)
 
 			dot.position({
 				x: mousePos.x,
@@ -91,13 +87,7 @@
 			$am.Actions[name].IsActive = true;
 			
 
-			$am.Actions[name].MustCancel.forEach(function (actionName) {
-				if (actionName == "draw") {
-					$am.Actions[actionName].Cancel(false)
-				} else {
-					$am.Actions[actionName].Cancel()
-				}
-			});
+			$am.Actions["draw"].Cancel();
 
 			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 			renderedDot.position({

@@ -4,7 +4,7 @@
 	import type { SwapResponse, Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { am, ifDimensions, GetZone, GetCam, server } from '$lib/stores';
-	import SubContextMenu from './SubContextMenu.svelte';
+	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
 	import type Konva from "konva";
 	const dispatch = createEventDispatcher();
 	
@@ -37,7 +37,7 @@
 			return;
 		}
 
-		loadMenu(origin, target)
+		loadMenu(origin, Number(target.id()))
 	}
 
 	function cancel(this: Action) {

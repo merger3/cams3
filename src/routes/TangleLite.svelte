@@ -5,6 +5,7 @@
 	import type { Box, Coordinates, CamPresets } from '$types';
 	import Radial from "./Radial.svelte";
 	import Draw from "$lib/actions/Draw.svelte";
+	import Swap from "$lib/actions/Swap.svelte";
 	import Click from "$lib/actions/Click.svelte";
 	import Scroll from "$lib/actions/Scroll.svelte";
 	import DoubleClick from "$lib/actions/DoubleClick.svelte";
@@ -298,9 +299,8 @@
 		// stage.on("pointerout.stage", pointerleave);
 
 		jQuery("#overlay")[0].addEventListener("pointerout",handlePointerOut);
-
 		// stage.on("pointerleave.stage", pointerleave);
-		layer.toggleHitCanvas();
+		// layer.toggleHitCanvas();
    
  	});
 </script>
@@ -369,7 +369,8 @@
 				/>
 			{/each}
 		</Group>
-		<Draw bind:stage />
+		<Draw bind:stage bind:layer />
+		<!-- <Swap bind:stage /> -->
 		<Click bind:stage />
 		<DoubleClick />
 		<Scroll on:forceiframeresize={bubbleResize}/>

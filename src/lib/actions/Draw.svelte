@@ -2,14 +2,19 @@
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
 	import { Circle, Rect, Transformer } from "svelte-konva";
-	import { am, commandText, ifDimensions, GetZone, GrowZone, ResetZone, ResetZones } from '$lib/stores';
+	import { am, commandText, ifDimensions, GetZone, GrowZone, ResetZone } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import {  DrawTangle } from '$lib/rect';
+	import _ from 'lodash';
+	import { customAlphabet } from 'nanoid';
 
+	const tangleID = customAlphabet('0123456789abcdef', 5);
 	const name = "draw";
 
 	export let stage: Konva.Stage;
+	export let layer: Konva.Layer;
+
 	let tangle: Konva.Rect;
 	let dot: Konva.Circle;
 	let transformer: Konva.Transformer;
@@ -35,27 +40,22 @@
 		Enable: enable
 	}
 
-	let children: any;
-	let layer: Konva.Layer;
-
-	let startZone: number | null;
+	let startZone: Konva.Rect | null;
 	function enable(this: Action, origin: Coordinates) {
 		// Optimization for GetZone in places that call it a lot
-		layer = stage.findOne('#mainlayer') as Konva.Layer;
-		children = layer.getChildren(function(node){
-			return node.id() != "zones" && node.listening();
-		});
+		// layer = stage.findOne('#mainlayer') as Konva.Layer;
+		// children = layer.getChildren(function(node){
+		// 	return node.id() != "zones" && node.listening();
+		// });
 
-		startZone = GetZone(origin, stage, layer, children);
-		if (!startZone) {
-			return;
-		}
+		// startZone = GetZone(origin, stage, layer, children);
+		// if (!startZone) {
+		// 	return;
+		// }
 		
-		GrowZone(stage, startZone);
+		// GrowZone(stage, startZone);
 
-		this.MustCancel.forEach(function (actionName) {
-			$am.Actions[actionName].Cancel(false);
-		});
+		$am.Actions["click"].Cancel()
 
 		transformer.nodes([]);
 		tangle.size({
@@ -109,16 +109,9 @@
 		}).command
 	}
 
-	function handleDrag(e: Konva.KonvaPointerEvent) {
+	function handleDragRaw(e: Konva.KonvaPointerEvent) {
 		let mousePos = stage.getPointerPosition();
 		if (mousePos) {
-			if (GetZone({x: mousePos.x, y: mousePos.y}, stage, layer, children) == startZone) {
-				tangle.show();
-				dot.show();
-			} else {
-				tangle.hide();
-				dot.hide();
-			}
 			tangle.size({
 				width: (mousePos.x - tangle.x()),
 				height: (mousePos.y - tangle.y())
@@ -127,20 +120,29 @@
 				x: (tangle.x() + (tangle.width() / 2)),
 				y: (tangle.y() + (tangle.height() / 2)),
 			})
+
+			// if (GetZone({x: mousePos.x, y: mousePos.y}, stage, layer, children) == startZone) {
+			// 	tangle.show();
+			// 	dot.show();
+			// } else {
+			// 	tangle.hide();
+			// 	dot.hide();
+			// }
 		}
 	}
 
+	var handleDrag = _.throttle(handleDragRaw, 5, { 'leading': true, 'trailing': true });
+
+
 	function finshDrawing(e: Konva.KonvaPointerEvent) {
-		$am.Actions[name].MustCancel.forEach(function (actionName) {
-			$am.Actions[actionName].Cancel()
-		});
+		$am.Actions["click"].Cancel()
 
 		stage.off('pointermove.draw')
 		stage.off('pointerup.draw')
 
 		let mousePos = stage.getPointerPosition();
 
-		if (mousePos && GetZone({x: mousePos.x, y: mousePos.y}, stage, layer, children) == startZone) {
+		if (mousePos) {
 			if (tangle.width() < 0) {
 				tangle.x(tangle.x() + tangle.width())
 				tangle.width(Math.abs(tangle.width()))
@@ -154,14 +156,80 @@
 			transformer.anchorSize(Math.max(Math.min((transformer?.width() / 8), 15), 3))
 			tangle.listening(true);
 
-			// ResetZone(stage, startZone!);
-			ResetZones(stage);
+			ResetZone(stage, startZone!);
 			writeCommand();
 
 			$am.Actions[name].IsActive = false;
 		} else {
 			$am.Actions[name].Cancel();
 		}
+	}
+
+
+
+	function manufactureTangle() {
+		let groupID = tangleID()
+
+		let newTangleGroup = new Konva.Group({
+			name: "tangle",
+			id: groupID
+		})
+
+		let newTangle = new Konva.Rect({
+			x: tangle.x(),
+			y: tangle.y(),
+			width: tangle.width(),
+			height: tangle.height(),
+			fill: 'rgba(250, 128, 114, 0.3)',
+			stroke: 'rgba(255, 0, 0, 0.5)',
+			strokeWidth: 1.5,
+			strokeScaleEnabled: false,
+			listening: true,
+			draggable: true,
+			visible: true
+		});
+		
+		let newDot = new Konva.Circle({
+			x: dot.x(),
+			y: dot.y(),
+			radius: 2,
+			strokeScaleEnabled: false,
+			fill: 'black',
+			listening: false,
+			draggable: false,
+			visible: true
+		});
+		newDot.transformsEnabled("position");
+
+		let newTranformer = new Konva.Transformer({
+			anchorSize: Math.max(Math.min((transformer?.width() / 8), 15), 3),
+			keepRatio: false,
+			rotateEnabled: false,
+			borderEnabled: false,
+			ignoreStroke: true,
+			shouldOverdrawWholeArea: true,
+			flipEnabled: false,	
+			anchorStyleFunc: function (anchor) {
+				anchor.fill('rgba(138, 219, 207, .5)');
+				anchor.cornerRadius(anchor.width() / 2);
+			}
+		});
+
+		// on:dragmove={handleTangleDrag}
+		// on:dragend={endTangleDrag}
+		// on:transform={handleTransform}
+		// on:transformend={handleTransformEnd}
+
+		newTangleGroup.on("transform", handleTransform);
+		newTangleGroup.on("transformend", handleTransformEnd)
+
+		newTangleGroup.add(newTangle);
+		newTangleGroup.add(newDot);
+		newTangleGroup.add(newTranformer);
+
+		newTranformer.nodes([newTangleGroup]);
+
+		layer.add(newTangleGroup);
 	}
 
 	function handleTangleDrag(e: any) {
@@ -188,10 +256,10 @@
 			scaleY: 1,
 		});
 
-		dot.position({
-			x: (tangle.x() + (tangle.width() / 2)),
-			y: (tangle.y() + (tangle.height() / 2)),
-		})
+		// dot.position({
+		// 	x: (tangle.x() + (tangle.width() / 2)),
+		// 	y: (tangle.y() + (tangle.height() / 2)),
+		// })
 
 		transformer.anchorSize(Math.max(Math.min((transformer?.width() / 8), 15), 3))
 	}
@@ -246,16 +314,19 @@
 		listening: false
 	}} 
 />
-<Transformer bind:handle={transformer} on:transformend={handleTransformEnd} config={{
-	name: "transformer",
-	keepRatio: false,
-	anchorSize: Math.max(Math.min((transformer?.width() / 8), 15), 3),
-	rotateEnabled: false,
-	borderEnabled: false,
-	ignoreStroke: true,
-	shouldOverdrawWholeArea: true,
-	flipEnabled: false,	
-	anchorStyleFunc: function (anchor) {
-		anchor.fill('rgba(138, 219, 207, .5)');
-		anchor.cornerRadius(anchor.width() / 2);
-	}}} />
+<Transformer bind:handle={transformer} on:transformend={handleTransformEnd} 
+	config={{
+		name: "transformer",
+		keepRatio: false,
+		anchorSize: Math.max(Math.min((transformer?.width() / 8), 15), 3),
+		rotateEnabled: false,
+		borderEnabled: false,
+		ignoreStroke: true,
+		shouldOverdrawWholeArea: true,
+		flipEnabled: false,	
+		anchorStyleFunc: function (anchor) {
+			anchor.fill('rgba(138, 219, 207, .5)');
+			anchor.cornerRadius(anchor.width() / 2);
+		}
+	}} 
+/>

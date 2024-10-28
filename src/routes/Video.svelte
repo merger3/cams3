@@ -2,9 +2,9 @@
 	import { onMount, createEventDispatcher } from 'svelte';
 	import Konva from "konva";
 	import Tangle from './Tangle.svelte';
-	import Zoomable from './Zoomable.svelte';
+	import Zoomable from '../lib/actions/Zoomable.svelte';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
-	import ContextMenu from './ContextMenu.svelte';
+	import ContextMenu from '../lib/actions/ContextMenu.svelte';
 	import type { SwapResponse, Coordinates, Box, RadialPart, RadialMenu, CamPresets } from '$types';
 	import { Motion } from 'svelte-motion'
 	import { pinch, press, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent } from 'svelte-gestures';
