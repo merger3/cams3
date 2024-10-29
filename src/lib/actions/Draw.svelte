@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
-	import { Circle, Rect, Transformer } from "svelte-konva";
-	import { am, commandText, ifDimensions, GetZone, GrowZone, ResetZone, ClearStage, stage } from '$lib/stores';
+	import { Circle, Rect } from "svelte-konva";
+	import { am, commandText, ifDimensions, ClearStage, stage } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import {  DrawTangle } from '$lib/rect';
@@ -51,14 +51,15 @@
 	function enable(this: Action, origin: Coordinates) {
 		ClearStage($stage);
 
-		tangle.size({
-			height: 0,
-			width: 0
-		})
 		tangle.position({
 			x: origin.x,
 			y: origin.y
 		})
+		tangle.size({
+			height: 0,
+			width: 0
+		})
+		
 
 		dot.position({
 			x: (tangle.x() + (tangle.width() / 2)),
@@ -66,8 +67,8 @@
 		})
 
 		tangle.show();
-		dot.show();
 		dot.moveToTop();
+		dot.show();
 
 		$stage.on('pointermove.draw', handleDrag);
 		$stage.on('pointerup.draw', finshDrawing);
@@ -77,7 +78,6 @@
 	}
 
 	function cancel(this: Action) {
-		console.log("cancelling Draw")
 		$stage.off('pointermove.draw');
 		$stage.off('pointerup.draw');
 
@@ -117,7 +117,6 @@
 
 
 	function finshDrawing(e: Konva.KonvaPointerEvent) {
-		console.log("running tangle up")
 		$stage.off('pointermove.draw')
 		$stage.off('pointerup.draw')
 
@@ -181,7 +180,7 @@
 		});
 
 		let newTranformer = new Konva.Transformer({
-			anchorSize: Math.max(Math.min((newTangle.width() / 8), 20), 3),
+			anchorSize: Math.max(Math.min((newTangle.width() / 8), 17), 3),
 			keepRatio: false,
 			rotateEnabled: false,
 			borderEnabled: false,
@@ -260,7 +259,7 @@
 					break;
 				}
 				case "Transformer": { 
-					(node as Konva.Transformer).anchorSize(Math.max(Math.min((node.width() / 8), 20), 3))
+					(node as Konva.Transformer).anchorSize(Math.max(Math.min((node.width() / 8), 17), 3))
 					break; 
 				} 
 			} 
@@ -288,7 +287,7 @@
 					break; 
 				}
 				case "Transformer": { 
-					(node as Konva.Transformer).anchorSize(Math.max(Math.min((node.width() / 8), 20), 3))
+					(node as Konva.Transformer).anchorSize(Math.max(Math.min((node.width() / 8), 17), 3))
 					break; 
 				} 
 			} 

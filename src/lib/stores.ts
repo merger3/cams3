@@ -1,12 +1,11 @@
 import { writable } from 'svelte/store';
-import axios, { Axios, type AxiosInstance } from 'axios';
+import { type AxiosInstance } from 'axios';
 import type { CamRequest, CamResponse, Coordinates, Dimensions } from '$types';
 import {type PanzoomObject} from '@panzoom/panzoom'
-import { pinch, press, composedGesture, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent, type RegisterGestureType, type GestureCallback, type BaseParams, type GestureReturnType} from 'svelte-gestures';
-import { setPointerControls, getCenterOfTwoPoints } from 'svelte-gestures';
-import { type States, type Action, type ActionsManager } from '$lib/actions';
+import { type BaseParams } from 'svelte-gestures';
+import { setPointerControls } from 'svelte-gestures';
+import { type ActionsManager } from '$lib/actions';
 import Konva from "konva";
-import { tick } from 'svelte';
 
 export let commandText = writable<string>();
 export let ifDimensions = writable<Dimensions>({width: 0, height: 0});
@@ -55,7 +54,6 @@ export function InitializeAM() {
 
 
 export function GetZone(origin: Coordinates, stage: Konva.Stage): Konva.Rect | undefined {
-	console.log("calling getzone")
 	let listening: Konva.Node[] = [];
 	let layer = stage.findOne('#mainlayer') as Konva.Layer;
 

@@ -8,7 +8,6 @@
 	import Swap from "$lib/actions/Swap.svelte";
 	import Click from "$lib/actions/Click.svelte";
 	import Scroll from "$lib/actions/Scroll.svelte";
-	import DoubleClick from "$lib/actions/DoubleClick.svelte";
 	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone } from '$lib/stores';
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
@@ -89,94 +88,41 @@
 
 	let startZone: any;
 	function setClickedZone(origin: Coordinates | null) {
-		$am.ActiveStates.add(States.ClickedZone);
-
-		$am.ActiveStates.delete(States.ClickedZoneOne);
-		$am.ActiveStates.delete(States.ClickedZoneTwo);
-		$am.ActiveStates.delete(States.ClickedZoneThree);
-		$am.ActiveStates.delete(States.ClickedZoneFour);
-		$am.ActiveStates.delete(States.ClickedZoneFive);
-		$am.ActiveStates.delete(States.ClickedZoneSix);
-
 		let zoneRect: Konva.Rect | undefined = undefined;
 		if (origin) {
 			zoneRect = GetZone(origin, $stage);
 		}
 
-		let zone = zoneRect ? zoneRect.name() : "";
-		switch (zone) {
-		case '1':
-			$am.ActiveStates.add(States.ClickedZoneOne);
-			break;
-		case '2':
-			$am.ActiveStates.add(States.ClickedZoneTwo);
-			break;
-		case '3':
-			$am.ActiveStates.add(States.ClickedZoneThree);
-			break;
-		case '4':
-			$am.ActiveStates.add(States.ClickedZoneFour);
-			break;
-		case '5':
-			$am.ActiveStates.add(States.ClickedZoneFive);
-			break;
-		case '6':
-			$am.ActiveStates.add(States.ClickedZoneSix);
-			break;
-		default:
+		if (zoneRect) {
+			$am.ActiveStates.add(States.ClickedZone);
+			if ($am.ActiveStates.has(States.PointerAdded) && $am.ActiveStates.has(States.OnePointer)) {
+				GrowZone($stage, zoneRect!);
+				startZone = zoneRect;
+			}
+		} else {
 			$am.ActiveStates.delete(States.ClickedZone);
 			startZone = undefined;
-			return;
 		}
-		if ($am.ActiveStates.has(States.PointerAdded) && $am.ActiveStates.has(States.OnePointer)) {
-			GrowZone($stage, zoneRect!);
-			startZone = zoneRect;
-		}
+		
+		
 	}
 
 	let hoverZone: any;
 	function setHoveredZone(zone: Konva.Rect | null) {
-		$am.ActiveStates.add(States.HoveredZone);
-
-		$am.ActiveStates.delete(States.HoveredZoneOne);
-		$am.ActiveStates.delete(States.HoveredZoneTwo);
-		$am.ActiveStates.delete(States.HoveredZoneThree);
-		$am.ActiveStates.delete(States.HoveredZoneFour);
-		$am.ActiveStates.delete(States.HoveredZoneFive);
-		$am.ActiveStates.delete(States.HoveredZoneSix);
-
-		let name = zone != null ? zone.name() : "";
 		if (hoverZone) {
 			hoverZone.fill("rgba(0, 0, 0, 0)")
 		}
 		
 		hoverZone = zone;
-		switch (name) {
-		case '1':
-			$am.ActiveStates.add(States.HoveredZoneOne);
-			break;
-		case '2':
-			$am.ActiveStates.add(States.HoveredZoneTwo);
-			break;
-		case '3':
-			$am.ActiveStates.add(States.HoveredZoneThree);
-			break;
-		case '4':
-			$am.ActiveStates.add(States.HoveredZoneFour);
-			break;
-		case '5':
-			$am.ActiveStates.add(States.HoveredZoneFive);
-			break;
-		case '6':
-			$am.ActiveStates.add(States.HoveredZoneSix);
-			break;
-		default:
+
+		if (zone) {
+			$am.ActiveStates.add(States.HoveredZone);
+			if (hoverZone != startZone && $am.ActiveStates.has(States.OnePointer) && $am.ActiveStates.has(States.LeftMouseButtonPressed)) {
+				hoverZone.fill("rgba(92, 150, 255, 0.15)")
+			}
+		} else {
 			$am.ActiveStates.delete(States.HoveredZone);
-			return;
-		}
-		if (hoverZone != startZone && $am.ActiveStates.has(States.OnePointer) && $am.ActiveStates.has(States.LeftMouseButtonPressed)) {
-			hoverZone.fill("rgba(92, 150, 255, 0.15)")
-		}
+		}	
 	}
 
 
@@ -193,12 +139,11 @@
 		zoneConfig.y = y;
 	}
 
-	export function testZone(shape: Konva.Shape) {
-		return shape.getParent() == boxGroup
-	}
-
 	let origin: Coordinates | null;
 	function handlePointerDown(e: KonvaPointerEvent) {
+		if (document.activeElement) {
+			(document.activeElement as HTMLElement).blur();
+		}
 		$am.ActiveStates.add(States.StagePointerDown);
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		
@@ -237,7 +182,7 @@
 		$am.CheckActions({x: origin!.x, y: origin!.y});
 	}
 	
-	function handlePointerMove(e: KonvaPointerEvent) {
+	function handlePointerMoveRaw(e: KonvaPointerEvent) {
 		if ($am.ActiveStates.has(States.StagePointerDown)) {
 			$am.ActiveStates.add(States.StageDragging);
 
@@ -254,10 +199,11 @@
 		}
 	}
 
-	function handlePointerUp(e: KonvaPointerEvent) {
-		$am.CheckActions({x: origin!.x, y: origin!.y});
+	var handlePointerMove = _.throttle(handlePointerMoveRaw, 16, { 'leading': true, 'trailing': true });
 
-		
+
+	function handlePointerUp(e: KonvaPointerEvent) {
+		// $am.CheckActions({x: origin!.x, y: origin!.y});
 		prevPointers = pointers;
 		if (pointers > 0) {
 			pointers--;
@@ -300,13 +246,29 @@
 
 	function handlePointerDoubleClick(e: KonvaPointerEvent) {
 		$am.ActiveStates.add(States.StageDoubleClick);
-
-		if (log) {
-			console.log(printStates($am.ActiveStates))
+		if (e.evt.button == 0) {
+			$am.ActiveStates.add(States.LeftMouseButtonPressed);
+		} else if (e.evt.button == 1) {
+			$am.ActiveStates.add(States.MiddleMouseButtonPressed);
+		}  else if (e.evt.button == 2) {
+			$am.ActiveStates.add(States.RightMouseButtonPressed);
 		}
 
-		$am.CheckActions({x: e.evt.clientX, y: e.evt.clientY});
+		if (log) {
+			console.log(e);
+		}
+
+		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+		$am.CheckActions({x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()});
+		
 		$am.ActiveStates.delete(States.StageDoubleClick);
+		if (e.evt.button == 0) {
+			$am.ActiveStates.delete(States.LeftMouseButtonPressed);
+		} else if (e.evt.button == 1) {
+			$am.ActiveStates.delete(States.MiddleMouseButtonPressed);
+		}  else if (e.evt.button == 2) {
+			$am.ActiveStates.delete(States.RightMouseButtonPressed);
+		}
 	}
 
 	function wheelHandler(e: any) {
@@ -398,14 +360,12 @@
 		dispatch("forceiframeresize");
 
 		$stage.on("pointerdown.stage", handlePointerDown);
-		// $stage.on("pointermove.stage", handlePointerMove);
 		$stage.on("pointerup.stage", handlePointerUp);
 		$stage.on("pointerdblclick.stage", handlePointerDoubleClick);
 		$stage.on("wheel.stage", wheelHandler);
-		// stage.on("pointerout.stage", pointerleave);
 
 		jQuery("#overlay")[0].addEventListener("pointerout",handlePointerOut);
-		// stage.on("pointerleave.stage", pointerleave);
+
 		// layer.toggleHitCanvas();
    
  	});
@@ -479,7 +439,6 @@
 		<Draw bind:layer />
 		<Swap />
 		<Click />
-		<DoubleClick />
 		<Scroll on:forceiframeresize={bubbleResize}/>
 	</Layer>
 </Stage>

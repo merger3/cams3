@@ -1,16 +1,66 @@
 <script lang="ts">
-    import type { CamPresets } from '$types';
-    import { createEventDispatcher } from 'svelte';
-	import { ScrollArea } from "bits-ui";
-	import { commandText } from '$lib/stores';
-
-    export let spacerHeight: number;
-	export let spacerWidth: number;
-	export let camPresets: CamPresets;
-
+	import { onMount, createEventDispatcher } from 'svelte';
+	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone } from '$lib/stores';
+	import type { Coordinates, CamPresets } from '$types';
+	import { States, type Action } from '$lib/actions';
 	const dispatch = createEventDispatcher();
 
-	let yMargin: number = spacerHeight * .035;
+
+	let camPresets: CamPresets = {name: "", presets: []};
+
+	const name = "doubleclick";
+
+	$am.Actions[name] = {
+		Name: name,
+		TriggerConditions: {
+			Active: new Set([
+				States.StageDoubleClick,
+				States.LeftMouseButtonPressed
+			]),
+			Inactive: new Set(),
+		},
+		CancelConditions: {
+			Active: new Set(),
+			Inactive: new Set(),
+		},
+		IsActive: false,
+		Cancel: cancel,
+		Enable: enable
+	}
+
+	function enable(this: Action, origin: Coordinates) {
+		$am.Actions[name].IsActive = true;
+		let target = GetZone(origin, $stage);
+		if (!target) {
+			$am.Actions[name].Cancel();
+			return;
+		}
+
+		loadMenu(origin, Number(target.id()))
+	}
+
+	function cancel(this: Action) {
+		$am.Actions[name].IsActive = false;
+	}
+	
+	async function loadMenu(coordinates: Coordinates, target: number) {
+		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: target}, $server)
+		if (!cam.found) {
+			$am.Actions[name].Cancel();
+			return;
+		}
+
+		// let response = await $server.post('/camera/presets', {camera: cam.name})
+		// camPresets = response.data.camPresets;
+		
+		let response = JSON.parse(testString());
+		if (!response.data.found) {
+			$am.Actions[name].Cancel();
+			return;
+		} else {
+			camPresets = response.data.camPresets;
+		}
+	}
 
     function buildCommand(preset: string) {
 		let newCommand: string = `!ptzload ${camPresets.name} ${preset}`;
@@ -21,14 +71,53 @@
 		}
     }
     
+	function testString(): string {
+		return `
+		{
+			"data": {
+				"found": true,
+				"camPresets": {
+					"name": "pasture",
+					"presets": [
+						"home",
+						"barn",
+						"insidebarn",
+						"pen",
+						"grove",
+						"purplebase",
+						"brush",
+						"barn2",
+						"pool",
+						"feeder",
+						"gate",
+						"barn2r",
+						"barn2hay",
+						"stompyfood",
+						"water",
+						"poolr",
+						"pooll",
+						"penr",
+						"penm",
+						"penl"
+					]
+				}
+			}
+		}`;
+	}
+
+	onMount(() => {
+		
+	});
 
 </script>
 
-<div id="presets-menu" class="w-100 d-block m-auto text-center px-3 py-2 rounded shadow" style="max-height: {spacerHeight - yMargin}px; max-width: {spacerWidth - 15}px; top: {(yMargin / 2) - 4}px;">
-    {#each camPresets.presets as p}
-        <button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 mb-2 overflow-hidden position-relative">{p}</button>
-    {/each}
-</div>
+{#if camPresets.presets.length != 0}
+	<div id="presets-menu" class="d-block text-center px-3 py-2 mt-1.5 mb-2.5 ms-1 me-1.5 rounded shadow">
+		{#each camPresets.presets as p}
+			<button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 mb-2 overflow-hidden position-relative h-16">{p}</button>
+		{/each}
+	</div>
+{/if}
 
 <style>
     #presets-menu {

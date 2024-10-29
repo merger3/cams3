@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
-	import { createEventDispatcher, onMount } from 'svelte';
 	import type { Entry, SwapResponse } from '$types';
 	import { commandText } from '$lib/stores';
 	import SubContextMenu from './SubContextMenu.svelte';

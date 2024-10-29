@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
-	import { Arrow, Rect, Transformer } from "svelte-konva";
-	import { am, commandText, ifDimensions, GetZone, GrowZone, ResetZone, ClearStage, stage } from '$lib/stores';
+	import { Arrow, Rect } from "svelte-konva";
+	import { am, commandText, GetZone, ClearStage, stage } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import {  DrawTangle } from '$lib/rect';
 	import _ from 'lodash';
 	import { customAlphabet } from 'nanoid';
 
@@ -13,6 +12,7 @@
 	const name = "swapPosition";
 
 	let arrow: Konva.Arrow;
+	let highlight: Konva.Rect;
 
 	$am.Actions[name] = {
 		Name: name,
@@ -54,13 +54,27 @@
 
 		if (startZone) {
 			arrow.points([(startZone.x() + (startZone.width() / 2)), (startZone.y() + (startZone.height() / 2))]);
+			highlight.position({
+				x: startZone.x(),
+				y: startZone.y()
+			})
+			highlight.size({
+				height: startZone.height(),
+				width: startZone.width()
+			})
+			
 		} else {
 			return;
 		}
 
 		ClearStage($stage);
 
+
+
+
 		arrow.show();
+		arrow.moveToTop();
+		highlight.show();
 		$stage.on('pointermove.swap', handleDrag);
 		$stage.on('pointerup.swap', finshDrawing);
 
@@ -68,14 +82,14 @@
 	}
 
 	function cancel(this: Action) {
-		console.log("cancelling swap")
 		$stage.off('pointermove.swap');
 		$stage.off('pointerup.swap');
 
 		arrow.hide();
 		arrow.points([]);
 
-		startZone = undefined;
+		highlight.hide();
+
 		this.IsActive = false;
 	}
 
@@ -111,8 +125,8 @@
 			manufactureArrow(endZone);
 
 			arrow.hide();
-
-			startZone = undefined;
+			highlight.hide();
+			
 			$am.Actions[name].IsActive = false;
 		}
 	}
@@ -132,17 +146,29 @@
 		let newArrow = new Konva.Arrow({
 			x: arrow.x(),
 			y: arrow.y(),
-			points: arrow.points(),
+			points: [...arrow.points()],
 			stroke: "rgba(121, 173, 120, 0.7)",
-			pointerLength: 12,
-       		pointerWidth: 15,
-			strokeWidth: 7,
+			pointerLength: 18,
+			pointerWidth: 22,
+			strokeWidth: 8,
 			lineCap: "round",
 			listening: false,
 			draggable: false
 		});
 
-		let newHighlight = new Konva.Rect({
+		let newSourceHighlight = new Konva.Rect({
+			x: highlight.x(),
+			y: highlight.y(),
+			width: highlight.width(),
+			height: highlight.height(),
+			fill: 'rgba(213, 65, 44, 0.15)',
+			fillEnabled: true,
+			strokeEnabled: false,
+			listening: false,
+			draggable: false,
+		});
+
+		let newTargetHighlight = new Konva.Rect({
 			x: box.x(),
 			y: box.y(),
 			width: box.width(),
@@ -155,7 +181,8 @@
 		});
 
 		newArrowGroup.add(newArrow);
-		newArrowGroup.add(newHighlight);
+		newArrowGroup.add(newTargetHighlight);
+		newArrowGroup.add(newSourceHighlight);
 		
 		arrow.getLayer()!.add(newArrowGroup);
 	}
@@ -166,6 +193,21 @@
 
 </script>
 
+<Rect 
+	bind:handle={highlight} 
+	  config={{
+		x: 0,
+		y: 0,
+		width: 0,
+		height: 0,
+		fill: 'rgba(213, 65, 44, 0.15)',
+		fillEnabled: true,
+		strokeEnabled: false,
+		listening: false,
+		visible: false,
+		draggable: false,
+	}}
+/>
 <Arrow 
 	bind:handle={arrow} 
 	  config={{
@@ -173,9 +215,9 @@
 		y: 0,
 		points: [],
 		stroke: "rgba(121, 173, 120, 0.7)",
-		pointerLength: 12,
-		pointerWidth: 15,
-		strokeWidth: 7,
+		pointerLength: 18,
+		pointerWidth: 22,
+		strokeWidth: 8,
 		lineCap: "round",
 		draggable: false,
 		visible: false,

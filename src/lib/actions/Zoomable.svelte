@@ -4,7 +4,7 @@
 	import type { Coordinates } from '$types';
 	import _ from 'lodash';
 	import Panzoom from '@panzoom/panzoom'
-	import { drawing, panzoom, multiTouch, tripleTouch, am, clickTimer, stage } from '$lib/stores';
+	import { panzoom, multiTouch, tripleTouch, am, stage } from '$lib/stores';
 	import { States, type Action } from '$lib/actions';
 	import type { KonvaPointerEvent } from 'konva/lib/PointerEvents';
 
@@ -99,7 +99,6 @@
 		zoomarea.removeEventListener("multiTouchUp", upHandlerDebounced);
 		toggleTangle(true);
 		$am.Actions[pinchName].IsActive = false;
-		console.log("pinch handlers unbound")
 	}
 	var upHandlerDebounced = _.debounce(doubleUpHandler, 10, { 'leading': false, 'trailing': true });
 
@@ -154,6 +153,9 @@
 
 	function tripleUpHandler(e: any) {
 		toggleTangle(true);
+		if ($panzoom.getScale() <= 1.3) {
+			$panzoom.reset();
+		}
 		zoomarea.removeEventListener("tripleTouchMove", tripleMoveHandler);
 		zoomarea.removeEventListener("tripleTouchUp", tripleUpHandlerDebounced);
 		$am.Actions[panName].IsActive = false;
@@ -216,6 +218,7 @@
 		Name: wheelPanName,
 		TriggerConditions: {
 			Active: new Set([
+				States.StagePointerDown,
 				States.MiddleMouseButtonPressed
 			]),
 			Inactive: new Set(),
@@ -223,6 +226,7 @@
 		CancelConditions: {
 			Active: new Set(),
 			Inactive: new Set([
+				States.StagePointerDown,
 				States.MiddleMouseButtonPressed
 			]),
 		},

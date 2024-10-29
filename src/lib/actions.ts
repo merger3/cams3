@@ -22,20 +22,7 @@ export enum States {
 	WheelScrollDown,
 
 	ClickedZone,
-	ClickedZoneOne,
-	ClickedZoneTwo,
-	ClickedZoneThree,
-	ClickedZoneFour,
-	ClickedZoneFive,
-	ClickedZoneSix,
-
 	HoveredZone,
-	HoveredZoneOne,
-	HoveredZoneTwo,
-	HoveredZoneThree,
-	HoveredZoneFour,
-	HoveredZoneFive,
-	HoveredZoneSix,
 
 	CrossedZones,
 	ClickedEmptySpace

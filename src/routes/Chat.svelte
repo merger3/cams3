@@ -3,18 +3,18 @@
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import { createEventDispatcher, onMount } from 'svelte';
 	import type { Entry, SwapResponse } from '$types';
-	const dispatch = createEventDispatcher();
+	import { ifDimensions } from '$lib/stores';
 
-	export let ifHeight: number;
+	const dispatch = createEventDispatcher();
 
   </script>
    
    <!-- let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null} -->
 
 
-   <button class="btn btn-outline-secondary z-50 fixed right-0 movedown" style="top: {ifHeight + 5}px;" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
-	Chat
-  </button>
+<button class="btn btn-outline-secondary z-50 fixed right-0 movedown" style="top: {$ifDimensions.height + 5}px;" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+Chat
+</button>
 <!-- <Chat bind:ifHeight /> -->
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">

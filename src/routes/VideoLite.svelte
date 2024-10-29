@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { commandText, ifDimensions, multiTouchPan } from '$lib/stores';
+	import { commandText, ifDimensions, multiTouchPan, ClearStage, stage } from '$lib/stores';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { Box } from '$types';
 	import { Motion } from 'svelte-motion'
@@ -48,8 +48,7 @@
 		}
 		initializeZones($ifDimensions.height, $ifDimensions.width);
 		
-		// let overlayBox = jQuery('#overlay')[0].getBoundingClientRect();
-		// selector.resizeZones(overlayBox.x, overlayBox.y)
+		clearStageDebounced($stage);
 	}
 
 	function initializeZones(height: number, width: number) {
@@ -73,6 +72,7 @@
 	}
 
 	var resizeIframe = _.throttle(resizeIframeRaw, 50, { 'leading': true, 'trailing': true });
+	var clearStageDebounced = _.debounce(ClearStage, 50, { 'leading': true, 'trailing': false })
 
 
 	function submitCommand(e: KeyboardEvent) {

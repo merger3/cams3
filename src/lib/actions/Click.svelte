@@ -58,7 +58,6 @@
 	}
 
 	function cancel(this: Action) {
-		console.log("cancelling Click")
 		if ($clickTimer) {
 			clearTimeout($clickTimer);
 		}

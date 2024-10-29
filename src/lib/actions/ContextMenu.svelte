@@ -23,7 +23,9 @@
 			Inactive: new Set(),
 		},
 		CancelConditions: {
-			Active: new Set(),
+			Active: new Set([
+				States.MiddleMouseButtonPressed
+			]),
 			Inactive: new Set(),
 		},
 		IsActive: false,
@@ -35,8 +37,10 @@
 	let dataReady: boolean = false;
 	let cancelled: boolean = true;
 	function enable(this: Action, origin: Coordinates) {
+		$am.Actions[name].IsActive = true;
 		let target = GetZone(origin, $stage);
 		if (!target) {
+			$am.Actions[name].Cancel();
 			return;
 		}
 
@@ -45,21 +49,33 @@
 	}
 
 	function cancel(this: Action) {
-		cancelled = true;
-		topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
-		dataReady = false;
-		$am.Actions[name].IsActive = false;
+		if (isOpen) {
+			isOpen = false;
+			animationTimer = setTimeout(() => {
+				cancelled = true;
+				topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
+				dataReady = false;
+				$am.Actions[name].IsActive = false;
+			}, 200);
+		} else {
+			cancelled = true;
+			topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
+			dataReady = false;
+			$am.Actions[name].IsActive = false;
+		}
 	}
 
 	async function loadMenu(coordinates: Coordinates, target: number) {
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: target}, $server)
 		if (!cam.found) {
+			$am.Actions[name].Cancel();
 			return;
 		}
 
 		// topEntry = await $server.post('/camera/swaps', {camera: cam.name});
 		topEntry = JSON.parse(testString());
 		if (!topEntry.found || !topEntry.swaps.subentries) {
+			$am.Actions[name].Cancel();
 			return;
 		}
 
@@ -68,10 +84,8 @@
 		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: coordinates.x + ifOverlay.left, clientY: coordinates.y + ifOverlay.top});
 		
 		dataReady = true;
-		$am.Actions[name].IsActive = true;
+
 		await tick();
-
-
 		jQuery('#menutrigger')[0].dispatchEvent(rightClickEvent);
 	}
 

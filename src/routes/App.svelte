@@ -14,21 +14,17 @@
 	InitializeAM();
 
 	const defaultCMD: string = "​";
-
-	export let config: Config;
+	
 	let selector: TangleLite;
 	$commandText = defaultCMD;
 	
-	let camPresets: CamPresets;
 
 	let commandHeight: number;
 
 	let spacerHeight: number;
 	let spacerWidth: number;
-
 	let resize: HTMLElement;
 
-	let cancelActions = ["click", "draw"];
 	async function sendCommand() {
 		$server.post('/send', {
 			command: $commandText
@@ -41,51 +37,8 @@
 		$clickZoom = 100;
 		$clickFocus = 0;
 		ClearStage($stage);
-	}
-
-
-	async function handleDoubleClick(e: any) {
-		console.log("double click registered highest level")
-		console.log(e)
-		console.log(`$ifDimensions.width: ${$ifDimensions.width}, $ifDimensions.height: ${$ifDimensions.height}`)
-
-		// Verify that e.detail.position is actually an integer before passing it
-		// Or verify that its in the zone group  
-		let cam = await GetCam({coordinates: {x: e.detail.x, y: e.detail.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: e.detail.position}, $server)
-		
-		$server.post('/camera/presets', {
-			camera: cam.name
-		}).then(function (response) {
-			camPresets = response.data.camPresets;
-			console.log(response);
-		}).catch(function (error) {
-			console.log(error);
-		});
-	}
-
-	let zoom: number = 100;
-	function handleWheel(event: any) {
-		let e = event.originalEvent as WheelEvent;
-		if ($commandText.startsWith("!ptzclick")) {
-			let forceResize: boolean = false;
-			if (e.deltaY < 0) {
-				zoom += 10;
-				if (zoom > 420) {
-					zoom = 10000;
-					forceResize = true;
-				}
-			} else {
-				if (zoom > 0) {
-					zoom -= 10;
-				}
-				if (zoom < 0) {
-					zoom = 0;
-				}
-			}
-			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${zoom}`;
-			if (forceResize) {
-				resizeText();
-			}
+		if (document.activeElement) {
+			(document.activeElement as HTMLElement).blur();
 		}
 	}
 
@@ -139,7 +92,7 @@
 		resizeObserverDefined = true;
 		window.addEventListener(`contextmenu`, (e) => e.preventDefault());
 
-		jQuery(".movedown").on('wheel', handleWheel)
+		// jQuery(".movedown").on('wheel', handleWheel)
 		if ($commandText) {
 			resizeText();
 		}
@@ -169,17 +122,12 @@
 {:else}
 	<div class="container-fluid" id="video-container">
 		<div class="row justify-content-between flex-nowrap ">
-			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector">
+			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector" style="max-height: {commandHeight + $ifDimensions.height}px;">
 				<div style="min-height: {commandHeight}px;max-height: {commandHeight}px;">
-					<CamSelector bind:spacerHeight bind:spacerWidth bind:commandHeight bind:camPresets bind:camList={config.camlist} />
+					<CamSelector bind:commandHeight />
 				</div>
-				<div id="spacer" bind:clientHeight={spacerHeight} bind:clientWidth={spacerWidth}>
-					{#if camPresets}
-					<Presets bind:spacerHeight bind:spacerWidth bind:camPresets on:sendcmd={sendCommand} />
-					{/if}
-					
-				</div>
-				<div id="sendcontainer" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
+				<Presets on:sendcmd={sendCommand} />
+				<div style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
 					<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown"> {$commandText == defaultCMD ? " Send " : " " + $commandText + " "} </button>
 				</div>
 			</div>
@@ -188,15 +136,10 @@
 			</div>
 		</div>
 	</div>
-	<!-- <Chat bind:$ifDimensions.height={commandHeight}/> -->
+	<!-- <Chat /> -->
 {/if}
 	
 <style>
-	#spacer {
-		height: 100%;
-		/* background-color: aqua; */
-		z-index: 0;
-	}
 	#camselector {
 		/* background-color: rebeccapurple; */
 		flex-grow: 1;
