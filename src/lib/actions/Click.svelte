@@ -2,28 +2,45 @@
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
 	import { Circle } from "svelte-konva";
-	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom } from '$lib/stores';
+	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom, stage, ClearStage } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import {  ClickTangle } from '$lib/rect';
+	import { customAlphabet } from 'nanoid';
+	const tangleID = customAlphabet('0123456789abcdef', 5);
 
 	const name = "click";
 
-	export let stage: Konva.Stage;
 	let dot: Konva.Circle;
-	let renderedDot: Konva.Circle;
+
 	$am.Actions[name] = {
 		Name: name,
-		ActiveConditions: new Set([
-			States.StagePointerDown,
-			States.OnePointer,
-			States.LeftMouseButtonPressed,
-			States.ZoneHit
-		]),
-		InactiveConditions: new Set([
-			States.StageDraggingBuffered
-		]),
-		MustCancel: ["draw"],
+		TriggerConditions: {
+			Active: new Set([
+				States.StagePointerDown,
+				States.PointerAdded,
+				States.OnePointer,
+				States.LeftMouseButtonPressed,
+				States.ClickedEmptySpace
+			]),
+			Inactive: new Set([
+				States.StageDraggingBuffered,
+				States.StageDoubleClick,
+				States.CrossedZones
+			]),
+		},
+		CancelConditions: {
+			Active: new Set([
+				States.StageDraggingBuffered,
+				States.StageDoubleClick,
+				States.CrossedZones
+			]),
+			Inactive: new Set([
+				States.StagePointerDown,
+				States.OnePointer,
+				States.LeftMouseButtonPressed
+			]),
+		},
 		IsActive: false,
 		Cancel: cancel,
 		Enable: enable
@@ -34,30 +51,29 @@
 			clearTimeout($clickTimer);
 		}
 		if ($am.ActiveStates.has(States.StageDraggingDejittered)) {
-			stage.on('pointermove.click', handleDrag);
+			$stage.on('pointermove.click', handleDrag);
 		}
-		stage.on('pointerup.click', finshDrawing);
+		$stage.on('pointerup.click', finshDrawing);
+		$am.Actions[name].IsActive = true;
 	}
 
-	function cancel(this: Action, mod = true) {
+	function cancel(this: Action) {
+		console.log("cancelling Click")
 		if ($clickTimer) {
 			clearTimeout($clickTimer);
 		}
-		stage.off('pointermove.click')
-		stage.off('pointerup.click')
+		$stage.off('pointermove.click')
+		$stage.off('pointerup.click')
 
 		dot.hide();
-		if (mod) {
-			renderedDot.hide();
-		}
 		this.IsActive = false;
 	}
 
 
 	function writeCommand() {
 		$commandText = ClickTangle({
-			X: renderedDot.x(),
-			Y: renderedDot.y(),
+			X: dot.x(),
+			Y: dot.y(),
 			Width: 0,
 			Height: 0,
 			FrameWidth: $ifDimensions.width,
@@ -66,12 +82,11 @@
 		$clickZoom = 100;
 	}
 
+	// Throttle
 	function handleDrag(e: Konva.KonvaPointerEvent) {
-		let mousePos = stage.getPointerPosition();
+		let mousePos = $stage.getPointerPosition();
 		if (mousePos) {
-			$am.Actions[name].IsActive = true;
 			dot.show();
-			$am.Actions["draw"].Cancel(false)
 
 			dot.position({
 				x: mousePos.x,
@@ -81,27 +96,43 @@
 	}
 
 	function finshDrawing(e: Konva.KonvaPointerEvent) {
-		stage.off('pointermove.click')
-		stage.off('pointerup.click')
+		$stage.off('pointermove.click')
+		$stage.off('pointerup.click')
 		$clickTimer = setTimeout(() => {
-			$am.Actions[name].IsActive = true;
 			
-
-			$am.Actions["draw"].Cancel();
+			ClearStage($stage);
 
 			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-			renderedDot.position({
+			dot.position({
 				x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(),
 				y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()
 			})
-
-			dot.hide();
-			renderedDot.show();
-
+			
 			writeCommand();
+			manufactureDot();
+			
+			dot.hide();
 			$am.Actions[name].IsActive = false;
-		}, 150);
+		}, 200);
 	}
+
+	function manufactureDot() {
+		let newDot = new Konva.Circle({
+			x: dot.x(),
+			y: dot.y(),
+			name: "click",
+			id: tangleID(),
+			radius: 2,
+			strokeScaleEnabled: false,
+			fill: 'black',
+			draggable: false,
+			visible: true,
+			listening: false
+		});
+
+		dot.getLayer()?.add(newDot);
+	}
+
 
 	onMount(async () => {
 		await tick();
@@ -111,19 +142,6 @@
 
 <Circle 
 	bind:handle={dot} 
-	config={{
-		x: 0,
-		y: 0,
-		radius: 2,
-		strokeScaleEnabled: false,
-		fill: 'black',
-		draggable: false,
-		visible: false,
-		listening: false
-	}} 
-/>
-<Circle 
-	bind:handle={renderedDot} 
 	config={{
 		x: 0,
 		y: 0,

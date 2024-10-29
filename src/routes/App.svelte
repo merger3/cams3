@@ -9,7 +9,7 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom, clickFocus } from '$lib/stores';
+	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom, clickFocus, ClearStage, stage } from '$lib/stores';
 	import _ from 'lodash';
 	InitializeAM();
 
@@ -40,9 +40,7 @@
 		$commandText = defaultCMD;
 		$clickZoom = 100;
 		$clickFocus = 0;
-		cancelActions.forEach(function (name) {
-			$am.Actions[name].Cancel()
-		});
+		ClearStage($stage);
 	}
 
 

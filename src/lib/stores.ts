@@ -12,6 +12,7 @@ export let commandText = writable<string>();
 export let ifDimensions = writable<Dimensions>({width: 0, height: 0});
 export let token = writable<string>();
 export let server = writable<AxiosInstance>();
+export let stage = writable<Konva.Stage>();
 export let clickZoom = writable<number>(100);
 export let clickFocus = writable<number>(0);
 export let drawing = writable<boolean>();
@@ -23,33 +24,28 @@ export let am = writable<ActionsManager>();
 
 export function InitializeAM() {
 	let newAM: ActionsManager = {
-		Actions: {}, 
-		ActiveAction: null, 
+		Actions: {},  
 		ActiveStates: new Set(),
 		IsAvailable: function (actionName: string): boolean {
 			let action = this.Actions[actionName];
 			if (action == undefined) {
 				return false;
 			}
-			return (action.ActiveConditions.isSubsetOf(this.ActiveStates) && (action.InactiveConditions.intersection(this.ActiveStates).size == 0));
+			return (action.TriggerConditions.Active.isSubsetOf(this.ActiveStates) && (action.TriggerConditions.Inactive.intersection(this.ActiveStates).size == 0));
 		},
-		CallAction: function (actionName: string, origin: Coordinates): void {
+		ShouldCancel: function (actionName: string): boolean {
 			let action = this.Actions[actionName];
 			if (action == undefined) {
-				return;
+				return false;
 			}
-			if (this.IsAvailable(actionName) && !action.IsActive) {
-				action.Enable({x: origin.x, y: origin.y})
-			} else if (!this.IsAvailable(actionName) && action.IsActive) {
-				action.Cancel();
-			}
+			return (action.CancelConditions.Active.intersection(this.ActiveStates).size != 0 || action.CancelConditions.Inactive.difference(this.ActiveStates).size != 0);
 		},
 		CheckActions: function (origin: Coordinates): void {
 			for (let [name, action] of Object.entries(this.Actions)) {
-				if (this.IsAvailable(name) && !action.IsActive) {
+				if (!action.IsActive && this.IsAvailable(name)) {
 					action.Enable({x: origin.x, y: origin.y})
-				} else if (!this.IsAvailable(name) && action.IsActive) {
-					// action.Cancel();
+				} else if (action.IsActive && this.ShouldCancel(name)) {
+					action.Cancel();
 				}
 			}
 		}
@@ -58,19 +54,14 @@ export function InitializeAM() {
 }
 
 
-export function GetZone(origin: Coordinates, stage: Konva.Stage, layer: Konva.Layer | undefined = undefined, children: any | undefined = undefined): Konva.Rect | null {
-	// Draw and Swap could pull layer or children in enable and then avoid having to call them on move
+export function GetZone(origin: Coordinates, stage: Konva.Stage): Konva.Rect | undefined {
+	console.log("calling getzone")
 	let listening: Konva.Node[] = [];
-	
-	if (!layer) {
-		layer = stage.findOne('#mainlayer') as Konva.Layer;
-	}
+	let layer = stage.findOne('#mainlayer') as Konva.Layer;
 
-	if (!children) {
-		children = layer.getChildren(function(node){
-			return node.id() != "zones" && node.listening();
-		});
-	}
+	let children = layer.getChildren(function(node){
+		return node.id() != "zones" && node.listening();
+	});
 	
 	children.forEach(function (node: Konva.Node) {
 		listening.push(node);
@@ -81,7 +72,7 @@ export function GetZone(origin: Coordinates, stage: Konva.Stage, layer: Konva.La
 	let zone = stage.getIntersection(origin) as Konva.Rect;
 	if (!zone || zone.name() == "") {
 		console.log("No zone clicked")
-		return null;
+		return undefined;
 	}
 
 	listening.forEach(function (node) {
@@ -105,7 +96,11 @@ export function GrowZone(stage: Konva.Stage, zone: Konva.Rect) {
 	zone.moveToTop();
 }
 
-export function ResetZone(stage: Konva.Stage, zone: Konva.Rect) {
+export function ResetZone(zone: Konva.Rect | undefined) {
+	if (!zone) {
+		return;
+	}
+
 	zone.hitFunc(function(context: any) {
 		context.beginPath();
 		context.rect(0, 0, zone.width(), zone.height());
@@ -113,6 +108,34 @@ export function ResetZone(stage: Konva.Stage, zone: Konva.Rect) {
 		context.fillStrokeShape(zone);
 	});
 	zone.fill("rgba(0, 0, 0, 0)");
+	zone.getLayer()?.draw();
+}
+
+
+export function ClearTangles(stage: Konva.Stage) {
+	stage.find(".tangle").forEach(function (tangle: any) {
+		tangle.destroyChildren();
+		tangle.destroy();
+	});
+}
+
+export function ClearClicks(stage: Konva.Stage) {
+	stage.find(".click").forEach(function (click: any) {
+		click.destroy();
+	});
+}
+
+export function ClearArrows(stage: Konva.Stage) {
+	stage.find(".arrow").forEach(function (arrow: any) {
+		arrow.destroyChildren();
+		arrow.destroy();
+	});
+}
+
+export function ClearStage(stage: Konva.Stage) {
+	ClearTangles(stage);
+	ClearClicks(stage);
+	ClearArrows(stage);
 }
 
 export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamResponse> {

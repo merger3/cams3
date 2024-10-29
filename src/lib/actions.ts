@@ -6,15 +6,6 @@ export enum States {
 	StageDragging,
 	StageDraggingBuffered,
 	StageDraggingDejittered,
-	NodeHit,
-	ZoneHit,
-	TangleHit,
-	NodeScrollHover,
-	ZoneScrollHover,
-	TangleScrollHover,
-	NodeDragHover,
-	ZoneDragHover,
-	TangleDragHover,
 	OnePointer,
 	TwoPointers,
 	ThreePointers,
@@ -28,17 +19,41 @@ export enum States {
 	MiddleMouseButtonPressed,
 	WheelScrolling,
 	WheelScrollUp,
-	WheelScrollDown
+	WheelScrollDown,
+
+	ClickedZone,
+	ClickedZoneOne,
+	ClickedZoneTwo,
+	ClickedZoneThree,
+	ClickedZoneFour,
+	ClickedZoneFive,
+	ClickedZoneSix,
+
+	HoveredZone,
+	HoveredZoneOne,
+	HoveredZoneTwo,
+	HoveredZoneThree,
+	HoveredZoneFour,
+	HoveredZoneFive,
+	HoveredZoneSix,
+
+	CrossedZones,
+	ClickedEmptySpace
 }
 
 export interface Action {
 	Name: string;
-	ActiveConditions: Set<States>;
-	InactiveConditions: Set<States>;
-	MustCancel: string[];
+	TriggerConditions: {
+		Active: Set<States>;
+		Inactive: Set<States>;
+	};
+	CancelConditions: {
+		Active: Set<States>;
+		Inactive: Set<States>;
+	};
 	IsActive: boolean;
 	Enable(origin: Coordinates): void;
-	Cancel(mod?: any): void;
+	Cancel(): void;
 }
 
 export interface ActionsManager {
@@ -46,8 +61,7 @@ export interface ActionsManager {
 	Actions: {
 		[key: string]: Action;
 	};
-	ActiveAction: Action | null;
 	IsAvailable(actionName: string): boolean;
-	CallAction(actionName: string, origin: Coordinates): void;
+	ShouldCancel(actionName: string): boolean;
 	CheckActions(origin: Coordinates): void;
 }

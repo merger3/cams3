@@ -4,66 +4,70 @@
 	import type { Coordinates } from '$types';
 	import _ from 'lodash';
 	import Panzoom from '@panzoom/panzoom'
-	import { drawing, panzoom, multiTouch, tripleTouch, am, clickTimer } from '$lib/stores';
+	import { drawing, panzoom, multiTouch, tripleTouch, am, clickTimer, stage } from '$lib/stores';
 	import { States, type Action } from '$lib/actions';
 	import type { KonvaPointerEvent } from 'konva/lib/PointerEvents';
 
-	export let stage: Konva.Stage;
 	let zoomarea: HTMLElement;
 
-	// Instead of leaving the handlers bound all the time and just selectively triggering them
-	// bind them in enable like in Scroll
-
 	function toggleTangle(state: boolean) {
-		let tangle = stage.findOne(".tangle");
-		if (tangle) {
-			tangle.draggable(state);
-			tangle.listening(state);
-			if (!state) {
-				tangle.stopDrag();
-			}
-		}
-
-		let transformer = stage.findOne(".transformer") as Konva.Transformer;
-		if (transformer) {
-			transformer.listening(state)
-			transformer.resizeEnabled(state);
-			if (!state) {
-				transformer.stopTransform();
-			}
-		}
+		$stage.find(".tangle").forEach(function (tangleGroup: any) {
+			tangleGroup.getChildren().forEach(function (node: Konva.Node) {
+				switch(node.getClassName()) { 
+					case "Rect": { 
+						node.draggable(state);
+						node.listening(state);
+						if (!state) {
+							node.stopDrag();
+						}
+						break; 
+					} 
+					case "Transformer": { 
+						node.listening(state)
+						let tranformer = (node as Konva.Transformer);
+						tranformer.resizeEnabled(state);
+						if (!state) {
+							tranformer.stopTransform();
+						}
+						break; 
+					} 
+				} 
+			});
+		});
 	}
 
 	const pinchName = "pinch";
 	$am.Actions[pinchName] = {
 		Name: pinchName,
-		ActiveConditions: new Set([
-			States.TwoPointers,
-			States.PointerAdded,
-			States.NodeHit
-		]),
-		InactiveConditions: new Set([
-			States.CommandScrollable
-		]),
-		MustCancel: ["draw", "click"],
+		TriggerConditions: {
+			Active: new Set([
+				States.StagePointerDown,
+				States.TwoPointers,
+				States.PointerAdded
+			]),
+			Inactive: new Set([
+				States.CommandScrollable
+			]),
+		},
+		CancelConditions: {
+			Active: new Set([
+				States.CommandScrollable
+			]),
+			Inactive: new Set([
+				States.TwoPointers
+			]),
+		},
 		IsActive: false,
 		Cancel: cancelPinch,
 		Enable: enablePinch
 	}
 
 	function enablePinch(this: Action, origin: Coordinates) {
-		console.log("pinch enabled")
-		this.MustCancel.forEach(function (actionName) {
-			if ($am.Actions[actionName].IsActive) {
-				$am.Actions[actionName].Cancel();
-			}
-		});
 		toggleTangle(false);
 
 		zoomarea.addEventListener("multiTouchMove", doubleMoveHandler);
 		zoomarea.addEventListener("multiTouchUp", upHandlerDebounced);
 		this.IsActive = true;
-		console.log("pinch handlers bound")
 	}
 
 	function cancelPinch(this: Action) {
@@ -71,7 +75,6 @@
 		zoomarea.removeEventListener("multiTouchMove", doubleMoveHandler);
 		zoomarea.removeEventListener("multiTouchUp", upHandlerDebounced);
 		this.IsActive = false;
-		console.log("pinch handlers cancled")
 	}
 
 	let zoomDebounce = 0;
@@ -87,9 +90,6 @@
   	}
 
 	function doubleUpHandler(e: any) {	
-		if ($clickTimer) {
-			clearTimeout($clickTimer);
-		}
 		zoomDebounce = 0;
 		if ($panzoom.getScale() <= 1.3) {
 			$panzoom.reset();
@@ -107,13 +107,24 @@
 	const panName = "pan";
 	$am.Actions[panName] = {
 		Name: panName,
-		ActiveConditions: new Set([
-			States.ThreePointers,
-			States.PointerAdded,
-			States.NodeHit
-		]),
-		InactiveConditions: new Set(),
-		MustCancel: ["draw", "click", "pinch"],
+		TriggerConditions: {
+			Active: new Set([
+				States.StagePointerDown,
+				States.ThreePointers,
+				States.PointerAdded
+			]),
+			Inactive: new Set([
+
+			]),
+		},
+		CancelConditions: {
+			Active: new Set([
+			
+			]),
+			Inactive: new Set([
+				States.ThreePointers
+			]),
+		},
 		IsActive: false,
 		Enable: enablePan,
 		Cancel: cancelPan
@@ -121,12 +132,6 @@
 	
 	let prevPan: Coordinates = {x: 0, y: 0}
 	function enablePan(this: Action, origin: Coordinates) {
-		console.log("pan enabled")
-		this.MustCancel.forEach(function (actionName) {
-			if ($am.Actions[actionName].IsActive) {
-				$am.Actions[actionName].Cancel();
-			}
-		});
 		toggleTangle(false);
 		prevPan = {x: $panzoom.getPan().x, y: $panzoom.getPan().y};
 
@@ -148,9 +153,6 @@
   	}
 
 	function tripleUpHandler(e: any) {
-		if ($clickTimer) {
-			clearTimeout($clickTimer);
-		}
 		toggleTangle(true);
 		zoomarea.removeEventListener("tripleTouchMove", tripleMoveHandler);
 		zoomarea.removeEventListener("tripleTouchUp", tripleUpHandlerDebounced);
@@ -162,14 +164,22 @@
 	const scrollName = "scrollZoom";
 	$am.Actions[scrollName] = {
 		Name: scrollName,
-		ActiveConditions: new Set([
-			States.WheelScrolling,
-			States.NodeScrollHover
-		]),
-		InactiveConditions: new Set([
-			States.CommandScrollable
-		]),
-		MustCancel: [],
+		TriggerConditions: {
+			Active: new Set([
+				States.WheelScrolling
+			]),
+			Inactive: new Set([
+				States.CommandScrollable
+			]),
+		},
+		CancelConditions: {
+			Active: new Set([
+				States.CommandScrollable
+			]),
+			Inactive: new Set([
+
+			]),
+		},
 		IsActive: false,
 		Enable: enableScroll,
 		Cancel: cancelScroll
@@ -179,12 +189,10 @@
 	function enableScroll(this: Action, origin: Coordinates) {
 		this.IsActive = true;
 		if ($am.ActiveStates.has(States.WheelScrollUp)) {
-			// Scroll Up
 			if (zoom < 4) {
 				zoom += .2;
 			}
 		} else if ($am.ActiveStates.has(States.WheelScrollDown)) {
-			// Scroll down
 			if (zoom > 1) {
 				zoom -= .2;
 			} 
@@ -206,12 +214,18 @@
 	const wheelPanName = "wheelPan";
 	$am.Actions[wheelPanName] = {
 		Name: wheelPanName,
-		ActiveConditions: new Set([
-			States.MiddleMouseButtonPressed,
-			States.NodeHit
-		]),
-		InactiveConditions: new Set(),
-		MustCancel: [],
+		TriggerConditions: {
+			Active: new Set([
+				States.MiddleMouseButtonPressed
+			]),
+			Inactive: new Set(),
+		},
+		CancelConditions: {
+			Active: new Set(),
+			Inactive: new Set([
+				States.MiddleMouseButtonPressed
+			]),
+		},
 		IsActive: false,
 		Enable: enableWheelPan,
 		Cancel: cancelWheelPan
@@ -226,16 +240,16 @@
 		prevMousePan = {x: $panzoom.getPan().x, y: $panzoom.getPan().y};		
 		ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 
-		stage.on('pointermove.wheel', wheelMoveHandler);
-		stage.on('pointerup.wheel', wheelUpHandler);
+		$stage.on('pointermove.wheel', wheelMoveHandler);
+		$stage.on('pointerup.wheel', wheelUpHandler);
 
 		this.IsActive = true;
 	}
 		
 	function cancelWheelPan(this: Action) {
 		toggleTangle(true);
-		stage.off('pointermove.wheel');
-		stage.off('pointerup.wheel');
+		$stage.off('pointermove.wheel');
+		$stage.off('pointerup.wheel');
 		
 		this.IsActive = false;
 	}
@@ -251,8 +265,8 @@
 			zoom = 1;
 		}
 
-		stage.off('pointermove.wheel');
-		stage.off('pointerup.wheel');
+		$stage.off('pointermove.wheel');
+		$stage.off('pointerup.wheel');
 		
 		$am.Actions[wheelPanName].IsActive = false;
 	}

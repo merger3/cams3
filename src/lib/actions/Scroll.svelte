@@ -12,24 +12,33 @@
 	const name = "scroll";
 	$am.Actions[name] = {
 		Name: name,
-		ActiveConditions: new Set([
-			States.TwoPointers,
-			States.ZoneHit,
-			States.CommandScrollable
-		]),
-		InactiveConditions: new Set(),
-		MustCancel: ["draw"],
+		TriggerConditions: {
+			Active: new Set([
+				States.StagePointerDown,
+				States.PointerAdded,
+				States.TwoPointers,
+				States.CommandScrollable
+			]),
+			Inactive: new Set([
+
+			]),
+		},
+		CancelConditions: {
+			Active: new Set([
+			
+			]),
+			Inactive: new Set([
+				States.StagePointerDown,
+				States.TwoPointers,
+				States.CommandScrollable
+			]),
+		},
 		IsActive: false,
 		Enable: enable,
 		Cancel: cancel
 	}
 
 	function enable(this: Action, origin: Coordinates) {
-		this.MustCancel.forEach(function (actionName) {
-			if ($am.Actions[actionName].IsActive) {
-				$am.Actions[actionName].Cancel();
-			}
-		});
 		jQuery('#overlay')[0].addEventListener("multiTouchMove", panMove);
 		jQuery('#overlay')[0].addEventListener("multiTouchUp", panUpDebounced);
 		this.IsActive = true;
@@ -89,9 +98,6 @@
 
 
 	function panUp(gestureEvent: any) {
-		if ($clickTimer) {
-			clearTimeout($clickTimer);
-		}
 		jQuery('#overlay')[0].removeEventListener("multiTouchMove", panMove);
 		jQuery('#overlay')[0].removeEventListener("multiTouchUp", panUpDebounced);
 		$am.Actions[name].IsActive = false;
@@ -100,15 +106,22 @@
 
 
 
-	const scrollName = "scroll";
+	const scrollName = "wheelScroll";
 	$am.Actions[scrollName] = {
 		Name: scrollName,
-		ActiveConditions: new Set([
-			States.WheelScrolling,
-			States.CommandScrollable
-		]),
-		InactiveConditions: new Set(),
-		MustCancel: [],
+		TriggerConditions: {
+			Active: new Set([
+				States.WheelScrolling,
+				States.CommandScrollable
+			]),
+			Inactive: new Set(),
+		},
+		CancelConditions: {
+			Active: new Set(),
+			Inactive: new Set([
+				States.CommandScrollable
+			]),
+		},
 		IsActive: false,
 		Enable: enableScroll,
 		Cancel: cancelScroll

@@ -3,12 +3,9 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { SwapResponse, Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { am, ifDimensions, GetZone, GetCam, server } from '$lib/stores';
+	import { am, ifDimensions, GetZone, GetCam, server, stage } from '$lib/stores';
 	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
-	import type Konva from "konva";
 	const dispatch = createEventDispatcher();
-	
-	export let stage: Konva.Stage;
 	
 	let topEntry: SwapResponse = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
 	let isOpen: boolean;
@@ -17,13 +14,18 @@
 	const name = "swaps";
 	$am.Actions[name] = {
 		Name: name,
-		ActiveConditions: new Set([
-			States.OnePointer,
-			States.NodeHit,
-			States.RightMouseButtonPressed
-		]),
-		InactiveConditions: new Set(),
-		MustCancel: ["draw"],
+		TriggerConditions: {
+			Active: new Set([
+				States.OnePointer,
+				States.RightMouseButtonPressed,
+				States.ClickedZone
+			]),
+			Inactive: new Set(),
+		},
+		CancelConditions: {
+			Active: new Set(),
+			Inactive: new Set(),
+		},
 		IsActive: false,
 		Enable: enable,
 		Cancel: cancel
@@ -31,16 +33,19 @@
 
 
 	let dataReady: boolean = false;
+	let cancelled: boolean = true;
 	function enable(this: Action, origin: Coordinates) {
-		let target = GetZone(origin, stage);
+		let target = GetZone(origin, $stage);
 		if (!target) {
 			return;
 		}
 
+		cancelled = false;
 		loadMenu(origin, Number(target.id()))
 	}
 
 	function cancel(this: Action) {
+		cancelled = true;
 		topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
 		dataReady = false;
 		$am.Actions[name].IsActive = false;
@@ -302,7 +307,7 @@
 
 
 <ContextMenu.Root bind:open={isOpen} onOpenChange={opc}>
-	{#if $am.Actions[name].IsActive && dataReady}
+	{#if $am.Actions[name].IsActive && dataReady && !cancelled}
 		<ContextMenu.Trigger>
 			<slot></slot>
 		</ContextMenu.Trigger>

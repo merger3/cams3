@@ -8,21 +8,22 @@
 
 	$am.Actions[name] = {
 		Name: name,
-		ActiveConditions: new Set([
-			States.ZoneHit,
-			States.StageDoubleClick
-		]),
-		InactiveConditions: new Set(),
-		MustCancel: [],
+		TriggerConditions: {
+			Active: new Set([
+				States.StageDoubleClick
+			]),
+			Inactive: new Set(),
+		},
+		CancelConditions: {
+			Active: new Set(),
+			Inactive: new Set(),
+		},
 		IsActive: false,
 		Cancel: cancel,
 		Enable: enable
 	}
 
 	function enable(this: Action, origin: Coordinates) {
-		if ($clickTimer) {
-			clearTimeout($clickTimer);
-		}
 		console.log("Double Click")
 		this.IsActive = true;
 		this.IsActive = false;

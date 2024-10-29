@@ -11,7 +11,6 @@
 	import ContextMenu from '$lib/actions/ContextMenu.svelte';
 	
 	export let selector: TangleLite;
-	let stage: Konva.Stage;
 
 	const dispatch = createEventDispatcher();
 
@@ -123,16 +122,16 @@
 		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown" style="height: {commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
 	</div>
 	<!-- <div id="stage" class="unselectable z-30" /> -->
-	<Zoomable bind:stage>
+	<Zoomable>
 		<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 			
-			<ContextMenu bind:stage>
+			<ContextMenu>
 				<div id="menutrigger" class="overlay unselectable z-100" />
 			</ContextMenu>
 
 			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}}/>
 
-			<TangleLite bind:this={selector} bind:stage bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframeRaw} />
+			<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframeRaw} />
 			
 			<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
 			
