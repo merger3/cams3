@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, createEventDispatcher } from 'svelte';
 	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
@@ -114,7 +115,7 @@
 {#if camPresets.presets.length != 0}
 	<div id="presets-menu" class="d-block text-center px-3 py-2 mt-1.5 mb-2.5 ms-1 me-1.5 rounded shadow">
 		{#each camPresets.presets as p}
-			<button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 mb-2 overflow-hidden position-relative h-16">{p}</button>
+			<button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 px-0 mb-2 overflow-hidden position-relative h-16">{p}</button>
 		{/each}
 	</div>
 {/if}
