@@ -3,7 +3,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { SwapResponse, Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { am, ifDimensions, GetZone, GetCam, server, stage } from '$lib/stores';
+	import { am, ifDimensions, GetZone, GetCam, server, stage, zones } from '$lib/stores';
 	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
 	const dispatch = createEventDispatcher();
 	
@@ -38,7 +38,7 @@
 	let cancelled: boolean = true;
 	function enable(this: Action, origin: Coordinates) {
 		$am.Actions[name].IsActive = true;
-		let target = GetZone(origin, $stage);
+		let target = GetZone($zones, origin);
 		if (!target) {
 			$am.Actions[name].Cancel();
 			return;

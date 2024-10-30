@@ -2,7 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
 	import { Arrow, Rect } from "svelte-konva";
-	import { am, commandText, GetZone, ClearStage, stage } from '$lib/stores';
+	import { am, commandText, GetZone, ClearStage, stage, zones } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import _ from 'lodash';
@@ -45,7 +45,7 @@
 
 	let startZone: Konva.Rect | undefined;
 	function enable(this: Action, origin: Coordinates) {
-		startZone = GetZone(origin, $stage)
+		startZone = GetZone($zones, origin)
 		if (!startZone) {
 			return;
 		}
@@ -101,7 +101,7 @@
 
 		if (mousePos) {
 
-			let endZone = GetZone(mousePos, $stage)
+			let endZone = GetZone($zones, mousePos)
 
 			if (endZone) {
 				let swaps: number[] = [Number(startZone?.name()), Number(endZone.name())]

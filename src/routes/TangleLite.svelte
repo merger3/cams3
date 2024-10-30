@@ -10,19 +10,18 @@
 	import Scroll from "$lib/actions/Scroll.svelte";
 	import { type PressCustomEvent } from 'svelte-gestures';
 
-	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone } from '$lib/stores';
+	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones } from '$lib/stores';
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
 	import _ from 'lodash';
 	
-	let log = false;
+	let log = true;
 	export let stageWidth: number;
 	export let stageHeight: number;
 
 	var layer: Konva.Layer;
-	var boxGroup: Konva.Group;
 
-	export let zones: Box[] = [];
+	export let zoneDefinitions: Box[] = [];
 	const dispatch = createEventDispatcher();
 
 	function bubbleResize(e: CustomEvent) {
@@ -92,7 +91,7 @@
 	function setClickedZone(origin: Coordinates | null) {
 		let zoneRect: Konva.Rect | undefined = undefined;
 		if (origin) {
-			zoneRect = GetZone(origin, $stage);
+			zoneRect = GetZone($zones, origin);
 		}
 
 		if (zoneRect) {
@@ -162,7 +161,7 @@
 		
 		if ($am.ActiveStates.has(States.OnePointer)) {
 			origin = {x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()};
-			if (e.target.getParent() == boxGroup) {
+			if (e.target.getParent() == $zones) {
 				$am.ActiveStates.add(States.ClickedEmptySpace);
 			}
 			$stage.on("pointermove.stage", handlePointerMove);
@@ -242,6 +241,8 @@
 			$am.ActiveStates.delete(States.CrossedZones);
 		} 
 
+		$am.ActiveStates.delete(States.StagePressed); 
+
 		if (log) {
 			console.log(printStates($am.ActiveStates))
 		}
@@ -283,6 +284,11 @@
 				$am.ActiveStates.delete(States.RightMouseButtonPressed);
 			}
 
+			$am.ActiveStates.delete(States.StagePressed); 
+
+			if (log) {
+				console.log(printStates($am.ActiveStates))
+			}
 		}
 	}
 
@@ -357,23 +363,25 @@
 	}
 
 	function pressDownHandler(event: any) {
-		let e: PressCustomEvent = event;
-		console.log(e)
-		$am.ActiveStates.add(States.StagePressed);
-		if (log) {
-			console.log(printStates($am.ActiveStates))
+		if ($am.ActiveStates.has(States.OnePointer)) {
+			let e: PressCustomEvent = event;
+			console.log("press triggered")
+			$am.ActiveStates.add(States.StagePressed);
+			if (log) {
+				console.log(printStates($am.ActiveStates))
+			}
+			
+			if (e.detail.pointerType == "touch") {
+				jQuery('#overlay')[0].releasePointerCapture(pointerID);
+				jQuery('#stage')[0].setPointerCapture(pointerID);
+			}
+			
+			$am.CheckActions({x: (e.detail.x), y: (e.detail.y)});
+			$am.ActiveStates.delete(States.StagePressed);
 		}
-
-		if (e.detail.pointerType == "touch") {
-			jQuery('#overlay')[0].releasePointerCapture(pointerID);
-			jQuery('#stage')[0].setPointerCapture(pointerID);
-		}
-		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-		$am.CheckActions({x: (e.detail.x + ifOverlay.left), y: (e.detail.y + ifOverlay.top)});
 	}
 
 	function pressUpHandler(e: any) {
-		console.log("press up handler")
 		$am.ActiveStates.delete(States.StagePressed); 
 		$am.CheckActions({x: e.clientX, y: e.clientY}); 
 		handlePointerUp({"evt": e.detail.event} as KonvaPointerEvent);
@@ -410,8 +418,8 @@
 	}}
 	>
 	<Layer bind:handle={layer} config={{id: "mainlayer", x: 0, y: 0}}>
-		<Group bind:handle={boxGroup} config={zoneConfig}>
-			{#each zones as z}
+		<Group bind:handle={$zones} config={zoneConfig}>
+			{#each zoneDefinitions as z}
 				<Rect config={{
 						x: z.x,
 						y: z.y,

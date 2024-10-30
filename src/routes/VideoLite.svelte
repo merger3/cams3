@@ -16,7 +16,7 @@
 	const dispatch = createEventDispatcher();
 
 	
-	var zones: Box[];
+	var zoneDefinitions: Box[];
 
 	let winWidth: number, winHeight: number;
 	export let commandHeight: number;
@@ -61,7 +61,7 @@
 		let bigBoxHeight: number = height / 1.5;
 		let bigBoxWidth: number = width / 1.5;
 
-		zones = [
+		zoneDefinitions = [
 			{x: smallBoxWidth, y: origin, height: bigBoxHeight, width: bigBoxWidth, zone: 1},
 			{x: origin, y: origin, height: smallBoxHeight, width: smallBoxWidth, zone: 2},
 			{x: origin, y: smallBoxHeight, height: smallBoxHeight, width: smallBoxWidth, zone: 3},
@@ -132,7 +132,7 @@
 
 			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} />
 
-			<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframeRaw} />
+			<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} />
 			
 			<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
 			
@@ -190,6 +190,6 @@
 		width: 100vw; 
 		height: 100vh;
 		z-index: 0;
-		background-color: rgba(190, 51, 172, 0);
+		background-color: rgba(190, 51, 172, .5);
 	}
 </style>

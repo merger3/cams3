@@ -25,7 +25,7 @@
 					case "Transformer": { 
 						node.listening(state)
 						let tranformer = (node as Konva.Transformer);
-						tranformer.resizeEnabled(state);
+						// tranformer.resizeEnabled(state);
 						if (!state) {
 							tranformer.stopTransform();
 						}
@@ -153,9 +153,9 @@
 
 	function tripleUpHandler(e: any) {
 		toggleTangle(true);
-		if ($panzoom.getScale() <= 1.3) {
-			$panzoom.reset();
-		}
+		// if ($panzoom.getScale() <= 1.3) {
+		// 	$panzoom.reset();
+		// }
 		zoomarea.removeEventListener("tripleTouchMove", tripleMoveHandler);
 		zoomarea.removeEventListener("tripleTouchUp", tripleUpHandlerDebounced);
 		$am.Actions[panName].IsActive = false;

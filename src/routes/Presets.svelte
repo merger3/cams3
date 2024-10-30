@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone } from '$lib/stores';
+	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	const dispatch = createEventDispatcher();
@@ -31,7 +31,7 @@
 
 	function enable(this: Action, origin: Coordinates) {
 		$am.Actions[name].IsActive = true;
-		let target = GetZone(origin, $stage);
+		let target = GetZone($zones, origin);
 		if (!target) {
 			$am.Actions[name].Cancel();
 			return;

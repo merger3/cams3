@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, CamPresets } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
 	import { RadialMenus, Transparency } from '$lib/radials';
@@ -38,10 +38,14 @@
 				States.LeftMouseButtonPressed,
 				States.StagePressed
 			]),
-			Inactive: new Set(),
+			Inactive: new Set([
+				States.StageDraggingBuffered
+			]),
 		},
 		CancelConditions: {
-			Active: new Set(),
+			Active: new Set([
+				States.StageDraggingBuffered
+			]),
 			Inactive: new Set([
 				States.StagePressed,
 				States.StagePointerDown,
@@ -55,18 +59,38 @@
 	
 
 	let activeMenu: RadialMenu | undefined;
-	function enable(this: Action, origin: Coordinates) {
+	function enable(this: Action, origin: Coordinates) {		
 		console.log("enabling radial")
-		let zone = GetZone(origin, $stage)
+		let zone = GetZone($zones, {x: (origin.x / $panzoom.getScale()), y: (origin.y / $panzoom.getScale())});
+		console.log(zone.name())
 		if (!zone) {
 			return;
 		}
+		
+		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+		origin = {x: (origin.x + ifOverlay.left), y: (origin.y + ifOverlay.top)}
+
+		$stage.find(".tangle").forEach(function (tangleGroup: any) {
+			tangleGroup.getChildren().forEach(function (node: Konva.Node) {
+				switch(node.getClassName()) { 
+					case "Rect": { 
+						node.stopDrag();
+						break; 
+					} 
+					case "Transformer": { 
+						let tranformer = (node as Konva.Transformer);
+						tranformer.stopTransform();
+						break; 
+					} 
+				} 
+			});
+		});
 
 		activeMenu = RadialMenus[mainMenu];
 		if (!activeMenu) {
 			return;
 		}
-		
+
 		activeMenu.location = origin;
 
 		radialLayer.listening(true);
@@ -95,7 +119,6 @@
     	return func;
 	}
 
-	
 	let labelConfig: any = {
 		x: 0,
 		y: 0,
@@ -107,12 +130,9 @@
 		strokeWidth: 1,
 		align: 'center',
 		listening: false
-	}
-
-	
+	}	
 	
 	function nop() {};
-
 
 	function radialStageHandlePointerUp(e: any) {
 		console.log("made it to handler")
@@ -185,7 +205,6 @@
 		height: stageHeight,
 		listening: false
 	}}
-	
 >
 	<Layer bind:handle={radialLayer} config={{listening: false}}>
 		{#if $am.Actions[name].IsActive && activeMenu}

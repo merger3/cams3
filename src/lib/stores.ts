@@ -12,6 +12,7 @@ export let ifDimensions = writable<Dimensions>({width: 0, height: 0});
 export let token = writable<string>();
 export let server = writable<AxiosInstance>();
 export let stage = writable<Konva.Stage>();
+export let zones = writable<Konva.Group>();
 export let clickZoom = writable<number>(100);
 export let clickFocus = writable<number>(0);
 export let drawing = writable<boolean>();
@@ -53,7 +54,7 @@ export function InitializeAM() {
 }
 
 
-export function GetZone(origin: Coordinates, stage: Konva.Stage): Konva.Rect | undefined {
+export function GetZone2(origin: Coordinates, stage: Konva.Stage, ): Konva.Rect | undefined {
 	let listening: Konva.Node[] = [];
 	let layer = stage.findOne('#mainlayer') as Konva.Layer;
 
@@ -70,6 +71,9 @@ export function GetZone(origin: Coordinates, stage: Konva.Stage): Konva.Rect | u
 	let zone = stage.getIntersection(origin) as Konva.Rect;
 	if (!zone || zone.name() == "") {
 		console.log("No zone clicked")
+		if (zone.name() == "") {
+			console.log(zone)
+		}
 		return undefined;
 	}
 
@@ -80,6 +84,28 @@ export function GetZone(origin: Coordinates, stage: Konva.Stage): Konva.Rect | u
 
 	return zone;
 }
+
+export function GetZone(zones: Konva.Group, origin: Coordinates): Konva.Rect | undefined {
+	let zone: Konva.Rect | undefined = undefined;
+	zones.getChildren(function(node){
+		return node.getClassName() == "Rect";
+	}).forEach(function (node: Konva.Node) {
+		let nodeGeometry = node.getClientRect();
+		// if ((origin.x >= nodeGeometry.x && origin.x <= nodeGeometry.x + nodeGeometry.width) && (origin.y >= nodeGeometry.y && origin.y <= nodeGeometry.y + nodeGeometry.height)) {
+		if (origin.x >= nodeGeometry.x) {
+			if (origin.x <= nodeGeometry.x + nodeGeometry.width) {
+				if (origin.y >= nodeGeometry.y) {
+					if (origin.y <= nodeGeometry.y + nodeGeometry.height) {
+						zone = node as Konva.Rect;
+					}
+				}
+			}
+		}
+	});	
+
+	return zone;
+}
+
 
 export function GrowZone(stage: Konva.Stage, zone: Konva.Rect) {
 	zone.hitFunc(function(context: any) {
