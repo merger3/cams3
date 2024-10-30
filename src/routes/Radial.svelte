@@ -4,32 +4,94 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, CamPresets } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam, ifDimensions } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
+	import { States, type Action } from '$lib/actions';
 
 	const dispatch = createEventDispatcher();
 	const defaultCMD: string = "​";
 	const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "focus": focusCam, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
 
-	export let stage: Konva.Stage;
-	export let commandText: string;
-	export let camPresets: CamPresets;
+	let camPresets: CamPresets;
+
+
+	const name = "draw";
+
+	export let layer: Konva.Layer;
+
+	let tangle: Konva.Rect;
+	let dot: Konva.Circle;
+
+	$am.Actions[name] = {
+		Name: name,
+		TriggerConditions: {
+			Active: new Set([
+				States.StagePointerDown,
+				States.OnePointer,
+				States.PointerAdded,
+				States.LeftMouseButtonPressed,
+				States.StageDraggingBuffered,
+				States.ClickedEmptySpace
+			]),
+			Inactive: new Set([
+				States.CrossedZones
+			]),
+		},
+		CancelConditions: {
+			Active: new Set([
+				States.CrossedZones
+			]),
+			Inactive: new Set([
+				States.StagePointerDown,
+				States.OnePointer,
+				States.LeftMouseButtonPressed,
+				States.StageDraggingBuffered
+			]),
+		},
+		IsActive: false,
+		Cancel: cancel,
+		Enable: enable
+	}
+
+	function enable(this: Action, origin: Coordinates) {
+
+		// Populate radial location and targets
+		ClearStage($stage);
+
+		tangle.position({
+			x: origin.x,
+			y: origin.y
+		})
+		tangle.size({
+			height: 0,
+			width: 0
+		})
+		
+
+		dot.position({
+			x: (tangle.x() + (tangle.width() / 2)),
+			y: (tangle.y() + (tangle.height() / 2)),
+		})
+
+		tangle.show();
+		dot.moveToTop();
+		dot.show();
+
+		$stage.on('pointermove.draw', handleDrag);
+		$stage.on('pointerup.draw', finshDrawing);
+
+		
+		this.IsActive = true;
+	}
+
+
 
 	let menuDefinition: RadialMenu;
 	let color: string;
 	let location: Coordinates;
 	let innerRadius: number = window.innerHeight * .08;
 	let outerRadius: number = (window.innerHeight * .08) + (window.innerHeight * .13);
-	
 
-	function getRelativeZoom(): number {
-		if ($panzoom.getScale() <= 1.5) {
-			return $panzoom.getScale()
-		} else {
-			return $panzoom.getScale() * .8
-		}
-		
-	}
 
 	function builder(definition: RadialMenu): RadialPart[] {
 		if (!definition) {
@@ -69,7 +131,7 @@
 		y: 0,
 		width: 200,
 		text: "",
-		fontSize: 2 * parseFloat(getComputedStyle(document.documentElement).fontSize) / getRelativeZoom(),
+		fontSize: 2 * parseFloat(getComputedStyle(document.documentElement).fontSize),
 		padding: 5,
 		fill: "white",
 		stroke: 'black',
@@ -292,8 +354,8 @@
 			}
 		}
 		return {
-			x: r*Math.cos(theta) / getRelativeZoom(),
-			y: r*Math.sin(theta) / getRelativeZoom(),
+			x: r*Math.cos(theta),
+			y: r*Math.sin(theta),
 		}
 	}
 
@@ -307,21 +369,17 @@
 
 <Group 
 	bind:handle={radials}
-	config={{
-		x: stage.x(),
-		y: stage.y(),
-	}}
 >
 	{#each builder(menuDefinition) as r}
 		<Arc config={{
 			x: menuDefinition.location.x,
 			y: menuDefinition.location.y,
-			innerRadius: innerRadius / getRelativeZoom(),
-			outerRadius: outerRadius / getRelativeZoom(),
+			innerRadius: innerRadius,
+			outerRadius: outerRadius,
 			angle: r.angle,
 			fill: r.color,
 			stroke: 'darkgrey',
-			strokeWidth: 2 / getRelativeZoom(),
+			strokeWidth: 2,
 			rotation: r.rotation,
 			name: "radialpart",
 			hitFunc: arcCustomHitbox

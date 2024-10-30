@@ -4,6 +4,7 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { Box } from '$types';
 	import { Motion } from 'svelte-motion'
+	import { press } from 'svelte-gestures';
 	import _ from 'lodash';
 	import Konva from "konva";
 	import TangleLite from './TangleLite.svelte';
@@ -121,7 +122,7 @@
 		</Motion>
 		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown" style="height: {commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
 	</div>
-	<!-- <div id="stage" class="unselectable z-30" /> -->
+	<div id="stage" class="unselectable" />
 	<Zoomable>
 		<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 			
@@ -129,7 +130,7 @@
 				<div id="menutrigger" class="overlay unselectable z-100" />
 			</ContextMenu>
 
-			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}}/>
+			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} />
 
 			<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zones on:forceiframeresize={resizeIframeRaw} />
 			
@@ -182,12 +183,13 @@
 		-o-user-select: none;
 		user-select: none;
 	}
-	/* #stage {
+	#stage {
 		position: fixed; 
 		top: 0;          
 		left: 0;      
 		width: 100vw; 
 		height: 100vh;
+		z-index: 0;
 		background-color: rgba(190, 51, 172, 0);
-	} */
+	}
 </style>

@@ -20,9 +20,6 @@
 	
 
 	let commandHeight: number;
-
-	let spacerHeight: number;
-	let spacerWidth: number;
 	let resize: HTMLElement;
 
 	async function sendCommand() {

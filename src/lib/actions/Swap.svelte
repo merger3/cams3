@@ -45,32 +45,22 @@
 
 	let startZone: Konva.Rect | undefined;
 	function enable(this: Action, origin: Coordinates) {
-		
-
-		// points: [(clickedShape!.x() + (clickedShape!.width() / 2)), (clickedShape!.y() + (clickedShape!.height() / 2))],
-		// points: [mousePos!.x, mousePos!.y],
-		// arrow.points(arrow.points().splice(0, 2).concat([mousePos!.x, mousePos!.y]));
 		startZone = GetZone(origin, $stage)
-
-		if (startZone) {
-			arrow.points([(startZone.x() + (startZone.width() / 2)), (startZone.y() + (startZone.height() / 2))]);
-			highlight.position({
-				x: startZone.x(),
-				y: startZone.y()
-			})
-			highlight.size({
-				height: startZone.height(),
-				width: startZone.width()
-			})
-			
-		} else {
+		if (!startZone) {
 			return;
 		}
 
+		arrow.points([(startZone.x() + (startZone.width() / 2)), (startZone.y() + (startZone.height() / 2))]);
+		highlight.position({
+			x: startZone.x(),
+			y: startZone.y()
+		})
+		highlight.size({
+			height: startZone.height(),
+			width: startZone.width()
+		})
+
 		ClearStage($stage);
-
-
-
 
 		arrow.show();
 		arrow.moveToTop();

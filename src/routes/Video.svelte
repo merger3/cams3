@@ -274,7 +274,7 @@
 
 	function setupRadials(event: PressCustomEvent, target: Konva.Shape) {
 		let zone = Number(target.name())
-		
+
 		let moveParts: RadialPart[] = [
 			{angle: 45, action: "up", label: "up", icon: "arrow-up"},
 			{angle: 45, action: "upright", label: "upright", icon: "arrow-up-right"},
@@ -318,6 +318,7 @@
 		radial.setRotations(mainMenu);
 
 		moveMenu.previousMenu = mainMenu;
+		radial.redefine(mainMenu);
 	}
 
 	let overlay: any;

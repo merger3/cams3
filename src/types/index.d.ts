@@ -56,19 +56,20 @@ interface Box {
 interface RadialMenu {
 	color: string;
 	rotation: number;
-	location: Coordinates;
-	target: number;
-	previousMenu?: RadialMenu | undefined;
 	parts: RadialPart[];
+	location?: Coordinates;
+	target?: number;
+	previousMenu?: RadialMenu;
 }
 
 interface RadialPart {
-	angle: number;
+	size: number;
 	action: string;
 	label: string;
 	icon: string;
 	color?: string;
-	submenu?: RadialMenu | undefined;
+	submenu?: string;
+	angle?: number;
 	rotation?: number;
 }
 

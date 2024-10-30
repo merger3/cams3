@@ -13,6 +13,7 @@ export enum States {
 	PointerAdded,
 	PointerRemoved,
 	StageDoubleClick,
+	StagePressed,
 	CommandScrollable,
 	LeftMouseButtonPressed,
 	RightMouseButtonPressed,
