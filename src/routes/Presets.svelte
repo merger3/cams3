@@ -58,6 +58,7 @@
 		} else {
 			$camPresets = response.data.camPresets;
 		}
+		$am.Actions[name].IsActive = false;
 	}
 
     function buildCommand(preset: string) {

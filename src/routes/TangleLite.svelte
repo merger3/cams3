@@ -299,8 +299,8 @@
 			$am.ActiveStates.add(States.RightMouseButtonPressed);
 		}
 
+		console.log(printStates($am.ActiveStates));
 		if (log) {
-			console.log(e);
 		}
 
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();

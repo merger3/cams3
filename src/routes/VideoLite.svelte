@@ -136,22 +136,22 @@
 			
 			<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
 			
-			<!-- <iframe
+			<iframe
 			title="da cameras"
 			id="cams"
 			src="https://helenkellersimulator.org/"
 			class="unselectable"
 			allow="autoplay; fullscreen"
 			allowfullscreen
-			></iframe> -->
+			></iframe>
 		</div>
 	</Zoomable>
 </div>
 
 <style>
-	/* #cams {
+	#cams {
 		pointer-events: none;
-	} */
+	}
 	[contenteditable="true"]:focus {
 		outline: none;
 	}
