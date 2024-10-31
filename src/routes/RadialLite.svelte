@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, CamPresets } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, camPresets } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
 	import { RadialMenus, Transparency } from '$lib/radials';
@@ -15,17 +15,16 @@
 	export let stageHeight: number;
 
 	const defaultCMD: string = "​";
-	const mainMenu = "ptzmove";
+	const mainMenu = "main";
+
 	let innerRadius: number;
 	let outerRadius: number;
 
 	let radialStage: Konva.Stage;
-	let radialLayer: Konva.Layer;
+	export let radialLayer: Konva.Layer;
 	let radials: Konva.Group;
 	let label: Konva.Text;
 	
-	// const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "focus": focusCam, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
-	const buttonHandlers: {[key: string]: any} = {};
 
 	const name = "radial";
 	$am.Actions[name] = {
@@ -57,12 +56,10 @@
 		Enable: enable
 	}
 	
-
+	let fontSize: number = 0;
 	let activeMenu: RadialMenu | undefined;
 	function enable(this: Action, origin: Coordinates) {		
-		console.log("enabling radial")
 		let zone = GetZone($zones, {x: (origin.x / $panzoom.getScale()), y: (origin.y / $panzoom.getScale())});
-		console.log(zone.name())
 		if (!zone) {
 			return;
 		}
@@ -90,23 +87,23 @@
 		if (!activeMenu) {
 			return;
 		}
-
 		activeMenu.location = origin;
+		activeMenu.target = Number(zone.name());
 
 		radialLayer.listening(true);
 		radialStage.listening(true);
 		jQuery('#stage').css('z-index', '49');
 
-		activeMenu.target = Number(zone.name());
-
+		fontSize = (2 * parseFloat(getComputedStyle(document.documentElement).fontSize));
 		innerRadius = (window.innerHeight * .08);
 		outerRadius = (window.innerHeight * .08) + (window.innerHeight * .13);
-		labelConfig.fontSize = 2 * parseFloat(getComputedStyle(document.documentElement).fontSize),
 		this.IsActive = true;
-		console.log("finished enabling radial")
 	}
 
 	function cancel(this: Action) {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
 		activeMenu = undefined;
 		radialLayer.listening(false);
 		radialStage.listening(false);
@@ -115,34 +112,60 @@
 	}
 
 	function getFunctionFromName(name: string) {
-		let func = buttonHandlers[name] ? buttonHandlers[name] : nop;
+		let func = buttonHandlers[name] ? buttonHandlers[name] : defaultAction;
     	return func;
 	}
 
-	let labelConfig: any = {
-		x: 0,
-		y: 0,
-		width: 200,
-		text: "",
-		padding: 5,
-		fill: "white",
-		stroke: 'black',
-		strokeWidth: 1,
-		align: 'center',
-		listening: false
-	}	
-	
-	function nop() {};
-
-	function radialStageHandlePointerUp(e: any) {
-		console.log("made it to handler")
-		console.log(e)
-		dispatch("simulatepointerup", {event: e});
+	function loadNewMenu(r: RadialPart) {
+		if (RadialMenus[r.submenu] != undefined) {
+			let newMenu = RadialMenus[r.submenu];
+			newMenu.location = activeMenu.location;
+			newMenu.target = activeMenu.target;
+			if (r.label != "back" && r.label != "prev" && r.label != "previous") {
+				newMenu.parts.forEach((part) => {
+					if (part.label == "back" || part.label == "prev" || part.label == "previous") {
+						part.submenu = activeMenu.name;
+					}
+				});
+			}
+			activeMenu = newMenu;
+		}	
 	}
 
-	onMount(async () => {
-		await tick();
- 	});
+	let hoverTimeout: number;
+	function highlightRadial(e: CustomEvent, r: RadialPart) {
+		(e.detail.target as Konva.Shape).fill("rgba(92, 150, 255, 0.15)")
+		let hoveredElementPos = e.detail.target.getPosition();
+		label.position({x: hoveredElementPos.x, y: hoveredElementPos.y});
+		label.offsetX(label.width() / 2);
+		label.offsetY(label.height() / 2);
+		label.text(r.label);
+		label.show();
+
+		if (r.submenu) {
+			hoverTimeout = setTimeout(() => {
+				loadNewMenu(r);
+			}, 400);
+		}
+	}
+
+	function unhighlightRadial(e: CustomEvent, r: RadialPart) {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
+		(e.detail.target as Konva.Shape).fill(r.color!);
+		label.hide();
+	}
+
+	function defaultAction() {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
+	};
+
+	function radialStageHandlePointerUp(e: any) {
+		dispatch("simulatepointerup", {event: e});
+	}
 
 	function arcCustomHitbox(context: Konva.Context, shape: any) {
 		var arc = shape as Konva.Arc;
@@ -156,13 +179,6 @@
 		context.fillStrokeShape(arc);
 	}
 
-	// window.addEventListener('keydown', function (e) {
-    //     if (e.code == "Space") {
-	// 		var node = stage.findOne('#mainlayer') as Konva.Layer;
-	// 		node!.toggleHitCanvas();
-	// 		e.preventDefault();
-    //     } 
-    //   });
 	function polar2xy(r: number, theta: number) {
 		theta = theta * (Math.PI / 180)
 		// theta in radians
@@ -187,11 +203,328 @@
 	onMount(async () => {
 		await tick();
 		jQuery("#stage")[0].addEventListener("pointerup", radialStageHandlePointerUp);
-		// on:pointerup={radialStageHandlePointerUp}
-   
+		jQuery("#stage")[0].addEventListener("pointerdown", radialStageHandlePointerUp);
+		console.log(radialLayer.getCanvas()._canvas)
  	});
 
-	
+
+	// const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "focus": focusCam, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
+	const buttonHandlers: {[key: string]: any} = {"send": send, "clear": clear, "focus": focuscam, "reset": resetcam, "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load")};
+
+	function sendHelper(cacheHit: boolean) {
+		if (cacheHit) {
+			dispatch('sendcmd');
+		} else {
+			_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
+		}
+	}
+
+	function send() {
+		if ($commandText == defaultCMD) {
+			$commandText = ClickTangle({
+				X: activeMenu.location.x,
+				Y: activeMenu.location.y,
+				Width: 0,
+				Height: 0,
+				FrameWidth: $ifDimensions.width,
+				FrameHeight: $ifDimensions.height
+			}).command
+		}
+		dispatch("sendcmd");
+	}
+
+	function clear() {
+		Reset($stage);
+	}
+
+	async function focuscam() {
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: activeMenu.target}, $server)
+		if (!cam.found) {
+			return;
+		}
+
+		$commandText = `!ptzfocusr ${cam.name} 0`
+		$clickFocus = 0;
+
+	}
+
+	async function resetcam() {
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: activeMenu.target}, $server)
+		if (!cam.found) {
+			return;
+		}
+
+		$commandText = `!resetcam ${cam.name}`
+		sendHelper(cam.cacheHit)
+	}
+
+	function swapMenu() {
+		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+		let mousePos = radialStage.getPointerPosition();
+		if (mousePos) {
+			$am.Actions["swaps"].Enable({x: (mousePos.x - ifOverlay.left) / $panzoom.getScale(), y: (mousePos.y - ifOverlay.top) / $panzoom.getScale()})
+		} else {
+			$am.Actions["swaps"].Enable({x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()})
+		}
+	}
+
+	async function loadNextCam(action: string) {
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: activeMenu.target}, $server)
+		if (!cam.found) {
+			return;
+		}
+		
+		// let response = await $server.post('/camera/swaps', {camera: cam.name});
+		let response = {data: JSON.parse(testString())};
+		console.log(response)
+		let swaps: SwapResponse = response.data;
+		if (!swaps.found || !swaps.swaps.subentries[0]) {
+			return;
+		}
+		if (action == "swap") {
+			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
+			// sendHelper(cam.cacheHit)
+		} else if (action == "load") {
+			// let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps!.subentries![0].label});
+			let presetResponse = JSON.parse(testPresets());
+			if (!presetResponse.data.found) {
+				return;
+			}
+
+			$camPresets = presetResponse.data.camPresets;
+		}
+	}
+
+
+	function testPresets(): string {
+		return `
+		{
+			"data": {
+				"found": true,
+				"camPresets": {
+					"name": "foxcorner",
+					"presets": [
+						"home",
+						"training",
+						"den",
+						"insidedoor"
+					]
+				}
+			}
+		}`;
+	}
+
+	function testString(): string {
+		return `{
+			"found": true,
+			"cam": "foxes",
+			"swaps": {
+				"label": "foxes",
+				"subentries": [
+				{
+					"label": "foxcorner",
+					"subentries": null
+				},
+				{
+					"label": "foxmulti",
+					"subentries": null
+				},
+				{
+					"label": "separator",
+					"subentries": null
+				},
+				{
+					"label": "wolves",
+					"subentries": [
+					{
+						"label": "wolf",
+						"subentries": null
+					},
+					{
+						"label": "wolfcorner",
+						"subentries": null
+					},
+					{
+						"label": "wolfinside",
+						"subentries": null
+					},
+					{
+						"label": "wolfden",
+						"subentries": null
+					},
+					{
+						"label": "wolfden2",
+						"subentries": null
+					},
+					{
+						"label": "wolfmultis",
+						"subentries": [
+						{
+							"label": "wolfmulti",
+							"subentries": null
+						},
+						{
+							"label": "wolfmulti2",
+							"subentries": null
+						},
+						{
+							"label": "wolfdenmulti",
+							"subentries": null
+						},
+						{
+							"label": "wolfdenmulti2",
+							"subentries": null
+						}
+						]
+					}
+					]
+				},
+				{
+					"label": "rats",
+					"subentries": [
+					{
+						"label": "rat1",
+						"subentries": null
+					},
+					{
+						"label": "rat2",
+						"subentries": null
+					},
+					{
+						"label": "rat3",
+						"subentries": null
+					},
+					{
+						"label": "ratmulti",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "reptiles",
+					"subentries": [
+					{
+						"label": "georgie",
+						"subentries": null
+					},
+					{
+						"label": "noodle",
+						"subentries": null
+					},
+					{
+						"label": "patchy",
+						"subentries": null
+					},
+					{
+						"label": "toast",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "insects",
+					"subentries": [
+					{
+						"label": "marty",
+						"subentries": null
+					},
+					{
+						"label": "bb",
+						"subentries": null
+					},
+					{
+						"label": "roaches",
+						"subentries": null
+					},
+					{
+						"label": "hank",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "crows",
+					"subentries": [
+					{
+						"label": "crowout",
+						"subentries": null
+					},
+					{
+						"label": "crowin",
+						"subentries": null
+					},
+					{
+						"label": "crowmulti",
+						"subentries": null
+					},
+					{
+						"label": "crowmulti2",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "marmosets",
+					"subentries": [
+					{
+						"label": "marmin",
+						"subentries": null
+					},
+					{
+						"label": "marmout",
+						"subentries": null
+					},
+					{
+						"label": "marmmulti",
+						"subentries": null
+					}
+					]
+				},
+				{
+					"label": "parrots",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "separator",
+					"subentries": null
+				},
+				{
+					"label": "swap",
+					"subentries": [
+					{
+						"label": "1",
+						"subentries": null
+					},
+					{
+						"label": "2",
+						"subentries": null
+					},
+					{
+						"label": "3",
+						"subentries": null
+					},
+					{
+						"label": "4",
+						"subentries": null
+					},
+					{
+						"label": "5",
+						"subentries": null
+					},
+					{
+						"label": "6",
+						"subentries": null
+					}
+					]
+				}
+				]
+			}
+		}`;
+	}
 
 </script>
 
@@ -218,17 +551,34 @@
 							outerRadius: outerRadius,
 							angle: r.angle,
 							fill: r.color,
-							stroke: `rgba(169, 169, 169, ${Transparency})`,
-							strokeWidth: 2,
+							stroke: `rgba(110, 110, 110, ${Transparency})`,
+							strokeWidth: 1,
 							rotation: r.rotation,
 							name: "radialpart",
 							hitFunc: arcCustomHitbox
 						}}
+						on:pointerenter={(e) => highlightRadial(e, r)}
+						on:pointerleave={(e) => unhighlightRadial(e, r)}
+						on:pointerup={getFunctionFromName(r.action)}
 					/>
 					<i class="bi bi-{r.icon} absolute z-100 pointer-events-none text-2xl" style={iconStyle(r)} use:portal={"#stage"}/>
-					{radials.moveToTop()}
 				{/each}
-				<Text bind:handle={label} config={labelConfig} />
+				<Text bind:handle={label} 
+					config={{
+						x: 0,
+						y: 0,
+						width: 200,
+						text: "",
+						padding: 5,
+						fontSize: fontSize,
+						fill: "white",
+						stroke: 'black',
+						strokeWidth: 1,
+						align: 'center',
+						listening: false,
+						visible: false
+					}}
+				/>
 			</Group>
 		{/if}
 	</Layer>

@@ -3,11 +3,11 @@ export interface CamList {
     cameras: string[];
 }
 
-export interface Config {
+interface Config {
     camlist: CamList[];
 }
 
-export interface CamPresets {
+interface CamPresets {
     name: string;
     presets: string[];
 } 
@@ -54,8 +54,9 @@ interface Box {
 }
 
 interface RadialMenu {
-	color: string;
-	rotation: number;
+	name?: string;
+	color?: string;
+	rotation?: number;
 	parts: RadialPart[];
 	location?: Coordinates;
 	target?: number;

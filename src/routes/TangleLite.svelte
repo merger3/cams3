@@ -15,11 +15,12 @@
 	import { States } from '$lib/actions';
 	import _ from 'lodash';
 	
-	let log = true;
+	let log = false;
 	export let stageWidth: number;
 	export let stageHeight: number;
 
 	var layer: Konva.Layer;
+	let radialLayer: Konva.Layer;
 
 	export let zoneDefinitions: Box[] = [];
 	const dispatch = createEventDispatcher();
@@ -37,14 +38,11 @@
 				$am.ActiveStates.delete(States.StageDraggingBuffered)
 			}
 
-			if (distance >= 5) {
+			if (distance >= 12) {
 				$am.ActiveStates.add(States.StageDraggingDejittered)
 			} else {
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
 			}
-		} else {
-			$am.ActiveStates.delete(States.StageDraggingBuffered)
-			$am.ActiveStates.delete(States.StageDraggingDejittered)
 		}
 	}
 
@@ -119,7 +117,7 @@
 		if (zone) {
 			$am.ActiveStates.add(States.HoveredZone);
 			if (hoverZone != startZone && $am.ActiveStates.has(States.OnePointer) && $am.ActiveStates.has(States.LeftMouseButtonPressed)) {
-				hoverZone.fill("rgba(92, 150, 255, 0.15)")
+				hoverZone.fill("rgba(92, 150, 255, 0.1)")
 			}
 		} else {
 			$am.ActiveStates.delete(States.HoveredZone);
@@ -143,7 +141,6 @@
 	let pointerID: any;
 	let origin: Coordinates | null;
 	function handlePointerDown(e: KonvaPointerEvent) {
-		console.log(e)
 		pointerID = e.evt.pointerId;
 		if (document.activeElement) {
 			(document.activeElement as HTMLElement).blur();
@@ -183,7 +180,7 @@
 		if (log) {
 			console.log(printStates($am.ActiveStates))
 		}
-		$am.CheckActions({x: origin!.x, y: origin!.y});
+		$am.CheckActions({x: origin.x, y: origin.y});
 	}
 	
 	function handlePointerMoveRaw(e: KonvaPointerEvent) {
@@ -365,15 +362,15 @@
 	function pressDownHandler(event: any) {
 		if ($am.ActiveStates.has(States.OnePointer)) {
 			let e: PressCustomEvent = event;
-			console.log("press triggered")
 			$am.ActiveStates.add(States.StagePressed);
+
 			if (log) {
 				console.log(printStates($am.ActiveStates))
 			}
 			
 			if (e.detail.pointerType == "touch") {
 				jQuery('#overlay')[0].releasePointerCapture(pointerID);
-				jQuery('#stage')[0].setPointerCapture(pointerID);
+				radialLayer.getCanvas()._canvas.setPointerCapture(pointerID);
 			}
 			
 			$am.CheckActions({x: (e.detail.x), y: (e.detail.y)});
@@ -477,4 +474,4 @@
 		<Scroll on:forceiframeresize={bubbleResize}/>
 	</Layer>
 </Stage>
-<RadialLite bind:stageWidth bind:stageHeight on:simulatepointerup={pressUpHandler}/>
+<RadialLite bind:radialLayer bind:stageWidth bind:stageHeight on:simulatepointerup={pressUpHandler} on:sendcmd={(e) => {dispatch("sendcmd")}}/>

@@ -81,9 +81,9 @@
 	let prevScale: number = 1;
 	function doubleMoveHandler(event: any) {
 		let scale: number = prevScale * event.detail.scale;
-		scale = scale < 1 ? 1 : scale;
+		// scale = scale < 1 ? 1 : scale;
 		if (zoomDebounce > 2) {
-			$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x - $panzoom.getPan().x), clientY: (event.detail.center.y - $panzoom.getPan().y)}, {minScale: 1, maxScale: 4})
+			$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x - $panzoom.getPan().x), clientY: (event.detail.center.y - $panzoom.getPan().y)}, {maxScale: 4})
 		} else {
 			zoomDebounce++;
 		}
@@ -153,9 +153,9 @@
 
 	function tripleUpHandler(e: any) {
 		toggleTangle(true);
-		// if ($panzoom.getScale() <= 1.3) {
-		// 	$panzoom.reset();
-		// }
+		if ($panzoom.getScale() <= 1.3) {
+			$panzoom.reset();
+		}
 		zoomarea.removeEventListener("tripleTouchMove", tripleMoveHandler);
 		zoomarea.removeEventListener("tripleTouchUp", tripleUpHandlerDebounced);
 		$am.Actions[panName].IsActive = false;
@@ -171,6 +171,7 @@
 				States.WheelScrolling
 			]),
 			Inactive: new Set([
+				States.StagePointerDown,
 				States.CommandScrollable
 			]),
 		},
@@ -178,9 +179,7 @@
 			Active: new Set([
 				States.CommandScrollable
 			]),
-			Inactive: new Set([
-
-			]),
+			Inactive: new Set(),
 		},
 		IsActive: false,
 		Enable: enableScroll,
@@ -192,15 +191,15 @@
 		this.IsActive = true;
 		if ($am.ActiveStates.has(States.WheelScrollUp)) {
 			if (zoom < 4) {
-				zoom += .2;
+				zoom += .3;
 			}
 		} else if ($am.ActiveStates.has(States.WheelScrollDown)) {
 			if (zoom > 1) {
-				zoom -= .2;
+				zoom -= .3;
 			} 
 		}
 
-		$panzoom.zoomToPoint(zoom, {clientX: (origin.x - $panzoom.getPan().x / $panzoom.getScale()), clientY: (origin.y - $panzoom.getPan().y / $panzoom.getScale())}, {maxScale: 4, minScale: 1, force: true});
+		$panzoom.zoomToPoint(zoom, {clientX: (origin.x - $panzoom.getPan().x / $panzoom.getScale()), clientY: (origin.y - $panzoom.getPan().y / $panzoom.getScale())}, {maxScale: 4, force: true});
 		if ($panzoom.getScale() <= 1.1) {
 			$panzoom.reset();
 			zoom = 1;

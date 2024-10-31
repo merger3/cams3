@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones } from '$lib/stores';
+	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	const dispatch = createEventDispatcher();
-
-
-	let camPresets: CamPresets = {name: "", presets: []};
 
 	const name = "doubleclick";
 
@@ -52,19 +49,19 @@
 		}
 
 		// let response = await $server.post('/camera/presets', {camera: cam.name})
-		// camPresets = response.data.camPresets;
+		// $camPresets = response.data.camPresets;
 		
 		let response = JSON.parse(testString());
 		if (!response.data.found) {
 			$am.Actions[name].Cancel();
 			return;
 		} else {
-			camPresets = response.data.camPresets;
+			$camPresets = response.data.camPresets;
 		}
 	}
 
     function buildCommand(preset: string) {
-		let newCommand: string = `!ptzload ${camPresets.name} ${preset}`;
+		let newCommand: string = `!ptzload ${$camPresets.name} ${preset}`;
 		if (newCommand == $commandText) {
 			dispatch("sendcmd");
 		} else {
@@ -112,12 +109,13 @@
 
 </script>
 
-{#if camPresets.presets.length != 0}
-	<div id="presets-menu" class="d-block text-center px-3 py-2 mt-1.5 mb-2.5 ms-1 me-1.5 z-20 rounded shadow">
-		{#each camPresets.presets as p}
+{#if $camPresets.presets.length != 0}
+	<div id="presets-menu" class="d-block text-center px-3 py-3 mt-1.5 mb-auto ms-1 me-1.5 z-20 rounded shadow ">
+		{#each $camPresets.presets as p}
 			<button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 px-0 mb-2 overflow-hidden position-relative h-16">{p}</button>
 		{/each}
 	</div>
+	<div class="mt-2.5" />
 {/if}
 
 <style>

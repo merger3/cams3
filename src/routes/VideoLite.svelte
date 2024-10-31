@@ -120,7 +120,7 @@
 				</div>
 			</div>
 		</Motion>
-		<button on:click={(e) => {dispatch("sendcmd");}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown" style="height: {commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
+		<button on:click={(e) => {dispatch("sendcmd")}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown" style="height: {commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
 	</div>
 	<div id="stage" class="unselectable" />
 	<Zoomable>
@@ -130,9 +130,9 @@
 				<div id="menutrigger" class="overlay unselectable z-100" />
 			</ContextMenu>
 
-			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 16 }} />
+			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 12 }} />
 
-			<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} />
+			<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} on:sendcmd={(e) => {dispatch("sendcmd")}}/>
 			
 			<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
 			
@@ -190,6 +190,6 @@
 		width: 100vw; 
 		height: 100vh;
 		z-index: 0;
-		background-color: rgba(190, 51, 172, .5);
+		background-color: rgba(190, 51, 172, 0);
 	}
 </style>

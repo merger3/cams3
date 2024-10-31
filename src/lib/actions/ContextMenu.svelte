@@ -3,7 +3,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { SwapResponse, Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { am, ifDimensions, GetZone, GetCam, server, stage, zones } from '$lib/stores';
+	import { am, ifDimensions, GetZone, GetCam, server, stage, zones, panzoom } from '$lib/stores';
 	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
 	const dispatch = createEventDispatcher();
 	
@@ -81,7 +81,7 @@
 
 		
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: coordinates.x + ifOverlay.left, clientY: coordinates.y + ifOverlay.top});
+		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: ((coordinates.x * $panzoom.getScale())+ ifOverlay.left), clientY: ((coordinates.y * $panzoom.getScale()) + ifOverlay.top)});
 		
 		dataReady = true;
 
@@ -325,7 +325,7 @@
 		<ContextMenu.Trigger>
 			<slot></slot>
 		</ContextMenu.Trigger>
-		<ContextMenu.Content class="w-52 dark:bg-slate-800 z-50" fitViewport={true} overlap={true}>
+		<ContextMenu.Content class="w-52 dark:bg-slate-800 z-50 overflow-scroll" fitViewport={true} overlap={true}>
 			<SubContextMenu entries={topEntry.swaps.subentries} cam={{cam: topEntry.cam, position: topEntry.position, found: true, swaps: {label: "", subentries: []}}} />
 		</ContextMenu.Content>
 	{/if}

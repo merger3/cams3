@@ -1,6 +1,6 @@
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { type AxiosInstance } from 'axios';
-import type { CamRequest, CamResponse, Coordinates, Dimensions } from '$types';
+import type { CamRequest, CamResponse, Coordinates, Dimensions, CamPresets } from '$types';
 import {type PanzoomObject} from '@panzoom/panzoom'
 import { type BaseParams } from 'svelte-gestures';
 import { setPointerControls } from 'svelte-gestures';
@@ -13,6 +13,7 @@ export let token = writable<string>();
 export let server = writable<AxiosInstance>();
 export let stage = writable<Konva.Stage>();
 export let zones = writable<Konva.Group>();
+export let camPresets = writable<CamPresets>({name: "", presets: []});
 export let clickZoom = writable<number>(100);
 export let clickFocus = writable<number>(0);
 export let drawing = writable<boolean>();
@@ -48,6 +49,11 @@ export function InitializeAM() {
 					action.Cancel();
 				}
 			}
+		},
+		CancelAll: function (): void {
+			Object.values(this.Actions).forEach((action) => {
+				action.Cancel();
+			});
 		}
  	};
 	am.set(newAM);
@@ -160,6 +166,18 @@ export function ClearStage(stage: Konva.Stage) {
 	ClearTangles(stage);
 	ClearClicks(stage);
 	ClearArrows(stage);
+}
+
+export function ResetValues() {
+	commandText.set("​");
+	clickZoom.set(100);
+	clickFocus.set(0);
+}
+
+export function Reset(stage: Konva.Stage) {
+	get(am).CancelAll();
+	ClearStage(stage)
+	ResetValues();
 }
 
 export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamResponse> {

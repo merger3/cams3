@@ -52,4 +52,5 @@ export interface ActionsManager {
 	IsAvailable(actionName: string): boolean;
 	ShouldCancel(actionName: string): boolean;
 	CheckActions(origin: Coordinates): void;
+	CancelAll(): void;
 }

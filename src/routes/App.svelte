@@ -9,7 +9,7 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { CamPresets, Config } from '$types';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom, clickFocus, ClearStage, stage } from '$lib/stores';
+	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom, clickFocus, ClearStage, stage, Reset } from '$lib/stores';
 	import _ from 'lodash';
 	InitializeAM();
 
@@ -18,22 +18,20 @@
 	let selector: TangleLite;
 	$commandText = defaultCMD;
 	
-
 	let commandHeight: number;
 	let resize: HTMLElement;
 
 	async function sendCommand() {
-		$server.post('/send', {
-			command: $commandText
-		}).then(function (response) {
-			console.log(response);
-		}).catch(function (error) {
-			console.log(error);
-		});
-		$commandText = defaultCMD;
-		$clickZoom = 100;
-		$clickFocus = 0;
-		ClearStage($stage);
+		// Edge case with click delay must be manually cancelled here
+		$am.Actions["click"].Cancel();
+		// $server.post('/send', {
+		// 	command: $commandText
+		// }).then(function (response) {
+		// 	console.log(response);
+		// }).catch(function (error) {
+		// 	console.log(error);
+		// });
+		Reset($stage);
 		if (document.activeElement) {
 			(document.activeElement as HTMLElement).blur();
 		}
@@ -124,12 +122,12 @@
 					<CamSelector bind:commandHeight />
 				</div>
 				<Presets on:sendcmd={sendCommand} />
-				<div style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
+				<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
 					<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown"> {$commandText == defaultCMD ? " Send " : " " + $commandText + " "} </button>
 				</div>
 			</div>
 			<div class="col-auto g-0" id="wrapper">
-				<VideoLite bind:selector bind:commandHeight />
+				<VideoLite bind:selector bind:commandHeight on:sendcmd={sendCommand}/>
 			</div>
 		</div>
 	</div>

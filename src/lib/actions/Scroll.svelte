@@ -83,14 +83,15 @@
 					$clickZoom = 0;
 				}
 			}
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickZoom}`;
 		} else if ($commandText.startsWith("!ptzfocusr"))  {
 			if (event.detail.notch == 1) {
 				$clickFocus += 25
 			} else if (event.detail.notch == -1) {
 				$clickFocus -= 25;
 			}
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickFocus}`;
 		}
-		$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickZoom}`;
 		if (forceResize) {
 			dispatch('forceiframeresize');
 		}
@@ -160,14 +161,15 @@
 				}
 
 			}
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickZoom}`;
 		} else if ($commandText.startsWith("!ptzfocusr")) {
 			if ($am.ActiveStates.has(States.WheelScrollUp)) {
 				$clickFocus += 25;
 			} else if ($am.ActiveStates.has(States.WheelScrollDown)) {
 				$clickFocus -= 25;
 			}
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickFocus}`;
 		}
-		$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickZoom}`;
 		if (forceResize) {
 			dispatch('forceiframeresize');
 		}

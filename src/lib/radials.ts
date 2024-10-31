@@ -1,7 +1,7 @@
 import type { RadialPart, RadialMenu, Coordinates } from '$types';
 
-export const Transparency = .5;
-
+export const Transparency = .65;
+export const DefaultColor = `rgba(21, 21, 21, ${Transparency})`;
 export let RadialMenus: {
 	[key: string]: RadialMenu;
 } = {};
@@ -24,10 +24,17 @@ function setRotations(menu: RadialMenu) {
 	}
 }
 
+RadialMenus["misc"] =  {
+	parts:  [
+		{size: 2, action: "submenu", label: "IR", icon: "lightbulb", submenu: "ptzir"},
+		{size: 1, action: "back", label: "back", icon: "arrow-bar-left"},
+		{size: 2, action: "submenu", label: "move", icon: "arrows-move", submenu: "ptzmove"},
+	]
+}
 
 RadialMenus["ptzmove"] = {
 	color: `rgba(149, 91, 157, ${Transparency})`, 
-	rotation: 22.5 - 135, 
+	rotation: -112.5, 
 	parts: [
 		{size: 1, action: "up", label: "up", icon: "arrow-up"},
 		{size: 1, action: "upright", label: "upright", icon: "arrow-up-right"},
@@ -41,7 +48,6 @@ RadialMenus["ptzmove"] = {
 }
 
 RadialMenus["ptzir"] =  {
-	color: `rgba(33, 37, 41, ${Transparency})`, 
 	rotation: 45, 
 	parts:  [
 		{size: 90, action: "iroff", label: "off", icon: "lightbulb-off"},
@@ -52,30 +58,31 @@ RadialMenus["ptzir"] =  {
 }
 
 RadialMenus["swap"] = {
-	color: `rgba(33, 37, 41, ${Transparency})`, 
-	rotation: 45,
+	rotation: 30,
 	parts: [
-		{size: 120, action: "nextswap", label: "swap", icon: "box-arrow-up-right"},
-		{size: 60, action: "back", label: "back", icon: "arrow-bar-left"},
-		{size: 120, action: "nextload", label: "load", icon: "download"},
-		{size: 60, action: "swap", label: "swap", icon: "menu-button-wide"},
+		{size: 2, action: "nextswap", label: "swap", icon: "box-arrow-up-right"},
+		{size: 1, action: "back", label: "back", icon: "arrow-bar-left"},
+		{size: 2, action: "nextload", label: "load", icon: "download"},
+		{size: 1, action: "swap", label: "swap", icon: "menu-button-wide"},
 	]
 }
 
 RadialMenus["main"] = {
-	color: `rgba(33, 37, 41, ${Transparency})`, 
-	rotation: -90,
-	parts:  [
-		{size: 120, action: "send", label: "send", icon: "arrow-return-left"},
-		{size: 60, action: "submenu", label: "next", icon: "arrow-left-right", submenu: "swap"},
-		{size: 60, action: "focus", label: "focus", icon: "eye"},
-		{size: 30, action: "submenu", label: "move", icon: "arrows-move", submenu: "ptzmove"},
-		{size: 30, action: "submenu", label: "ir", icon: "lightbulb", submenu: "ptzir"},
-		{size: 60, action: "reset", label: "reset", icon: "arrow-repeat"},	
+	rotation: -38.5,
+	parts: [
+		{size: 1.5, action: "send", label: "send", icon: "arrow-return-left"},
+		{size: 1, action: "submenu", label: "next", icon: "arrow-left-right", submenu: "swap"},
+		{size: 1, action: "reset", label: "reset", icon: "arrow-repeat"},
+		{size: 1.5, action: "clear", label: "clear", icon: "recycle"},
+		{size: 1, action: "submenu", label: "misc", icon: "list", submenu: "misc"},
+		{size: 1, action: "focus", label: "focus", icon: "eye"},
 	]
 }
 
 
-Object.values(RadialMenus).forEach(menu => {
+Object.entries(RadialMenus).forEach(([name, menu]) => {
+	menu.name = name;
+	menu.color = !menu.color ? DefaultColor : menu.color;
+	menu.rotation = !menu.rotation ? 0 : menu.rotation;
 	setRotations(menu);
 });

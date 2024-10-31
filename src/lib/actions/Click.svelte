@@ -50,10 +50,12 @@
 		if ($clickTimer) {
 			clearTimeout($clickTimer);
 		}
+	
 		if ($am.ActiveStates.has(States.StageDraggingDejittered)) {
 			$stage.on('pointermove.click', handleDrag);
 		}
 		$stage.on('pointerup.click', finshDrawing);
+
 		$am.Actions[name].IsActive = true;
 	}
 
@@ -83,10 +85,10 @@
 
 	// Throttle
 	function handleDrag(e: Konva.KonvaPointerEvent) {
+		$am.Actions[name].IsActive = true;
 		let mousePos = $stage.getPointerPosition();
 		if (mousePos) {
 			dot.show();
-
 			dot.position({
 				x: mousePos.x,
 				y: mousePos.y,
@@ -95,6 +97,7 @@
 	}
 
 	function finshDrawing(e: Konva.KonvaPointerEvent) {
+		$am.Actions[name].IsActive = true;
 		$stage.off('pointermove.click')
 		$stage.off('pointerup.click')
 		$clickTimer = setTimeout(() => {
