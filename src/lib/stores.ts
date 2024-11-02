@@ -202,10 +202,12 @@ export function Reset(stage: Konva.Stage) {
 export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamResponse> {
 	// return {found: true, name: "fox", position: 3, cacheHit: true};
 	let response = await a.post("/camera", {x: r.coordinates.x, y: r.coordinates.y, width: 0, height: 0, frameWidth: r.frameWidth, frameHeight: r.frameHeight, position: Number(r.position)});
-	if (response.status == 404) {
-		console.log("Could not get camera");
-		return {found: false, name: "", position: 0, cacheHit: false}
-	}
+	
+	console.log(response);
+	// if (response.status == 404) {
+	// 	console.log("Could not get camera");
+	// 	return {found: false, name: "", position: 0, cacheHit: false}
+	// }
 	return response.data;
 }
 

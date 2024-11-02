@@ -26,8 +26,12 @@
 		// Edge case with click delay must be manually cancelled here
 		$am.Actions["click"].Cancel();
 
-		let response = await $server.post('/send', {
+		$server.post('/send', {
 			command: $commandText
+		}).then(function (response) {
+			console.log(response);
+		}).catch(function (error) {
+			console.log(error);
 		});
 		
 		let result = swapRegEx.exec($commandText);
@@ -55,8 +59,20 @@
 		}
 		fit(resize, {min_size: 8});
 	}
-
 	var resizeText = _.throttle(resizeTextRaw, 20, { 'leading': true, 'trailing': true });
+
+	let authorized: boolean = false;
+	function checkAuth() {
+		$server.post('/authorize').then(function (response) {
+			if (response.data.authorized) {
+				authorized = true;
+			} else {
+				authorized = false;
+			}
+		}).catch(function (error) {
+			console.log(error);
+		});
+	}
 
 	let resizeObserverDefined = false;
 	onMount(() => {
@@ -70,7 +86,7 @@
 				username: 'merger3',
 				password: 'Merger!23'
 			},
-			baseURL: 'https://alvsanc-cams.dev/api/',
+			baseURL: '/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
@@ -85,16 +101,10 @@
 		});
 
 
-		$server.post('/authorize').then(function (response) {
-			if (response.data.authorized) {
-				authorized = true;
-			} else {
-				authorized = false;
-			}
-		}).catch(function (error) {
-			console.log(error);
-		});
-
+		checkAuth();
+		setInterval(() => {
+			checkAuth();
+		}, 600000);
 	
 		window.ResizeObserver = ResizeObserver;
 		resizeObserverDefined = true;
@@ -106,8 +116,6 @@
 		}
 	});
 	$: resizeObserverDefined && $commandText && resizeText();
-
-	let authorized: boolean = false;
 </script>
 
 <svelte:head>
