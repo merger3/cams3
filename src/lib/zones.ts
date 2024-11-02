@@ -4,16 +4,18 @@ import Konva from "konva";
 // It's sloppy an inefficient but it works on small enough collections that it should never matter.
 // The beauty of modern computers is they're fast enough to mostly ignore my dogshit optimization here.
 
-export enum Zones {
+export enum Selector {
 	Presets,
 	Radial,
 	Keyboard,
 	SwapSource,
-	SwapTarget
+	SwapTarget,
+	ContexMenu,
+	Focus
 }
 
 export interface Selection {
-	Name: Zones;
+	Name: Selector;
 	Config: any;
 	Rect: Konva.Rect;
 }
@@ -25,30 +27,33 @@ export interface Zone {
 }
 
 export function CreateZones(boxGroup: Konva.Group) {
-	zones = [];
+	Zones = [];
 	boxGroup.getChildren(function(node){
 		return node.getClassName() == "Rect";
 	}).forEach(function (node: Konva.Node) {
-		zones.push({Name: node.name(), Rect: node as Konva.Rect, Selections: []})
+		Zones.push({Name: node.name(), Rect: node as Konva.Rect, Selections: []})
 	});
 }
 
-let zones: Zone[] = [];
-let configs: {[key in Zones]?: any} = {};
+export let Zones: Zone[] = [];
+let configs: {[key in Selector]?: any} = {};
 
-configs[Zones.Presets] = {stroke: 'rgba(186, 137, 14, 1)', strokeWidth: 2.5};
-configs[Zones.Radial] = {stroke: 'rgba(13, 110, 253, 1)', strokeWidth: 2.5};
-configs[Zones.Keyboard] = {stroke: 'rgba(136, 48, 10, 1)', strokeWidth: 2.5};
-configs[Zones.SwapSource] = {stroke: 'rgba(171, 119, 172, 1)', strokeWidth: 2.5};
-configs[Zones.SwapTarget] = {stroke: 'rgba(121, 173, 120, 1)', strokeWidth: 2.5};
+configs[Selector.Presets] = {stroke: 'rgba(186, 137, 14, 1)', strokeWidth: 2.5};
+configs[Selector.Focus] = {stroke: 'rgba(13, 150, 252, 1)', strokeWidth: 2.5};
+configs[Selector.Keyboard] = {stroke: 'rgba(136, 48, 10, 1)', strokeWidth: 2.5};
+configs[Selector.SwapSource] = {stroke: 'rgba(121, 173, 120, 1)', strokeWidth: 3};
+configs[Selector.SwapTarget] = {stroke: 'rgba(171, 119, 172, 1)', strokeWidth: 3};
+configs[Selector.ContexMenu] = {stroke: 'rgba(99, 60, 154, 1)', strokeWidth: 3};
+configs[Selector.Radial] = {stroke: 'rgba(21, 21, 21, .7)', strokeWidth: 3.5};
 
-export function AddSelection(rect: Konva.Rect, config: Zones) {
-	let zone = zones[Number(rect.name()) - 1];
+export function AddSelection(rect: Konva.Rect, config: Selector) {
+	let zone = Zones[Number(rect.name()) - 1];
 	if (zone == undefined) {
 		return;
 	}
+
 	RemoveSelection(config);
-	let offset = zone.Selections.reduce((sum, selection) => sum + selection.Rect.strokeWidth() + 1, 0);
+	let offset = zone.Selections.reduce((sum, selection) => sum + selection.Rect.strokeWidth() + .5, 0) + 2;
 	let newSelector = new Konva.Rect({
 		x: zone.Rect.x() + offset,
 		y: zone.Rect.y() + offset,
@@ -59,15 +64,15 @@ export function AddSelection(rect: Konva.Rect, config: Zones) {
 		draggable: false,
 		visible: true
 	});
-	newSelector.setAttrs(configs[config].Attributes);
+	newSelector.setAttrs(configs[config]);
 
 	zone.Selections.push({Name: config, Config: configs[config], Rect: newSelector});
 	zone.Rect.getLayer().add(newSelector);
 }
 
-export function RemoveSelection(config: Zones): string {
+export function RemoveSelection(config: Selector): string {
 	let zone: Zone;
-	zones.forEach(function (z: Zone) {
+	Zones.forEach(function (z: Zone) {
 		z.Selections.forEach(function (s: Selection) {
 			if (s.Name == config) {
 				zone = z;
@@ -94,7 +99,7 @@ export function RemoveSelection(config: Zones): string {
 }
 
 export function RedrawSelections() {
-	zones.forEach(function (z: Zone) {
+	Zones.forEach(function (z: Zone) {
 		let oldSelections: Selection[] = [...z.Selections];
 		z.Selections = [];
 		oldSelections.forEach(function (selection: Selection) {
@@ -105,10 +110,22 @@ export function RedrawSelections() {
 }
 
 export function ResetZones() {
-	zones.forEach(function (z: Zone) {
+	Zones.forEach(function (z: Zone) {
 		z.Selections.forEach(function (s: Selection) {
 			s.Rect.destroy();
 		});
 		z.Selections = []
 	});
+}
+
+export function GetSelectedRect(zone: Selector): Konva.Rect {
+	let foundZone = null;
+	Zones.forEach(function (z: Zone) {
+		z.Selections.forEach(function (s: Selection) {
+			if (s.Name == zone) {
+				foundZone = z.Rect;
+			}
+		});
+	});
+	return foundZone;
 }

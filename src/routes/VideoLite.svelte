@@ -138,14 +138,14 @@
 			
 			<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
 			
-			<iframe
+			<!-- <iframe
 			title="da cameras"
 			id="cams"
 			src="https://camops.ptz.app:8889/ptz-alv?controls=0&autoplay=1&mute=0"
 			class="unselectable"
 			allow="autoplay; fullscreen"
 			allowfullscreen
-			></iframe>
+			></iframe> -->
 		</div>
 	</Zoomable>
 </div>

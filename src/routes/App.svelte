@@ -7,7 +7,7 @@
 	import axios from 'axios';
 	import VideoLite from './VideoLite.svelte';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
-	import { Zones, RemoveSelection, AddSelection } from '$lib/zones';
+	import { Selector, RemoveSelection, AddSelection, GetSelectedRect } from '$lib/zones';
 	import ResizeObserver from 'resize-observer-polyfill'
 	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom, clickFocus, ClearStage, stage, Reset, zones } from '$lib/stores';
 	import _ from 'lodash';
@@ -25,7 +25,7 @@
 	async function sendCommand() {
 		// Edge case with click delay must be manually cancelled here
 		$am.Actions["click"].Cancel();
-		
+
 		// $server.post('/send', {
 		// 	command: $commandText
 		// }).then(function (response) {
@@ -36,12 +36,12 @@
 			
 		let result = swapRegEx.exec($commandText);
 		if (result) {
-			let removed = RemoveSelection(Zones.Presets);
-			if (removed != "") {
-				if (removed == result[1]) {
-					AddSelection($zones.findOne(`.${result[2]}`), Zones.Presets)
-				} else {
-					AddSelection($zones.findOne(`.${result[1]}`), Zones.Presets)
+			let presetSelected = GetSelectedRect(Selector.Presets).name();
+			if (presetSelected != "") {
+				if (presetSelected == result[1]) {
+					AddSelection($zones.findOne(`.${result[2]}`), Selector.Presets)
+				} else if (presetSelected == result[2]) {
+					AddSelection($zones.findOne(`.${result[1]}`), Selector.Presets)
 				}
 			}
 		}
@@ -85,6 +85,16 @@
 			baseURL: '/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
+
+		// $server.interceptors.response.use(function (response) {
+		// 	// Any status code that lie within the range of 2xx cause this function to trigger
+		// 	// Do something with response data
+		// 	return response;
+		// }, function (error) {
+		// 	// Any status codes that falls outside the range of 2xx cause this function to trigger
+		// 	// Do something with response error
+		// 	return Promise.reject(error);
+		// });
 
 		// $server.post('/authorize').then(function (response) {
 		// 	console.log(response);

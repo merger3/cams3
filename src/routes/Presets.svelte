@@ -4,7 +4,7 @@
 	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { Zones, AddSelection, RemoveSelection } from '$lib/zones';
+	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
 	import type Konva from "konva";
 
 	const dispatch = createEventDispatcher();
@@ -40,8 +40,8 @@
 			$am.Actions[name].Cancel();
 			return;
 		}
-		RemoveSelection(Zones.Presets);
-		AddSelection(target, Zones.Presets);
+		RemoveSelection(Selector.Presets);
+		AddSelection(target, Selector.Presets);
 		loadMenu(origin, Number(target.id()))
 	}
 

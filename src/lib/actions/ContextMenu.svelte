@@ -5,7 +5,7 @@
 	import { States, type Action } from '$lib/actions';
 	import { am, ifDimensions, GetZone, GetCam, server, stage, zones, panzoom } from '$lib/stores';
 	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
-	import Portal from "svelte-portal";
+	import { AddSelection, RemoveSelection, Selector, GetSelectedRect } from '$lib/zones';
 	const dispatch = createEventDispatcher();
 	
 	let topEntry: SwapResponse = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
@@ -39,12 +39,17 @@
 	let cancelled: boolean = true;
 	function enable(this: Action, origin: Coordinates) {
 		$am.Actions[name].IsActive = true;
-		let target = GetZone($zones, origin);
+		let target = GetSelectedRect(Selector.Radial);
 		if (!target) {
-			$am.Actions[name].Cancel();
-			return;
+			target = GetZone($zones, origin);
+			if (!target) {
+				$am.Actions[name].Cancel();
+				return;
+			}
 		}
-
+		
+		AddSelection(target, Selector.ContexMenu);
+		
 		cancelled = false;
 		loadMenu(origin, Number(target.id()))
 	}
@@ -63,6 +68,7 @@
 			topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
 			dataReady = false;
 			$am.Actions[name].IsActive = false;
+			RemoveSelection(Selector.ContexMenu);
 		}
 
 	}
@@ -100,6 +106,7 @@
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
+			RemoveSelection(Selector.ContexMenu);
 		}
 	}
 

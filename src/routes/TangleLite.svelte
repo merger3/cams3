@@ -9,7 +9,7 @@
 	import Click from "$lib/actions/Click.svelte";
 	import Scroll from "$lib/actions/Scroll.svelte";
 	import { type PressCustomEvent } from 'svelte-gestures';
-
+	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
 	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones } from '$lib/stores';
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
@@ -118,7 +118,9 @@
 		if (zone) {
 			$am.ActiveStates.add(States.HoveredZone);
 			if (hoverZone != startZone && $am.ActiveStates.has(States.OnePointer) && $am.ActiveStates.has(States.LeftMouseButtonPressed)) {
-				hoverZone.fill("rgba(92, 150, 255, 0.15)")
+				AddSelection(zone, Selector.SwapTarget)
+			} else if (hoverZone == startZone && $am.ActiveStates.has(States.OnePointer) && $am.ActiveStates.has(States.LeftMouseButtonPressed)) {
+				RemoveSelection(Selector.SwapTarget)
 			}
 		} else {
 			$am.ActiveStates.delete(States.HoveredZone);
@@ -143,12 +145,10 @@
 	let clicks: number = 0;
 	function monitorDoubleClick(e: KonvaPointerEvent) {
 		clicks++;
-		console.log(clicks)
 		doubleClicktimer = setTimeout(() => {
 			if (clicks > 0) {
 				clicks--;
 			}
-			console.log(clicks)
 		}, 200);
 
 		if (clicks == 2) {
@@ -158,8 +158,8 @@
 			clicks = 0;
 			$am.ActiveStates.add(States.StageDoubleClick);
 		
-			console.log(printStates($am.ActiveStates));
 			if (log) {
+				console.log(printStates($am.ActiveStates));
 			}
 
 			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
@@ -459,7 +459,7 @@
 						height: z.height,
 						fill: 'rgba(0, 0, 0, 0)',
 						fillEnabled: true,
-						stroke: 'rgba(255, 0, 0, 0.2)',
+						stroke: 'rgba(149, 76, 30, 1)',
 						strokeWidth: 1.5,
 						strokeScaleEnabled: false,
 						name: String(z.zone)

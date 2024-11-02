@@ -5,7 +5,7 @@ import {type PanzoomObject} from '@panzoom/panzoom'
 import { type BaseParams } from 'svelte-gestures';
 import { setPointerControls } from 'svelte-gestures';
 import { type ActionsManager } from '$lib/actions';
-import { ResetZones } from '$lib/zones';
+import { RemoveSelection, Selector, Zones } from '$lib/zones';
 import Konva from "konva";
 
 export let commandText = writable<string>();
@@ -23,13 +23,6 @@ export let panzoom = writable<PanzoomObject>();
 export let clickTimer = writable<number>();
 
 export let am = writable<ActionsManager>();
-
-export enum Zones {
-	Presets,
-	Radial,
-	Keyboard,
-	Swap
-}
 
 export function InitializeAM() {
 	let newAM: ActionsManager = {
@@ -209,12 +202,16 @@ export function ClearClicks(stage: Konva.Stage) {
 
 export function ClearArrows(stage: Konva.Stage) {
 	stage.find(".arrow").forEach(function (arrow: any) {
-		arrow.destroyChildren();
 		arrow.destroy();
 	});
 }
 
-export function ClearStage(stage: Konva.Stage) {
+export function ClearStage(stage: Konva.Stage, withHover = true) {
+	RemoveSelection(Selector.SwapSource);
+	if (withHover) {
+		RemoveSelection(Selector.SwapTarget);
+	}
+	RemoveSelection(Selector.Focus);
 	ClearTangles(stage);
 	ClearClicks(stage);
 	ClearArrows(stage);
@@ -230,6 +227,7 @@ export function Reset(stage: Konva.Stage) {
 	get(am).CancelAll();
 	ClearStage(stage)
 	ResetValues();
+
 }
 
 export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamResponse> {

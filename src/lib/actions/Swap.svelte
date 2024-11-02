@@ -7,12 +7,12 @@
 	import { States, type Action } from '$lib/actions';
 	import _ from 'lodash';
 	import { customAlphabet } from 'nanoid';
+	import { AddSelection, RemoveSelection, Selector } from '$lib/zones';
 
 	const tangleID = customAlphabet('0123456789abcdef', 5);
 	const name = "swapPosition";
 
 	let arrow: Konva.Arrow;
-	let highlight: Konva.Rect;
 
 	$am.Actions[name] = {
 		Name: name,
@@ -44,6 +44,7 @@
 	}
 
 	let startZone: Konva.Rect | undefined;
+	let endZone: Konva.Rect | undefined;
 	function enable(this: Action, origin: Coordinates) {
 		startZone = GetZone($zones, origin)
 		if (!startZone) {
@@ -51,20 +52,14 @@
 		}
 
 		arrow.points([(startZone.x() + (startZone.width() / 2)), (startZone.y() + (startZone.height() / 2))]);
-		highlight.position({
-			x: startZone.x(),
-			y: startZone.y()
-		})
-		highlight.size({
-			height: startZone.height(),
-			width: startZone.width()
-		})
-
-		ClearStage($stage);
-
+		
+		ClearStage($stage, false);
+		
 		arrow.show();
 		arrow.moveToTop();
-		highlight.show();
+		
+		AddSelection(startZone, Selector.SwapSource)
+		
 		$stage.on('pointermove.swap', handleDrag);
 		$stage.on('pointerup.swap', finshDrawing);
 
@@ -78,7 +73,9 @@
 		arrow.hide();
 		arrow.points([]);
 
-		highlight.hide();
+	
+		RemoveSelection(Selector.SwapSource);
+		RemoveSelection(Selector.SwapTarget);
 
 		this.IsActive = false;
 	}
@@ -100,8 +97,7 @@
 		let mousePos = $stage.getPointerPosition();
 
 		if (mousePos) {
-
-			let endZone = GetZone($zones, mousePos)
+			endZone = GetZone($zones, mousePos)
 
 			if (endZone) {
 				let swaps: number[] = [Number(startZone?.name()), Number(endZone.name())]
@@ -112,30 +108,21 @@
 				return;
 			}
 
-			manufactureArrow(endZone);
-
+			manufactureArrow();
 			arrow.hide();
-			highlight.hide();
-			
+
 			$am.Actions[name].IsActive = false;
 		}
 	}
 
 
 
-	function manufactureArrow(box: Konva.Rect) {
-		let groupID = tangleID();
-
-		let newArrowGroup= new Konva.Group({
-			name: "arrow",
-			id: groupID,
-			listening: false,
-			draggable: false
-		})
-
+	function manufactureArrow() {
 		let newArrow = new Konva.Arrow({
 			x: arrow.x(),
 			y: arrow.y(),
+			name: "arrow",
+			id: tangleID(),
 			points: [...arrow.points()],
 			stroke: "rgba(121, 173, 120, 0.7)",
 			pointerLength: 18,
@@ -145,36 +132,8 @@
 			listening: false,
 			draggable: false
 		});
-
-		let newSourceHighlight = new Konva.Rect({
-			x: highlight.x(),
-			y: highlight.y(),
-			width: highlight.width(),
-			height: highlight.height(),
-			fill: 'rgba(213, 65, 44, 0.2)',
-			fillEnabled: true,
-			strokeEnabled: false,
-			listening: false,
-			draggable: false,
-		});
-
-		let newTargetHighlight = new Konva.Rect({
-			x: box.x(),
-			y: box.y(),
-			width: box.width(),
-			height: box.height(),
-			fill: 'rgba(92, 150, 255, 0.15)',
-			fillEnabled: true,
-			strokeEnabled: false,
-			listening: false,
-			draggable: false,
-		});
-
-		newArrowGroup.add(newArrow);
-		newArrowGroup.add(newTargetHighlight);
-		newArrowGroup.add(newSourceHighlight);
 		
-		arrow.getLayer()!.add(newArrowGroup);
+		arrow.getLayer()!.add(newArrow);
 	}
 
 	onMount(async () => {
@@ -183,21 +142,6 @@
 
 </script>
 
-<Rect 
-	bind:handle={highlight} 
-	  config={{
-		x: 0,
-		y: 0,
-		width: 0,
-		height: 0,
-		fill: 'rgba(213, 65, 44, 0.2)',
-		fillEnabled: true,
-		strokeEnabled: false,
-		listening: false,
-		visible: false,
-		draggable: false,
-	}}
-/>
 <Arrow 
 	bind:handle={arrow} 
 	  config={{

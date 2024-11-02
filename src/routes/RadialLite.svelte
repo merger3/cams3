@@ -7,7 +7,7 @@
 	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, camPresets } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
-	import { Zones, AddSelection, RemoveSelection } from '$lib/zones';
+	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
 	import { RadialMenus, Transparency } from '$lib/radials';
 	import { portal } from "svelte-portal";
 	const dispatch = createEventDispatcher();
@@ -93,7 +93,7 @@
 		activeMenu.target = Number(zone.name());
 
 
-		AddSelection(zone, Zones.Radial);
+		AddSelection(zone, Selector.Radial);
 		// zone.stroke('rgba(136, 48, 10, 1)');
 		// zone.strokeWidth(2.5);
 		// zone.moveToTop();
@@ -117,7 +117,7 @@
 		radialStage.listening(false);
 		jQuery('#stage').css('z-index', '');
 
-		RemoveSelection(Zones.Radial);
+		RemoveSelection(Selector.Radial);
 		zone = undefined;
 
 		this.IsActive = false;
@@ -270,7 +270,7 @@
 
 		$commandText = `!ptzfocusr ${cam.name} 0`
 		$clickFocus = 0;
-
+		AddSelection(zone, Selector.Focus);
 	}
 
 	function swapMenu() {

@@ -52,7 +52,6 @@
 		this.IsActive = false;	}
 
 	function panMove(event: any) {
-		let forceResize: boolean = false;
 		if ($commandText.startsWith("!ptzclick")) {
 			if (event.detail.notch == 1) {
 				if ($clickZoom >= 100) {
@@ -64,9 +63,7 @@
 				}
 				if ($clickZoom > maxZoomTouch) {
 					$clickZoom = 10000;
-					forceResize = true;
 				}
-
 			} else if (event.detail.notch == -1) {
 				if ($clickZoom >= 10000) {
 					$clickZoom = maxZoomTouch;			
@@ -91,9 +88,6 @@
 				$clickFocus -= 25;
 			}
 			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickFocus}`;
-		}
-		if (forceResize) {
-			dispatch('forceiframeresize');
 		}
 	}
 
@@ -130,7 +124,6 @@
 
 	function enableScroll(this: Action, origin: Coordinates) {
 		this.IsActive = true;
-		let forceResize: boolean = false;
 		if ($commandText.startsWith("!ptzclick")) {
 			if ($am.ActiveStates.has(States.WheelScrollUp)) {
 				if ($clickZoom >= 100) {
@@ -142,7 +135,6 @@
 				}
 				if ($clickZoom > maxZoom) {
 					$clickZoom = 10000;
-					forceResize = true;
 				}
 			} else if ($am.ActiveStates.has(States.WheelScrollDown)) {
 				if ($clickZoom >= 10000) {
@@ -170,9 +162,6 @@
 			}
 			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickFocus}`;
 		}
-		if (forceResize) {
-			dispatch('forceiframeresize');
-		}
 		this.IsActive = false;
 	}
 
@@ -181,10 +170,5 @@
 		$clickFocus = 0;
 		this.IsActive = false;
 	}
-
-
-	onMount(async () => {
-		await tick();
- 	});
 
 </script>

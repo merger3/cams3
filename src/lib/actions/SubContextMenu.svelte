@@ -1,9 +1,8 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import type { Entry, SwapResponse } from '$types';
-	import { commandText } from '$lib/stores';
+	import { commandText, stage, ClearStage } from '$lib/stores';
 	import SubContextMenu from './SubContextMenu.svelte';
-	import Portal from "svelte-portal";
 
 	export let entries: Entry[];
 	export let cam: SwapResponse;
@@ -16,12 +15,10 @@
 		} else {
 			$commandText = `!swap ${sourceCam} ${target}`
 		}
-		
+		ClearStage($stage);
 	}
 
 </script>
-
-<!-- <ContextMenu.Item>an item</ContextMenu.Item> -->
  
 
 {#each entries as e, i}
