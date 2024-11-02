@@ -2,11 +2,12 @@
 	import { Arc, Group, Text, Stage, Layer } from "svelte-konva";
 	import Konva from "konva";
 	import { createEventDispatcher, onMount, tick } from 'svelte';
-	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, CamPresets } from '$types';
+	import type { RadialPart, RadialMenu, Coordinates, SwapResponse } from '$types';
 	import _ from 'lodash';
 	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, camPresets } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
+	import { Zones, AddSelection, RemoveSelection } from '$lib/zones';
 	import { RadialMenus, Transparency } from '$lib/radials';
 	import { portal } from "svelte-portal";
 	const dispatch = createEventDispatcher();
@@ -52,14 +53,15 @@
 			]),
 		},
 		IsActive: false,
-		Cancel: cancel,
-		Enable: enable
+		Enable: enable,
+		Cancel: cancel
 	}
 	
 	let fontSize: number = 0;
 	let activeMenu: RadialMenu | undefined;
+	let zone: Konva.Rect;
 	function enable(this: Action, origin: Coordinates) {		
-		let zone = GetZone($zones, {x: (origin.x / $panzoom.getScale()), y: (origin.y / $panzoom.getScale())});
+		zone = GetZone($zones, {x: (origin.x / $panzoom.getScale()), y: (origin.y / $panzoom.getScale())});
 		if (!zone) {
 			return;
 		}
@@ -90,6 +92,12 @@
 		activeMenu.location = origin;
 		activeMenu.target = Number(zone.name());
 
+
+		AddSelection(zone, Zones.Radial);
+		// zone.stroke('rgba(136, 48, 10, 1)');
+		// zone.strokeWidth(2.5);
+		// zone.moveToTop();
+
 		radialLayer.listening(true);
 		radialStage.listening(true);
 		jQuery('#stage').css('z-index', '49');
@@ -108,11 +116,15 @@
 		radialLayer.listening(false);
 		radialStage.listening(false);
 		jQuery('#stage').css('z-index', '');
+
+		RemoveSelection(Zones.Radial);
+		zone = undefined;
+
 		this.IsActive = false;
 	}
 
 	function getFunctionFromName(name: string) {
-		let func = buttonHandlers[name] ? buttonHandlers[name] : defaultAction;
+		let func = rh[name] ? rh[name] : defaultAction;
     	return func;
 	}
 
@@ -153,7 +165,7 @@
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
 		}
-		(e.detail.target as Konva.Shape).fill(r.color!);
+		(e.detail.target as Konva.Shape).fill(r.color);
 		label.hide();
 	}
 
@@ -209,7 +221,10 @@
 
 
 	// const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "focus": focusCam, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
-	const buttonHandlers: {[key: string]: any} = {"send": send, "clear": clear, "focus": focuscam, "reset": resetcam, "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load")};
+	let rh: {[key: string]: any} = {"send": send, "clear": clear, "focus": focuscam, "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load")};
+	rh = {...{"iroff": async () => await buildCommand("ptzir", ["off"]), "iron": async () => await buildCommand("ptzir", ["on"]), "irauto": async () => await buildCommand("ptzir", ["auto"])}, ...rh};
+	rh = {...{"iroff": async () => await buildCommand("ptzir", ["off"]), "iron": async () => await buildCommand("ptzir", ["on"]), "irauto": async () => await buildCommand("ptzir", ["auto"])}, ...rh};
+	rh = {...{"up": async () => await buildCommand("ptzmove", ["up"]), "upright": async () => await buildCommand("ptzmove", ["upright"]), "right": async () => await buildCommand("ptzmove", ["right"]), "downright": async () => await buildCommand("ptzmove", ["downright"]), "down": async () => await buildCommand("ptzmove", ["down"]), "downleft": async () => await buildCommand("ptzmove", ["downleft"]), "left": async () => await buildCommand("ptzmove", ["left"]), "upleft": async () => await buildCommand("ptzmove", ["upleft"])}, ...rh};
 
 	function sendHelper(cacheHit: boolean) {
 		if (cacheHit) {
@@ -237,6 +252,16 @@
 		Reset($stage);
 	}
 
+	async function buildCommand(command: string, values: string[] = []) {
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: activeMenu.target}, $server)
+		if (!cam.found) {
+			return;
+		}
+		$commandText = `!${command} ${cam.name} ${values.join(" ")}`
+
+		// sendHelper(cam.cacheHit)
+	}
+
 	async function focuscam() {
 		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: activeMenu.target}, $server)
 		if (!cam.found) {
@@ -246,16 +271,6 @@
 		$commandText = `!ptzfocusr ${cam.name} 0`
 		$clickFocus = 0;
 
-	}
-
-	async function resetcam() {
-		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: activeMenu.target}, $server)
-		if (!cam.found) {
-			return;
-		}
-
-		$commandText = `!resetcam ${cam.name}`
-		sendHelper(cam.cacheHit)
 	}
 
 	function swapMenu() {
@@ -283,7 +298,7 @@
 		}
 		if (action == "swap") {
 			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
-			// sendHelper(cam.cacheHit)
+			sendHelper(cam.cacheHit)
 		} else if (action == "load") {
 			// let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps!.subentries![0].label});
 			let presetResponse = JSON.parse(testPresets());

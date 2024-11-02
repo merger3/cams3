@@ -4,6 +4,9 @@
 	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
+	import { Zones, AddSelection, RemoveSelection } from '$lib/zones';
+	import type Konva from "konva";
+
 	const dispatch = createEventDispatcher();
 
 	const name = "doubleclick";
@@ -13,31 +16,37 @@
 		TriggerConditions: {
 			Active: new Set([
 				States.StageDoubleClick,
-				States.LeftMouseButtonPressed
+				States.LeftMouseButtonPressed,
+				States.OnePointer
 			]),
 			Inactive: new Set(),
 		},
 		CancelConditions: {
 			Active: new Set(),
-			Inactive: new Set(),
+			Inactive: new Set([
+				States.OnePointer
+			]),
 		},
 		IsActive: false,
 		Cancel: cancel,
 		Enable: enable
 	}
 
+	let target: Konva.Rect;
 	function enable(this: Action, origin: Coordinates) {
 		$am.Actions[name].IsActive = true;
-		let target = GetZone($zones, origin);
+		target = GetZone($zones, origin);
 		if (!target) {
 			$am.Actions[name].Cancel();
 			return;
 		}
-
+		RemoveSelection(Zones.Presets);
+		AddSelection(target, Zones.Presets);
 		loadMenu(origin, Number(target.id()))
 	}
 
 	function cancel(this: Action) {
+		target = undefined;
 		$am.Actions[name].IsActive = false;
 	}
 	
@@ -113,7 +122,7 @@
 {#if $camPresets.presets.length != 0}
 	<div id="presets-menu" class="d-block text-center px-3 py-3 mt-1.5 mb-auto ms-1 me-1.5 z-20 rounded shadow ">
 		{#each $camPresets.presets as p}
-			<button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-danger btn-lg d-block w-100 px-0 mb-2 overflow-hidden position-relative h-16">{p}</button>
+			<button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-warning btn-lg d-block w-100 px-0 mb-2 overflow-hidden position-relative h-16">{p}</button>
 		{/each}
 	</div>
 	<div class="mt-2.5" />

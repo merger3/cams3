@@ -29,12 +29,13 @@
 		{#if e.label == "separator"}
 			<ContextMenu.Separator class="bg-cyan-700 mx-1"/>
 		{:else}
-			<ContextMenu.Item class="h-10 position" on:click={() => handleClick(cam, e.label)}>{e.label}</ContextMenu.Item>
+			<ContextMenu.Item class="h-10" on:click={() => handleClick(cam, e.label)}>{e.label}</ContextMenu.Item>
 		{/if}
 	{:else}
 		<ContextMenu.Sub>
 			<ContextMenu.SubTrigger class="h-10" inset>{e.label}</ContextMenu.SubTrigger>
-			<ContextMenu.SubContent class="w-4 overflow-visible text-center position-fixed">
+
+			<ContextMenu.SubContent class="w-4 overflow-visible text-center" fitViewport={false} overlap={true}> 
 				<SubContextMenu entries={e.subentries} cam={cam}/>
 			</ContextMenu.SubContent>
 		</ContextMenu.Sub>

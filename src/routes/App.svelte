@@ -7,14 +7,15 @@
 	import axios from 'axios';
 	import VideoLite from './VideoLite.svelte';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
-	import type { CamPresets, Config } from '$types';
+	import { Zones, RemoveSelection, AddSelection } from '$lib/zones';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom, clickFocus, ClearStage, stage, Reset } from '$lib/stores';
+	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom, clickFocus, ClearStage, stage, Reset, zones } from '$lib/stores';
 	import _ from 'lodash';
 	InitializeAM();
 
 	const defaultCMD: string = "​";
-	
+	const swapRegEx = new RegExp('^\!swap ([0-9]) ([0-9])$');
+
 	let selector: TangleLite;
 	$commandText = defaultCMD;
 	
@@ -24,6 +25,7 @@
 	async function sendCommand() {
 		// Edge case with click delay must be manually cancelled here
 		$am.Actions["click"].Cancel();
+		
 		// $server.post('/send', {
 		// 	command: $commandText
 		// }).then(function (response) {
@@ -31,6 +33,19 @@
 		// }).catch(function (error) {
 		// 	console.log(error);
 		// });
+			
+		let result = swapRegEx.exec($commandText);
+		if (result) {
+			let removed = RemoveSelection(Zones.Presets);
+			if (removed != "") {
+				if (removed == result[1]) {
+					AddSelection($zones.findOne(`.${result[2]}`), Zones.Presets)
+				} else {
+					AddSelection($zones.findOne(`.${result[1]}`), Zones.Presets)
+				}
+			}
+		}
+
 		Reset($stage);
 		if (document.activeElement) {
 			(document.activeElement as HTMLElement).blur();

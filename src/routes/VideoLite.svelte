@@ -6,7 +6,7 @@
 	import { Motion } from 'svelte-motion'
 	import { press } from 'svelte-gestures';
 	import _ from 'lodash';
-	import Konva from "konva";
+	import { RedrawSelections } from '$lib/zones';
 	import TangleLite from './TangleLite.svelte';
 	import Zoomable from '$lib/actions/Zoomable.svelte';
 	import ContextMenu from '$lib/actions/ContextMenu.svelte';
@@ -49,6 +49,7 @@
 		}
 		initializeZones($ifDimensions.height, $ifDimensions.width);
 		
+		redrawSelectionsDebounced();
 		clearStageDebounced($stage);
 	}
 
@@ -74,6 +75,7 @@
 
 	var resizeIframe = _.throttle(resizeIframeRaw, 50, { 'leading': true, 'trailing': true });
 	var clearStageDebounced = _.debounce(ClearStage, 50, { 'leading': true, 'trailing': false })
+	var redrawSelectionsDebounced = _.debounce(RedrawSelections, 50, { 'leading': false, 'trailing': true })
 
 
 	function submitCommand(e: KeyboardEvent) {
@@ -139,7 +141,7 @@
 			<iframe
 			title="da cameras"
 			id="cams"
-			src="https://helenkellersimulator.org/"
+			src="https://camops.ptz.app:8889/ptz-alv?controls=0&autoplay=1&mute=0"
 			class="unselectable"
 			allow="autoplay; fullscreen"
 			allowfullscreen
@@ -149,9 +151,9 @@
 </div>
 
 <style>
-	#cams {
+	/* #cams {
 		pointer-events: none;
-	}
+	} */
 	[contenteditable="true"]:focus {
 		outline: none;
 	}
@@ -162,6 +164,15 @@
 	#command {
 		position: relative;
 		color: rgb(204, 212, 219);
+		text-shadow:
+			-1.25px -1.25px 0 #000,
+			1.25px -1.25px 0 #000,
+			-1.25px 1.25px 0 #000,
+			1.25px 1.25px 0 #000,
+			0 -1.25px 0 #000,
+			0 1.25px 0 #000,
+			-1.25px 0 0 #000,
+			1.25px 0 0 #000;
 	}
 	#wrapper {
 		flex-grow: 0;

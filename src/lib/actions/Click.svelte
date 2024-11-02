@@ -115,7 +115,7 @@
 			
 			dot.hide();
 			$am.Actions[name].IsActive = false;
-		}, 200);
+		}, 250);
 	}
 
 	function manufactureDot() {

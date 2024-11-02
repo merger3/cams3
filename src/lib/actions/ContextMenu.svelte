@@ -5,6 +5,7 @@
 	import { States, type Action } from '$lib/actions';
 	import { am, ifDimensions, GetZone, GetCam, server, stage, zones, panzoom } from '$lib/stores';
 	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
+	import Portal from "svelte-portal";
 	const dispatch = createEventDispatcher();
 	
 	let topEntry: SwapResponse = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
@@ -63,6 +64,7 @@
 			dataReady = false;
 			$am.Actions[name].IsActive = false;
 		}
+
 	}
 
 	async function loadMenu(coordinates: Coordinates, target: number) {
@@ -277,6 +279,118 @@
 					"subentries": null
 				},
 				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
+					"label": "pasture",
+					"subentries": null
+				},
+				{
 					"label": "separator",
 					"subentries": null
 				},
@@ -314,7 +428,10 @@
 		}`;
 	}
 
-
+	onMount(async () => {
+		await tick();
+		// ;
+ 	});
 </script>
    
    <!-- let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null} -->
@@ -325,7 +442,8 @@
 		<ContextMenu.Trigger>
 			<slot></slot>
 		</ContextMenu.Trigger>
-		<ContextMenu.Content class="w-52 dark:bg-slate-800 z-50 overflow-scroll" fitViewport={true} overlap={true}>
+
+		<ContextMenu.Content class="w-52 dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
 			<SubContextMenu entries={topEntry.swaps.subentries} cam={{cam: topEntry.cam, position: topEntry.position, found: true, swaps: {label: "", subentries: []}}} />
 		</ContextMenu.Content>
 	{/if}

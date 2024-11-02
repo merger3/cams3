@@ -1,6 +1,6 @@
 import type { RadialPart, RadialMenu, Coordinates } from '$types';
 
-export const Transparency = .65;
+export const Transparency = .75;
 export const DefaultColor = `rgba(21, 21, 21, ${Transparency})`;
 export let RadialMenus: {
 	[key: string]: RadialMenu;

@@ -13,6 +13,7 @@
 	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones } from '$lib/stores';
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
+	import { CreateZones } from '$lib/zones';
 	import _ from 'lodash';
 	
 	let log = false;
@@ -117,7 +118,7 @@
 		if (zone) {
 			$am.ActiveStates.add(States.HoveredZone);
 			if (hoverZone != startZone && $am.ActiveStates.has(States.OnePointer) && $am.ActiveStates.has(States.LeftMouseButtonPressed)) {
-				hoverZone.fill("rgba(92, 150, 255, 0.1)")
+				hoverZone.fill("rgba(92, 150, 255, 0.15)")
 			}
 		} else {
 			$am.ActiveStates.delete(States.HoveredZone);
@@ -136,6 +137,34 @@
 	export function resizeZones(x: number, y: number) {
 		zoneConfig.x = x;
 		zoneConfig.y = y;
+	}
+
+	let doubleClicktimer: number;
+	let clicks: number = 0;
+	function monitorDoubleClick(e: KonvaPointerEvent) {
+		clicks++;
+		console.log(clicks)
+		doubleClicktimer = setTimeout(() => {
+			if (clicks > 0) {
+				clicks--;
+			}
+			console.log(clicks)
+		}, 200);
+
+		if (clicks == 2) {
+			if (doubleClicktimer) { // Should always be true but better safe than sorry
+				clearTimeout(doubleClicktimer);
+			}
+			clicks = 0;
+			$am.ActiveStates.add(States.StageDoubleClick);
+		
+			console.log(printStates($am.ActiveStates));
+			if (log) {
+			}
+
+			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+			$am.CheckActions({x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()});
+		}
 	}
 
 	let pointerID: any;
@@ -180,7 +209,10 @@
 		if (log) {
 			console.log(printStates($am.ActiveStates))
 		}
+
+		monitorDoubleClick(e);
 		$am.CheckActions({x: origin.x, y: origin.y});
+		$am.ActiveStates.delete(States.StageDoubleClick);
 	}
 	
 	function handlePointerMoveRaw(e: KonvaPointerEvent) {
@@ -290,6 +322,7 @@
 	}
 
 	function handlePointerDoubleClick(e: KonvaPointerEvent) {
+		console.log(e)
 		$am.ActiveStates.add(States.StageDoubleClick);
 		if (e.evt.button == 0) {
 			$am.ActiveStates.add(States.LeftMouseButtonPressed);
@@ -392,13 +425,15 @@
 
 		$stage.on("pointerdown.stage", handlePointerDown);
 		$stage.on("pointerup.stage", handlePointerUp);
-		$stage.on("pointerdblclick.stage", handlePointerDoubleClick);
+		// $stage.on("pointerdblclick.stage", handlePointerDoubleClick);
 		$stage.on("wheel.stage", wheelHandler);
 
 		jQuery("#overlay")[0].addEventListener("pointerout",handlePointerOut);
 		jQuery("#overlay")[0].addEventListener("press", pressDownHandler);
 		// jQuery("#overlay")[0].addEventListener("pressup", pressUpHandler);
 		// layer.toggleHitCanvas();
+
+		CreateZones($zones);
    
  	});
 </script>
@@ -459,8 +494,8 @@
 						// (!) Konva specific method, it is very important
 						context.fillStrokeShape(shape);
 					},
-					fill: 'rgba(255,255,255,.7)',
-					stroke: 'rgba(0,0,0,.8)',
+					fill: 'rgba(255, 255, 255, .7)',
+					stroke: 'rgba(0, 0, 0, .8)',
 					strokeWidth: 1,
 					listening: false,
 					name: String(z.zone)

@@ -5,6 +5,7 @@ import {type PanzoomObject} from '@panzoom/panzoom'
 import { type BaseParams } from 'svelte-gestures';
 import { setPointerControls } from 'svelte-gestures';
 import { type ActionsManager } from '$lib/actions';
+import { ResetZones } from '$lib/zones';
 import Konva from "konva";
 
 export let commandText = writable<string>();
@@ -22,6 +23,13 @@ export let panzoom = writable<PanzoomObject>();
 export let clickTimer = writable<number>();
 
 export let am = writable<ActionsManager>();
+
+export enum Zones {
+	Presets,
+	Radial,
+	Keyboard,
+	Swap
+}
 
 export function InitializeAM() {
 	let newAM: ActionsManager = {
@@ -125,6 +133,50 @@ export function GrowZone(stage: Konva.Stage, zone: Konva.Rect) {
 	});
 	zone.moveToTop();
 }
+
+// export function SelectZone(key: Zones, zone: Konva.Rect) {
+// 	let targetZone = get(activeZones)[key];
+	
+// 	let color: string = 'rgba(13, 110, 253, 1)';
+// 	let strokeWidth: number = 2;
+// 	if (zone == undefined)  {
+// 		color = 'rgba(255, 0, 0, 1)';
+// 		strokeWidth = 1.5;	
+// 	} else {
+// 		switch(key) { 
+// 			case Zones.Radial: { 
+// 				color = 'rgba(136, 48, 10, 1)'
+// 				break;
+// 			} 
+// 			case Zones.Presets: { 
+// 				break; 
+// 			}
+// 		} 
+// 	}
+
+
+// 	zone.stroke(color);
+// 	zone.strokeWidth(strokeWidth);
+// 	zone.moveToTop();
+
+// 	get(activeZones)[key] = zone;
+
+// 	console.log(get(activeZones));
+// }
+
+export function UnselectZone() {
+	// let zone = get(activeZone);
+	// if (!zone) {
+	// 	return;
+	// }
+
+	// zone.stroke('rgba(255, 0, 0, 0.2)');
+	// zone.strokeWidth(1.5);
+
+	// activeZone.set(undefined);
+}
+
+
 
 export function ResetZone(zone: Konva.Rect | undefined) {
 	if (!zone) {
