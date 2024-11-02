@@ -26,22 +26,19 @@
 		// Edge case with click delay must be manually cancelled here
 		$am.Actions["click"].Cancel();
 
-		// $server.post('/send', {
-		// 	command: $commandText
-		// }).then(function (response) {
-		// 	console.log(response);
-		// }).catch(function (error) {
-		// 	console.log(error);
-		// });
-			
+		let response = await $server.post('/send', {
+			command: $commandText
+		});
+		
 		let result = swapRegEx.exec($commandText);
 		if (result) {
-			let presetSelected = GetSelectedRect(Selector.Presets).name();
-			if (presetSelected != "") {
-				if (presetSelected == result[1]) {
-					AddSelection($zones.findOne(`.${result[2]}`), Selector.Presets)
-				} else if (presetSelected == result[2]) {
-					AddSelection($zones.findOne(`.${result[1]}`), Selector.Presets)
+			let presetSelected = GetSelectedRect(Selector.Presets);
+			if (presetSelected?.name()) {
+				let presetZone = presetSelected.name();
+				let targetZone = presetZone === result[1] ? result[2] : (presetZone === result[2] ? result[1] : null);
+				
+				if (targetZone) {
+					AddSelection($zones.findOne(`.${targetZone}`), Selector.Presets);
 				}
 			}
 		}
@@ -77,7 +74,7 @@
 		//$token = `oauth:51esxuzacga63qijrpwczxq95m8ejc`
 
 		$server = axios.create({
-			timeout: 0,
+			timeout: 10000,
 			auth: {
 				username: 'merger3',
 				password: 'Merger!23'
@@ -86,26 +83,16 @@
 			headers: {'X-Twitch-Token': $token}
 		});
 
-		// $server.interceptors.response.use(function (response) {
-		// 	// Any status code that lie within the range of 2xx cause this function to trigger
-		// 	// Do something with response data
-		// 	return response;
-		// }, function (error) {
-		// 	// Any status codes that falls outside the range of 2xx cause this function to trigger
-		// 	// Do something with response error
-		// 	return Promise.reject(error);
-		// });
-
-		// $server.post('/authorize').then(function (response) {
-		// 	console.log(response);
-		// 	if (response.data.authorized) {
-		// 		authorized = true;
-		// 	} else {
-		// 		window.location.replace("/login");
-		// 	}
-		// }).catch(function (error) {
-		// 	console.log(error);
-		// });
+		$server.post('/authorize').then(function (response) {
+			console.log(response);
+			if (response.data.authorized) {
+				authorized = true;
+			} else {
+				window.location.replace("/login");
+			}
+		}).catch(function (error) {
+			console.log(error);
+		});
 
 	
 		window.ResizeObserver = ResizeObserver;
@@ -119,17 +106,17 @@
 	});
 	$: resizeObserverDefined && $commandText && resizeText();
 
-	let authorized: boolean = true;
+	let authorized: boolean = false;
 </script>
 
 <svelte:head>
 	<script lang="ts">
-		// const fragmentCheck = window.location.hash.substring(1);
-		// const regex = new RegExp('access_token=\\w+&scope=[\\w%+]+&token_type=bearer');
-		// if (fragmentCheck == "" || !regex.test(fragmentCheck)) {
-		// 	console.log("redirecting")
-		// 	window.location.replace("/login");
-		// }
+		const fragmentCheck = window.location.hash.substring(1);
+		const regex = new RegExp('access_token=\\w+&scope=[\\w%+]+&token_type=bearer');
+		if (fragmentCheck == "" || !regex.test(fragmentCheck)) {
+			console.log("redirecting")
+			window.location.replace("/login");
+		}
 	</script>
 </svelte:head>
 

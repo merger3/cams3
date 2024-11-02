@@ -216,7 +216,6 @@
 		await tick();
 		jQuery("#stage")[0].addEventListener("pointerup", radialStageHandlePointerUp);
 		jQuery("#stage")[0].addEventListener("pointerdown", radialStageHandlePointerUp);
-		console.log(radialLayer.getCanvas()._canvas)
  	});
 
 

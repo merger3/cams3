@@ -51,7 +51,7 @@
 		AddSelection(target, Selector.ContexMenu);
 		
 		cancelled = false;
-		loadMenu(origin, Number(target.id()))
+		loadMenu(origin, Number(target.name()))
 	}
 
 	function cancel(this: Action) {
@@ -80,8 +80,9 @@
 			return;
 		}
 
-		// topEntry = await $server.post('/camera/swaps', {camera: cam.name});
-		topEntry = JSON.parse(testString());
+		topEntry = await $server.post('/camera/swaps', {camera: cam.name});
+		console.log(topEntry)
+		// topEntry = JSON.parse(testString());
 		if (!topEntry.found || !topEntry.swaps.subentries) {
 			$am.Actions[name].Cancel();
 			return;
