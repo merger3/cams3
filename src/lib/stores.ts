@@ -61,37 +61,6 @@ export function InitializeAM() {
 }
 
 
-export function GetZone2(origin: Coordinates, stage: Konva.Stage, ): Konva.Rect | undefined {
-	let listening: Konva.Node[] = [];
-	let layer = stage.findOne('#mainlayer') as Konva.Layer;
-
-	let children = layer.getChildren(function(node){
-		return node.id() != "zones" && node.listening();
-	});
-	
-	children.forEach(function (node: Konva.Node) {
-		listening.push(node);
-		node.listening(false);
-	});
-	layer.draw();
-
-	let zone = stage.getIntersection(origin) as Konva.Rect;
-	if (!zone || zone.name() == "") {
-		console.log("No zone clicked")
-		if (zone.name() == "") {
-			console.log(zone)
-		}
-		return undefined;
-	}
-
-	listening.forEach(function (node) {
-		node.listening(true);
-	});
-	layer.draw();
-
-	return zone;
-}
-
 export function GetZone(zones: Konva.Group, origin: Coordinates): Konva.Rect | undefined {
 	let zone: Konva.Rect | undefined = undefined;
 	zones.getChildren(function(node){

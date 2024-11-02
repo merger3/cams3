@@ -59,9 +59,8 @@
 	
 	let fontSize: number = 0;
 	let activeMenu: RadialMenu | undefined;
-	let zone: Konva.Rect;
 	function enable(this: Action, origin: Coordinates) {		
-		zone = GetZone($zones, {x: (origin.x / $panzoom.getScale()), y: (origin.y / $panzoom.getScale())});
+		let zone = GetZone($zones, {x: (origin.x / $panzoom.getScale()), y: (origin.y / $panzoom.getScale())});
 		if (!zone) {
 			return;
 		}
@@ -90,7 +89,7 @@
 			return;
 		}
 		activeMenu.location = origin;
-		activeMenu.target = Number(zone.name());
+		activeMenu.target = zone;
 
 
 		AddSelection(zone, Selector.Radial);
@@ -118,7 +117,6 @@
 		jQuery('#stage').css('z-index', '');
 
 		RemoveSelection(Selector.Radial);
-		zone = undefined;
 
 		this.IsActive = false;
 	}
@@ -252,7 +250,7 @@
 	}
 
 	async function buildCommand(command: string, values: string[] = []) {
-		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: activeMenu.target}, $server)
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server)
 		if (!cam.found) {
 			return;
 		}
@@ -262,14 +260,14 @@
 	}
 
 	async function focuscam() {
-		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: activeMenu.target}, $server)
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server)
 		if (!cam.found) {
 			return;
 		}
 
 		$commandText = `!ptzfocusr ${cam.name} 0`
 		$clickFocus = 0;
-		AddSelection(zone, Selector.Focus);
+		AddSelection(activeMenu.target, Selector.Focus);
 	}
 
 	function swapMenu() {
@@ -283,24 +281,22 @@
 	}
 
 	async function loadNextCam(action: string) {
-		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: activeMenu.target}, $server)
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server)
 		if (!cam.found) {
 			return;
 		}
 		
-		// let response = await $server.post('/camera/swaps', {camera: cam.name});
-		let response = {data: JSON.parse(testString())};
-		console.log(response)
+		let response = await $server.post('/camera/swaps', {camera: cam.name});
+		// let response = {data: JSON.parse(testString())};
 		let swaps: SwapResponse = response.data;
-		if (!swaps.found || !swaps.swaps.subentries[0]) {
+		if (!swaps.found || !swaps.swaps.subentries[0] || swaps.swaps.subentries[0].subentries) {
 			return;
 		}
 		if (action == "swap") {
 			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
-			sendHelper(cam.cacheHit)
+			// sendHelper(cam.cacheHit)
 		} else if (action == "load") {
-			// let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps!.subentries![0].label});
-			let presetResponse = JSON.parse(testPresets());
+			let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps.subentries[0].label});
 			if (!presetResponse.data.found) {
 				return;
 			}

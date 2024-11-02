@@ -40,9 +40,8 @@
 			$am.Actions[name].Cancel();
 			return;
 		}
-		RemoveSelection(Selector.Presets);
-		AddSelection(target, Selector.Presets);
-		loadMenu(origin, Number(target.id()))
+		
+		loadMenu(origin, target)
 	}
 
 	function cancel(this: Action) {
@@ -50,22 +49,23 @@
 		$am.Actions[name].IsActive = false;
 	}
 	
-	async function loadMenu(coordinates: Coordinates, target: number) {
-		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: target}, $server)
+	async function loadMenu(coordinates: Coordinates, target: Konva.Rect) {
+		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
 		if (!cam.found) {
 			$am.Actions[name].Cancel();
 			return;
 		}
 
-		// let response = await $server.post('/camera/presets', {camera: cam.name})
+		let response = await $server.post('/camera/presets', {camera: cam.name})
 		// $camPresets = response.data.camPresets;
 		
-		let response = JSON.parse(testString());
+		// let response = JSON.parse(testString());
 		if (!response.data.found) {
 			$am.Actions[name].Cancel();
 			return;
 		} else {
 			$camPresets = response.data.camPresets;
+			AddSelection(target, Selector.Presets);
 		}
 		$am.Actions[name].IsActive = false;
 	}

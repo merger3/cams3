@@ -47,6 +47,9 @@
 	}
 
 	function enable(this: Action, origin: Coordinates) {
+		if ($am.Actions["swaps"].IsActive) {
+			return;
+		}
 		if ($clickTimer) {
 			clearTimeout($clickTimer);
 		}

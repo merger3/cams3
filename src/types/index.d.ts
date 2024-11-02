@@ -1,3 +1,5 @@
+import Konva from "konva";
+
 export interface CamList {
     name: string;
     cameras: string[];
@@ -59,7 +61,7 @@ interface RadialMenu {
 	rotation?: number;
 	parts: RadialPart[];
 	location?: Coordinates;
-	target?: number;
+	target?: Konva.Rect;
 	previousMenu?: RadialMenu;
 }
 

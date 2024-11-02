@@ -44,7 +44,7 @@ configs[Selector.Keyboard] = {stroke: 'rgba(136, 48, 10, 1)', strokeWidth: 2.5};
 configs[Selector.SwapSource] = {stroke: 'rgba(121, 173, 120, 1)', strokeWidth: 3};
 configs[Selector.SwapTarget] = {stroke: 'rgba(171, 119, 172, 1)', strokeWidth: 3};
 configs[Selector.ContexMenu] = {stroke: 'rgba(99, 60, 154, 1)', strokeWidth: 3};
-configs[Selector.Radial] = {stroke: 'rgba(21, 21, 21, .7)', strokeWidth: 3.5};
+configs[Selector.Radial] = {stroke: 'rgba(153, 153, 153, 1)', strokeWidth: 3};
 
 export function AddSelection(rect: Konva.Rect, config: Selector) {
 	let zone = Zones[Number(rect.name()) - 1];

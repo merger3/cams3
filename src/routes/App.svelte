@@ -79,12 +79,22 @@
 				username: 'merger3',
 				password: 'Merger!23'
 			},
-			baseURL: '/api/',
+			baseURL: 'https://alvsanc-cams.dev/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
+		$server.interceptors.response.use(function (response) {
+			console.log(response)
+			return response;
+		}, function (error) {
+			console.log(error)
+			// Any status codes that falls outside the range of 2xx cause this function to trigger
+			// Do something with response error
+			return Promise.reject(error);
+		});
+
+
 		$server.post('/authorize').then(function (response) {
-			console.log(response);
 			if (response.data.authorized) {
 				authorized = true;
 			} else {

@@ -80,7 +80,8 @@
 			return;
 		}
 
-		topEntry = await $server.post('/camera/swaps', {camera: cam.name});
+		let response = await $server.post('/camera/swaps', {camera: cam.name});
+		topEntry = response.data;
 		console.log(topEntry)
 		// topEntry = JSON.parse(testString());
 		if (!topEntry.found || !topEntry.swaps.subentries) {
