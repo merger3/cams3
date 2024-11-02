@@ -4,8 +4,8 @@
 	import Presets from './Presets.svelte';
 	import Chat from './Chat.svelte';
 	import CamSelector from "./CamSelector.svelte";
-	import axios from 'axios';
 	import VideoLite from './VideoLite.svelte';
+	import axios from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import { Selector, RemoveSelection, AddSelection, GetSelectedRect } from '$lib/zones';
 	import ResizeObserver from 'resize-observer-polyfill'
@@ -60,18 +60,9 @@
 
 	let resizeObserverDefined = false;
 	onMount(() => {
-		 // Parse the fragment from the URL
 		const fragment = window.location.hash.substring(1);
 		const params = new URLSearchParams(fragment);
-
-		// Extract access_token
-		const accessToken = params.get("access_token");
-		// const state = params.get("state");
-		// const scope = params.get("scope");
-		$token = `${accessToken}`
-
-		// console.log($token)
-		//$token = `oauth:51esxuzacga63qijrpwczxq95m8ejc`
+		$token = params.get("access_token");
 
 		$server = axios.create({
 			timeout: 10000,
@@ -84,12 +75,12 @@
 		});
 
 		$server.interceptors.response.use(function (response) {
-			console.log(response)
 			return response;
 		}, function (error) {
-			console.log(error)
-			// Any status codes that falls outside the range of 2xx cause this function to trigger
-			// Do something with response error
+			console.log(error.response)
+			if (error.status == 401) {
+				window.location.replace("/login");
+			}
 			return Promise.reject(error);
 		});
 
@@ -98,7 +89,7 @@
 			if (response.data.authorized) {
 				authorized = true;
 			} else {
-				window.location.replace("/login");
+				authorized = false;
 			}
 		}).catch(function (error) {
 			console.log(error);
@@ -121,12 +112,16 @@
 
 <svelte:head>
 	<script lang="ts">
-		const fragmentCheck = window.location.hash.substring(1);
+
+		const fragment = window.location.hash.substring(1);
 		const regex = new RegExp('access_token=\\w+&scope=[\\w%+]+&token_type=bearer');
-		if (fragmentCheck == "" || !regex.test(fragmentCheck)) {
-			console.log("redirecting")
-			window.location.replace("/login");
+		if (fragment == "" || !regex.test(fragment)) {
+			// console.log("redirecting")
+			// window.location.replace("/login");
 		}
+
+		
+
 	</script>
 </svelte:head>
 
