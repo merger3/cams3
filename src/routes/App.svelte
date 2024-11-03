@@ -7,9 +7,9 @@
 	import VideoLite from './VideoLite.svelte';
 	import axios from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
-	import { Selector, RemoveSelection, AddSelection, GetSelectedRect } from '$lib/zones';
+	import { Selector, AddSelection, GetSelectedRect } from '$lib/zones';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, GetCam, InitializeAM, ifDimensions, am, clickZoom, clickFocus, ClearStage, stage, Reset, zones } from '$lib/stores';
+	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones } from '$lib/stores';
 	import _ from 'lodash';
 	InitializeAM();
 
@@ -29,7 +29,7 @@
 		$server.post('/send', {
 			command: $commandText
 		}).then(function (response) {
-			console.log(response);
+			// console.log(response);
 		}).catch(function (error) {
 			console.log(error);
 		});
@@ -86,18 +86,17 @@
 				username: 'merger3',
 				password: 'Merger!23'
 			},
-			baseURL: '/api/',
+			baseURL: 'https://alvsanc-cams.dev/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
 		$server.interceptors.response.use(function (response) {
 			return response;
 		}, function (error) {
-			console.log(error.response)
 			if (error.status == 401) {
 				window.location.replace("/login");
 			}
-			return Promise.reject(error);
+			return error;
 		});
 
 
@@ -120,16 +119,11 @@
 
 <svelte:head>
 	<script lang="ts">
-
 		const fragment = window.location.hash.substring(1);
 		const regex = new RegExp('access_token=\\w+&scope=[\\w%+]+&token_type=bearer');
 		if (fragment == "" || !regex.test(fragment)) {
-			// console.log("redirecting")
 			// window.location.replace("/login");
 		}
-
-		
-
 	</script>
 </svelte:head>
 

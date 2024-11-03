@@ -102,8 +102,19 @@
 		jQuery('#stage').css('z-index', '49');
 
 		fontSize = (2 * parseFloat(getComputedStyle(document.documentElement).fontSize));
-		innerRadius = (window.innerHeight * .08);
-		outerRadius = (window.innerHeight * .08) + (window.innerHeight * .13);
+
+		let screenSize = window.innerHeight + window.innerWidth;
+		if (screenSize <= 1500) {
+			innerRadius = (screenSize * .035);
+			outerRadius = (screenSize * .035) + (screenSize * .052);
+		} else if (screenSize <= 2000) {
+			innerRadius = (screenSize * .028);
+			outerRadius = (screenSize * .028) + (screenSize * .044);
+		} else {
+			innerRadius = (screenSize * .024);
+			outerRadius = (screenSize * .024) + (screenSize * .04);
+		}
+
 		this.IsActive = true;
 	}
 
@@ -184,7 +195,7 @@
 
 		context.beginPath();
 		context.arc(0, 0, arc.outerRadius() * 1.75, 0, angle, clockwise);
-		context.arc(0, 0, arc.innerRadius() * .5, angle, 0, !clockwise);
+		context.arc(0, 0, arc.innerRadius() * .3, angle, 0, !clockwise);
 		context.closePath();
 		context.fillStrokeShape(arc);
 	}
@@ -223,14 +234,6 @@
 	rh = {...{"iroff": async () => await buildCommand("ptzir", ["off"]), "iron": async () => await buildCommand("ptzir", ["on"]), "irauto": async () => await buildCommand("ptzir", ["auto"])}, ...rh};
 	rh = {...{"up": async () => await buildCommand("ptzmove", ["up"]), "upright": async () => await buildCommand("ptzmove", ["upright"]), "right": async () => await buildCommand("ptzmove", ["right"]), "downright": async () => await buildCommand("ptzmove", ["downright"]), "down": async () => await buildCommand("ptzmove", ["down"]), "downleft": async () => await buildCommand("ptzmove", ["downleft"]), "left": async () => await buildCommand("ptzmove", ["left"]), "upleft": async () => await buildCommand("ptzmove", ["upleft"])}, ...rh};
 
-	function sendHelper(cacheHit: boolean) {
-		if (cacheHit) {
-			dispatch('sendcmd');
-		} else {
-			_.delay(function(text) {dispatch(text);}, 1050, 'sendcmd');
-		}
-	}
-
 	function send() {
 		if ($commandText == defaultCMD) {
 			$commandText = ClickTangle({
@@ -254,9 +257,9 @@
 		if (!cam.found) {
 			return;
 		}
-		$commandText = `!${command} ${cam.name} ${values.join(" ")}`
+		$commandText = `!${command} ${cam.cam} ${values.join(" ")}`
 
-		// sendHelper(cam.cacheHit)
+		// dispatch('sendcmd');
 	}
 
 	async function focuscam() {
@@ -265,7 +268,7 @@
 			return;
 		}
 
-		$commandText = `!ptzfocusr ${cam.name} 0`
+		$commandText = `!ptzfocusr ${cam.cam} 0`
 		$clickFocus = 0;
 		AddSelection(activeMenu.target, Selector.Focus);
 	}
@@ -286,15 +289,14 @@
 			return;
 		}
 		
-		let response = await $server.post('/camera/swaps', {camera: cam.name});
-		// let response = {data: JSON.parse(testString())};
+		let response = await $server.post('/camera/swaps', {camera: cam.cam});
 		let swaps: SwapResponse = response.data;
 		if (!swaps.found || !swaps.swaps.subentries[0] || swaps.swaps.subentries[0].subentries) {
 			return;
 		}
 		if (action == "swap") {
 			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
-			// sendHelper(cam.cacheHit)
+			// dispatch('sendcmd');
 		} else if (action == "load") {
 			let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps.subentries[0].label});
 			if (!presetResponse.data.found) {
@@ -303,237 +305,6 @@
 
 			$camPresets = presetResponse.data.camPresets;
 		}
-	}
-
-
-	function testPresets(): string {
-		return `
-		{
-			"data": {
-				"found": true,
-				"camPresets": {
-					"name": "foxcorner",
-					"presets": [
-						"home",
-						"training",
-						"den",
-						"insidedoor"
-					]
-				}
-			}
-		}`;
-	}
-
-	function testString(): string {
-		return `{
-			"found": true,
-			"cam": "foxes",
-			"swaps": {
-				"label": "foxes",
-				"subentries": [
-				{
-					"label": "foxcorner",
-					"subentries": null
-				},
-				{
-					"label": "foxmulti",
-					"subentries": null
-				},
-				{
-					"label": "separator",
-					"subentries": null
-				},
-				{
-					"label": "wolves",
-					"subentries": [
-					{
-						"label": "wolf",
-						"subentries": null
-					},
-					{
-						"label": "wolfcorner",
-						"subentries": null
-					},
-					{
-						"label": "wolfinside",
-						"subentries": null
-					},
-					{
-						"label": "wolfden",
-						"subentries": null
-					},
-					{
-						"label": "wolfden2",
-						"subentries": null
-					},
-					{
-						"label": "wolfmultis",
-						"subentries": [
-						{
-							"label": "wolfmulti",
-							"subentries": null
-						},
-						{
-							"label": "wolfmulti2",
-							"subentries": null
-						},
-						{
-							"label": "wolfdenmulti",
-							"subentries": null
-						},
-						{
-							"label": "wolfdenmulti2",
-							"subentries": null
-						}
-						]
-					}
-					]
-				},
-				{
-					"label": "rats",
-					"subentries": [
-					{
-						"label": "rat1",
-						"subentries": null
-					},
-					{
-						"label": "rat2",
-						"subentries": null
-					},
-					{
-						"label": "rat3",
-						"subentries": null
-					},
-					{
-						"label": "ratmulti",
-						"subentries": null
-					}
-					]
-				},
-				{
-					"label": "reptiles",
-					"subentries": [
-					{
-						"label": "georgie",
-						"subentries": null
-					},
-					{
-						"label": "noodle",
-						"subentries": null
-					},
-					{
-						"label": "patchy",
-						"subentries": null
-					},
-					{
-						"label": "toast",
-						"subentries": null
-					}
-					]
-				},
-				{
-					"label": "insects",
-					"subentries": [
-					{
-						"label": "marty",
-						"subentries": null
-					},
-					{
-						"label": "bb",
-						"subentries": null
-					},
-					{
-						"label": "roaches",
-						"subentries": null
-					},
-					{
-						"label": "hank",
-						"subentries": null
-					}
-					]
-				},
-				{
-					"label": "crows",
-					"subentries": [
-					{
-						"label": "crowout",
-						"subentries": null
-					},
-					{
-						"label": "crowin",
-						"subentries": null
-					},
-					{
-						"label": "crowmulti",
-						"subentries": null
-					},
-					{
-						"label": "crowmulti2",
-						"subentries": null
-					}
-					]
-				},
-				{
-					"label": "marmosets",
-					"subentries": [
-					{
-						"label": "marmin",
-						"subentries": null
-					},
-					{
-						"label": "marmout",
-						"subentries": null
-					},
-					{
-						"label": "marmmulti",
-						"subentries": null
-					}
-					]
-				},
-				{
-					"label": "parrots",
-					"subentries": null
-				},
-				{
-					"label": "pasture",
-					"subentries": null
-				},
-				{
-					"label": "separator",
-					"subentries": null
-				},
-				{
-					"label": "swap",
-					"subentries": [
-					{
-						"label": "1",
-						"subentries": null
-					},
-					{
-						"label": "2",
-						"subentries": null
-					},
-					{
-						"label": "3",
-						"subentries": null
-					},
-					{
-						"label": "4",
-						"subentries": null
-					},
-					{
-						"label": "5",
-						"subentries": null
-					},
-					{
-						"label": "6",
-						"subentries": null
-					}
-					]
-				}
-				]
-			}
-		}`;
 	}
 
 </script>

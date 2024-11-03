@@ -51,15 +51,13 @@
 	
 	async function loadMenu(coordinates: Coordinates, target: Konva.Rect) {
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
+		
 		if (!cam.found) {
 			$am.Actions[name].Cancel();
 			return;
 		}
 
-		let response = await $server.post('/camera/presets', {camera: cam.name})
-		// $camPresets = response.data.camPresets;
-		
-		// let response = JSON.parse(testString());
+		let response = await $server.post('/camera/presets', {camera: cam.cam})
 		if (!response.data.found) {
 			$am.Actions[name].Cancel();
 			return;
@@ -78,44 +76,6 @@
 			$commandText =  newCommand;
 		}
     }
-    
-	function testString(): string {
-		return `
-		{
-			"data": {
-				"found": true,
-				"camPresets": {
-					"name": "pasture",
-					"presets": [
-						"home",
-						"barn",
-						"insidebarn",
-						"pen",
-						"grove",
-						"purplebase",
-						"brush",
-						"barn2",
-						"pool",
-						"feeder",
-						"gate",
-						"barn2r",
-						"barn2hay",
-						"stompyfood",
-						"water",
-						"poolr",
-						"pooll",
-						"penr",
-						"penm",
-						"penl"
-					]
-				}
-			}
-		}`;
-	}
-
-	onMount(() => {
-		
-	});
 
 </script>
 

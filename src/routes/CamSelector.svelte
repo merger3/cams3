@@ -18,7 +18,6 @@
 			camera: cam
 		}).then(function (response) {
 			camPresets = response.data.camPresets;
-			console.log(response);
 		}).catch(function (error) {
 			console.log(error);
 		});

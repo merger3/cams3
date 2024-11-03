@@ -8,7 +8,7 @@ import { type ActionsManager } from '$lib/actions';
 import { RemoveSelection, Selector, Zones } from '$lib/zones';
 import Konva from "konva";
 
-export let commandText = writable<string>();
+export let commandText = writable<string>("​");
 export let ifDimensions = writable<Dimensions>({width: 0, height: 0});
 export let token = writable<string>();
 export let server = writable<AxiosInstance>();
@@ -96,50 +96,6 @@ export function GrowZone(stage: Konva.Stage, zone: Konva.Rect) {
 	zone.moveToTop();
 }
 
-// export function SelectZone(key: Zones, zone: Konva.Rect) {
-// 	let targetZone = get(activeZones)[key];
-	
-// 	let color: string = 'rgba(13, 110, 253, 1)';
-// 	let strokeWidth: number = 2;
-// 	if (zone == undefined)  {
-// 		color = 'rgba(255, 0, 0, 1)';
-// 		strokeWidth = 1.5;	
-// 	} else {
-// 		switch(key) { 
-// 			case Zones.Radial: { 
-// 				color = 'rgba(136, 48, 10, 1)'
-// 				break;
-// 			} 
-// 			case Zones.Presets: { 
-// 				break; 
-// 			}
-// 		} 
-// 	}
-
-
-// 	zone.stroke(color);
-// 	zone.strokeWidth(strokeWidth);
-// 	zone.moveToTop();
-
-// 	get(activeZones)[key] = zone;
-
-// 	console.log(get(activeZones));
-// }
-
-export function UnselectZone() {
-	// let zone = get(activeZone);
-	// if (!zone) {
-	// 	return;
-	// }
-
-	// zone.stroke('rgba(255, 0, 0, 0.2)');
-	// zone.strokeWidth(1.5);
-
-	// activeZone.set(undefined);
-}
-
-
-
 export function ResetZone(zone: Konva.Rect | undefined) {
 	if (!zone) {
 		return;
@@ -203,11 +159,10 @@ export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamRespon
 	// return {found: true, name: "fox", position: 3, cacheHit: true};
 	let response = await a.post("/camera", {x: r.coordinates.x, y: r.coordinates.y, width: 0, height: 0, frameWidth: r.frameWidth, frameHeight: r.frameHeight, position: Number(r.position)});
 	
-	console.log(response);
-	// if (response.status == 404) {
-	// 	console.log("Could not get camera");
-	// 	return {found: false, name: "", position: 0, cacheHit: false}
-	// }
+	if (response.status >= 300) {
+		console.log("Could not get camera");
+		return {found: false, cam: "", position: 0, cacheHit: false}
+	}
 	return response.data;
 }
 
@@ -260,7 +215,6 @@ export function multiTouch(node: HTMLElement, params: BaseParams = {composed: fa
 	}
 
 	function onMove(activeEvents: PointerEvent[], event: PointerEvent) {
-		// console.log(event)
 		if (activeEvents.length == touchCount) {
 			let midX = (activeEvents[0].clientX + activeEvents[1].clientX) / 2;
 			let midY = (activeEvents[0].clientY + activeEvents[1].clientY) / 2;

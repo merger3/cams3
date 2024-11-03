@@ -321,34 +321,6 @@
 		}
 	}
 
-	function handlePointerDoubleClick(e: KonvaPointerEvent) {
-		console.log(e)
-		$am.ActiveStates.add(States.StageDoubleClick);
-		if (e.evt.button == 0) {
-			$am.ActiveStates.add(States.LeftMouseButtonPressed);
-		} else if (e.evt.button == 1) {
-			$am.ActiveStates.add(States.MiddleMouseButtonPressed);
-		}  else if (e.evt.button == 2) {
-			$am.ActiveStates.add(States.RightMouseButtonPressed);
-		}
-
-		console.log(printStates($am.ActiveStates));
-		if (log) {
-		}
-
-		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-		$am.CheckActions({x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()});
-		
-		$am.ActiveStates.delete(States.StageDoubleClick);
-		if (e.evt.button == 0) {
-			$am.ActiveStates.delete(States.LeftMouseButtonPressed);
-		} else if (e.evt.button == 1) {
-			$am.ActiveStates.delete(States.MiddleMouseButtonPressed);
-		}  else if (e.evt.button == 2) {
-			$am.ActiveStates.delete(States.RightMouseButtonPressed);
-		}
-	}
-
 	function wheelHandler(e: any) {
 		$am.ActiveStates.add(States.WheelScrolling);
 		if (e.evt.deltaY < 0) {

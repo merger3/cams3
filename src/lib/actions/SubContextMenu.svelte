@@ -7,13 +7,15 @@
 	export let entries: Entry[];
 	export let cam: SwapResponse;
 	function handleClick(source: SwapResponse, target: string) {
-		target = target == "main" ? "1" : target;
-		let sourceCam = isNaN(Number(target)) ? source.cam : source.position
-
-		if (target == "1") {
-			$commandText = `!swap ${target} ${sourceCam}`
+		if (!isNaN(Number(target))) {
+			let swaps: number[] = [Number(target), source.position]
+			if (swaps[0] == swaps[1]) {
+				return;
+			}
+			swaps.sort(function(a, b){return a - b}); 
+			$commandText = `!swap ${swaps[0]} ${swaps[1]}`
 		} else {
-			$commandText = `!swap ${sourceCam} ${target}`
+			$commandText = `!swap ${source.cam} ${target}`
 		}
 		ClearStage($stage);
 	}
@@ -31,7 +33,6 @@
 	{:else}
 		<ContextMenu.Sub>
 			<ContextMenu.SubTrigger class="h-10" inset>{e.label}</ContextMenu.SubTrigger>
-
 			<ContextMenu.SubContent class="w-4 overflow-visible text-center" fitViewport={false} overlap={true}> 
 				<SubContextMenu entries={e.subentries} cam={cam}/>
 			</ContextMenu.SubContent>

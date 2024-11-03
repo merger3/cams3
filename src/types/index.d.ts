@@ -85,7 +85,7 @@ interface CamRequest {
 
 interface CamResponse {
 	found: boolean;
-	name: string;
+	cam: string;
 	position: number;
 	cacheHit: boolean;
 }
