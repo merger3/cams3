@@ -3,12 +3,10 @@
 	import { onMount, createEventDispatcher } from 'svelte';
 	import 'simplebar'; // or "import SimpleBar from 'simplebar';" if you want to use it manually.
 	import 'simplebar/dist/simplebar.css';
-	import type { CamList, CamPresets } from '$types';
-	import { server, ifDimensions } from '$lib/stores';
+	import type { CamPresets } from '$types';
+	import { server, ifDimensions, commandHeight } from '$lib/stores';
 
 	import ResizeObserver from 'resize-observer-polyfill';
-
-	export let commandHeight: number;
 
 	const cars = ["Saab", "Volvo", "BMW", "Hondaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "Toyota", "Nissan", "Ford", "Chevy", "GM", "Kia", "Hyundai", "Cadillac", "Lincoln", "Mini", "Audi", "Lexus", "Acura", "Porsche"];
 	let camPresets: CamPresets = {name: "", presets: cars};
@@ -29,7 +27,7 @@
 </script>
 
 <div class="dropdown z-40 movedown">
-	<button style="position: absolute;min-height: {commandHeight}px;max-height: {commandHeight}px;right: 0;top: 0;" id="dropdown-button" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+	<button style="position: absolute;min-height: {$commandHeight}px;max-height: {$commandHeight}px;right: 0;top: 0;" id="dropdown-button" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
 		Settings (wip)
 	</button>
 	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-2 border-danger-subtle shadow" style="max-height: {$ifDimensions.height - ($ifDimensions.height * .15)}px">

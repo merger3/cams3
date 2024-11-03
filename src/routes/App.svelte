@@ -9,7 +9,7 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import { Selector, AddSelection, GetSelectedRect } from '$lib/zones';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones } from '$lib/stores';
+	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight } from '$lib/stores';
 	import _ from 'lodash';
 	InitializeAM();
 
@@ -18,8 +18,7 @@
 
 	let selector: TangleLite;
 	$commandText = defaultCMD;
-	
-	let commandHeight: number;
+
 	let resize: HTMLElement;
 
 	async function sendCommand() {
@@ -86,7 +85,7 @@
 				username: 'merger3',
 				password: 'Merger!23'
 			},
-			baseURL: 'https://alvsanc-cams.dev/api/',
+			baseURL: '/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
@@ -136,9 +135,9 @@
 {:else}
 	<div class="container-fluid" id="video-container">
 		<div class="row justify-content-between flex-nowrap ">
-			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector" style="max-height: {commandHeight + $ifDimensions.height}px;">
-				<div style="min-height: {commandHeight}px;max-height: {commandHeight}px;">
-					<CamSelector bind:commandHeight />
+			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector" style="max-height: {$commandHeight + $ifDimensions.height}px;">
+				<div style="min-height: {$commandHeight}px;max-height: {$commandHeight}px;">
+					<CamSelector />
 				</div>
 				<Presets on:sendcmd={sendCommand} />
 				<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
@@ -146,11 +145,11 @@
 				</div>
 			</div>
 			<div class="col-auto g-0" id="wrapper">
-				<VideoLite bind:selector bind:commandHeight on:sendcmd={sendCommand}/>
+				<VideoLite bind:selector on:sendcmd={sendCommand}/>
 			</div>
 		</div>
 	</div>
-	<!-- <Chat /> -->
+	<Chat />
 {/if}
 	
 <style>

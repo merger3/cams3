@@ -10,6 +10,11 @@ export enum States {
 	TwoPointers,
 	ThreePointers,
 	OverThreePointers,
+	
+	MousePointer,
+	TouchPointer,
+	PenPointer,
+
 	PointerAdded,
 	PointerRemoved,
 	StageDoubleClick,

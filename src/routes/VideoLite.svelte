@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { commandText, ifDimensions, multiTouchPan, ClearStage, stage } from '$lib/stores';
+	import { commandText, ifDimensions, multiTouchPan, ClearStage, stage, commandHeight } from '$lib/stores';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { Box } from '$types';
 	import { Motion } from 'svelte-motion'
@@ -19,7 +19,6 @@
 	var zoneDefinitions: Box[];
 
 	let winWidth: number, winHeight: number;
-	export let commandHeight: number;
 
 
 	function resizeIframeRaw() {
@@ -39,9 +38,9 @@
 			$ifDimensions.width = $ifDimensions.height * (16/9);
 		}
 
-		commandHeight = $ifDimensions.height * .06;
+		$commandHeight = $ifDimensions.height * .06;
 
-		let trailingHeight: number = maxHeight - commandHeight;
+		let trailingHeight: number = maxHeight - $commandHeight;
 
 		if ($ifDimensions.height > trailingHeight) {
 			$ifDimensions.height = trailingHeight;
@@ -115,24 +114,24 @@
 <div class="vstack gap-1" id="wrapper">
 	<div class="hstack gap-1">
 		<Motion whileFocus={{ scale: 1.3 }} let:motion>
-			<div style={parent_style}height:{commandHeight}px;>
+			<div style={parent_style}height:{$commandHeight}px;>
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;" bind:innerHTML={$commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} >
 					{$commandText}
 				</div>
 			</div>
 		</Motion>
-		<button on:click={(e) => {dispatch("sendcmd")}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown" style="height: {commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
+		<button on:click={(e) => {dispatch("sendcmd")}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown" style="height: {$commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
 	</div>
 	<div id="stage" class="unselectable" />
-	<Zoomable>
-		<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
-			
+	<div id="vid2" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
+			<Zoomable>
+			<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 			<ContextMenu>
 				<div id="menutrigger" class="overlay unselectable z-100" />
 			</ContextMenu>
 
-			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 12 }} />
+			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 8 }} />
 
 			<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} on:sendcmd={(e) => {dispatch("sendcmd")}}/>
 			
@@ -148,6 +147,7 @@
 			></iframe>
 		</div>
 	</Zoomable>
+	</div>
 </div>
 
 <style>

@@ -10,6 +10,7 @@ import Konva from "konva";
 
 export let commandText = writable<string>("​");
 export let ifDimensions = writable<Dimensions>({width: 0, height: 0});
+export let commandHeight = writable<number>();
 export let token = writable<string>();
 export let server = writable<AxiosInstance>();
 export let stage = writable<Konva.Stage>();

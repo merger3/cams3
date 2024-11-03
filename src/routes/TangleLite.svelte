@@ -191,6 +191,14 @@
 				$am.ActiveStates.add(States.ClickedEmptySpace);
 			}
 			$stage.on("pointermove.stage", handlePointerMove);
+
+			if (e.evt.pointerType == 'mouse') {
+				$am.ActiveStates.add(States.MousePointer);
+			} else if (e.evt.pointerType == 'touch') {
+				$am.ActiveStates.add(States.TouchPointer);
+			} else if (e.evt.pointerType == 'pen') {
+				$am.ActiveStates.add(States.PenPointer);
+			}
 		}
 
 		setClickedZone(origin);
@@ -263,6 +271,10 @@
 			$am.ActiveStates.delete(States.PointerRemoved)
 			$am.ActiveStates.delete(States.ClickedEmptySpace);
 
+			$am.ActiveStates.delete(States.MousePointer);
+			$am.ActiveStates.delete(States.TouchPointer);
+			$am.ActiveStates.delete(States.PenPointer);
+
 			ResetZone(startZone as Konva.Rect)
 
 			setClickedZone(null);
@@ -297,6 +309,10 @@
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
 				$am.ActiveStates.delete(States.PointerRemoved)
 				$am.ActiveStates.delete(States.ClickedEmptySpace);
+
+				$am.ActiveStates.delete(States.MousePointer);
+				$am.ActiveStates.delete(States.TouchPointer);
+				$am.ActiveStates.delete(States.PenPointer);
 
 				ResetZone(startZone as Konva.Rect)
 				

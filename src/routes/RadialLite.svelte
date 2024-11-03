@@ -229,16 +229,17 @@
 
 
 	// const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "focus": focusCam, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
-	let rh: {[key: string]: any} = {"send": send, "clear": clear, "focus": focuscam, "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load")};
+	let rh: {[key: string]: any} = {"send": send, "clear": clear, "focus": async () => await focuscam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load")};
 	rh = {...{"iroff": async () => await buildCommand("ptzir", ["off"]), "iron": async () => await buildCommand("ptzir", ["on"]), "irauto": async () => await buildCommand("ptzir", ["auto"])}, ...rh};
 	rh = {...{"iroff": async () => await buildCommand("ptzir", ["off"]), "iron": async () => await buildCommand("ptzir", ["on"]), "irauto": async () => await buildCommand("ptzir", ["auto"])}, ...rh};
 	rh = {...{"up": async () => await buildCommand("ptzmove", ["up"]), "upright": async () => await buildCommand("ptzmove", ["upright"]), "right": async () => await buildCommand("ptzmove", ["right"]), "downright": async () => await buildCommand("ptzmove", ["downright"]), "down": async () => await buildCommand("ptzmove", ["down"]), "downleft": async () => await buildCommand("ptzmove", ["downleft"]), "left": async () => await buildCommand("ptzmove", ["left"]), "upleft": async () => await buildCommand("ptzmove", ["upleft"])}, ...rh};
 
 	function send() {
 		if ($commandText == defaultCMD) {
+			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 			$commandText = ClickTangle({
-				X: activeMenu.location.x,
-				Y: activeMenu.location.y,
+				X: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(),
+				Y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale(),
 				Width: 0,
 				Height: 0,
 				FrameWidth: $ifDimensions.width,
@@ -258,11 +259,10 @@
 			return;
 		}
 		$commandText = `!${command} ${cam.cam} ${values.join(" ")}`
-
-		// dispatch('sendcmd');
+		dispatch('sendcmd');
 	}
 
-	async function focuscam() {
+	async function focuscam(zone: Konva.Rect) {
 		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server)
 		if (!cam.found) {
 			return;
@@ -270,13 +270,13 @@
 
 		$commandText = `!ptzfocusr ${cam.cam} 0`
 		$clickFocus = 0;
-		AddSelection(activeMenu.target, Selector.Focus);
+		AddSelection(zone, Selector.Focus);
 	}
 
 	function swapMenu() {
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		let mousePos = radialStage.getPointerPosition();
-		if (mousePos) {
+		if (mousePos && $am.ActiveStates.has(States.MousePointer)) {
 			$am.Actions["swaps"].Enable({x: (mousePos.x - ifOverlay.left) / $panzoom.getScale(), y: (mousePos.y - ifOverlay.top) / $panzoom.getScale()})
 		} else {
 			$am.Actions["swaps"].Enable({x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()})
@@ -296,14 +296,14 @@
 		}
 		if (action == "swap") {
 			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
-			// dispatch('sendcmd');
+			dispatch('sendcmd');
 		} else if (action == "load") {
 			let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps.subentries[0].label});
 			if (!presetResponse.data.found) {
 				return;
 			}
-
 			$camPresets = presetResponse.data.camPresets;
+			RemoveSelection(Selector.Presets);
 		}
 	}
 
