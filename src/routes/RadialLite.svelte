@@ -281,6 +281,9 @@
 		} else {
 			$am.Actions["swaps"].Enable({x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()})
 		}
+
+		const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: 0, clientY: 0, button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+		jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
 	}
 
 	async function loadNextCam(action: string) {

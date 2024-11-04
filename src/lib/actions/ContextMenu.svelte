@@ -6,6 +6,8 @@
 	import { am, ifDimensions, GetZone, GetCam, server, stage, zones, panzoom } from '$lib/stores';
 	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
 	import { AddSelection, RemoveSelection, Selector, GetSelectedRect } from '$lib/zones';
+	import type { KonvaPointerEvent } from "svelte-konva";
+	import Konva from "konva";
 	const dispatch = createEventDispatcher();
 	
 	let topEntry: SwapResponse = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
@@ -21,11 +23,14 @@
 				States.RightMouseButtonPressed,
 				States.ClickedZone
 			]),
-			Inactive: new Set(),
+			Inactive: new Set([
+				States.StageDraggingDejittered
+			]),
 		},
 		CancelConditions: {
 			Active: new Set([
-				States.MiddleMouseButtonPressed
+				States.MiddleMouseButtonPressed,
+				States.StageDraggingDejittered
 			]),
 			Inactive: new Set(),
 		},
@@ -35,9 +40,20 @@
 	}
 
 
+	let boundHandleClick: any;
+	function removeClickListener() {
+    if (boundHandleClick) {
+		jQuery("#overlay")[0].removeEventListener("pointerup",boundHandleClick);
+        boundHandleClick = null;
+    }
+}
 	let dataReady: boolean = false;
 	let cancelled: boolean = true;
 	function enable(this: Action, origin: Coordinates) {
+		if ($am.Actions["mousePan"] && $am.Actions["mousePan"].IsActive) {
+			return;
+		}
+
 		$am.Actions[name].IsActive = true;
 		let target = GetSelectedRect(Selector.Radial);
 		if (!target) {
@@ -48,13 +64,16 @@
 			}
 		}
 		
-		AddSelection(target, Selector.ContexMenu);
-		
+		boundHandleClick = function (e: any) {
+			loadMenu(e, origin, target);
+		};
+
+		jQuery("#overlay")[0].addEventListener("pointerup", boundHandleClick);
 		cancelled = false;
-		loadMenu(origin, Number(target.name()))
 	}
 
 	function cancel(this: Action) {
+		removeClickListener();
 		if (isOpen) {
 			isOpen = false;
 			animationTimer = setTimeout(() => {
@@ -73,8 +92,9 @@
 
 	}
 
-	async function loadMenu(coordinates: Coordinates, target: number) {
-		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: target}, $server)
+	async function loadMenu(e: KonvaPointerEvent, coordinates: Coordinates, target: Konva.Rect) {
+		AddSelection(target, Selector.ContexMenu);
+		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
 		if (!cam.found) {
 			$am.Actions[name].Cancel();
 			return;
@@ -87,13 +107,13 @@
 			return;
 		}
 
-		topEntry.position = target;
+		topEntry.position = Number(target.name());
 		
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: ((coordinates.x * $panzoom.getScale())+ ifOverlay.left), clientY: ((coordinates.y * $panzoom.getScale()) + ifOverlay.top)});
 		
 		dataReady = true;
-
+		removeClickListener();
 		await tick();
 		jQuery('#menutrigger')[0].dispatchEvent(rightClickEvent);
 	}
@@ -108,12 +128,11 @@
 				$am.Actions[name].IsActive = false;
 			}, 200);
 			RemoveSelection(Selector.ContexMenu);
+			removeClickListener();
 		}
 	}
 </script>
    
-   <!-- let swaps: SwapResponse = {found: false, cam: "", position: 0, swaps: null} -->
-
 
 <ContextMenu.Root bind:open={isOpen} onOpenChange={opc}>
 	{#if $am.Actions[name].IsActive && dataReady && !cancelled}

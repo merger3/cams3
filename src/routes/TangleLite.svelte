@@ -39,7 +39,7 @@
 				$am.ActiveStates.delete(States.StageDraggingBuffered)
 			}
 
-			if (distance >= 12) {
+			if (distance >= 10) {
 				$am.ActiveStates.add(States.StageDraggingDejittered)
 			} else {
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
@@ -309,10 +309,6 @@
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
 				$am.ActiveStates.delete(States.PointerRemoved)
 				$am.ActiveStates.delete(States.ClickedEmptySpace);
-
-				$am.ActiveStates.delete(States.MousePointer);
-				$am.ActiveStates.delete(States.TouchPointer);
-				$am.ActiveStates.delete(States.PenPointer);
 
 				ResetZone(startZone as Konva.Rect)
 				

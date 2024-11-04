@@ -64,8 +64,9 @@
 	const resetThresholdDefault: number = 1.4;
 	let resetThreshold: number = resetThresholdDefault;
 	function enablePinch(this: Action, origin: Coordinates) {
+		this.IsActive = true;
+		
 		toggleTangle(false);
-
 		if ($panzoom.getScale() != 1) {
 			resetThreshold = Math.max($panzoom.getScale() / 1.8, resetThresholdDefault);
 		} else {
@@ -73,7 +74,6 @@
 		}
 		zoomarea.addEventListener("multiTouchMove", doubleMoveHandler);
 		zoomarea.addEventListener("multiTouchUp", upHandlerDebounced);
-		this.IsActive = true;
 	}
 
 	function cancelPinch(this: Action) {
@@ -141,12 +141,13 @@
 	
 	let prevPan: Coordinates = {x: 0, y: 0}
 	function enablePan(this: Action, origin: Coordinates) {
+		this.IsActive = true;
+	
 		toggleTangle(false);
 		prevPan = {x: $panzoom.getPan().x, y: $panzoom.getPan().y};
 
 		zoomarea.addEventListener("tripleTouchMove", tripleMoveHandler);
 		zoomarea.addEventListener("tripleTouchUp", tripleUpHandlerDebounced);
-		this.IsActive = true;
 	}
 
 	function cancelPan(this: Action) {
@@ -248,6 +249,8 @@
 	let prevMousePan: Coordinates;
 	let ifOverlay: any;
 	function enableWheelPan(this: Action, origin: Coordinates) {
+		this.IsActive = true;
+		
 		toggleTangle(false);
 		panOrigin = {x: origin.x, y: origin.y}
 		prevMousePan = {x: $panzoom.getPan().x, y: $panzoom.getPan().y};		
@@ -255,8 +258,6 @@
 
 		$stage.on('pointermove.wheel', wheelMoveHandler);
 		$stage.on('pointerup.wheel', wheelUpHandler);
-
-		this.IsActive = true;
 	}
 		
 	function cancelWheelPan(this: Action) {
@@ -284,6 +285,67 @@
 		$am.Actions[wheelPanName].IsActive = false;
 	}
 
+
+
+	const mousePanName = "mousePan";
+	$am.Actions[mousePanName] = {
+		Name: mousePanName,
+		TriggerConditions: {
+			Active: new Set([
+				States.StagePointerDown,
+				States.RightMouseButtonPressed,
+				States.StageDraggingDejittered
+			]),
+			Inactive: new Set(),
+		},
+		CancelConditions: {
+			Active: new Set(),
+			Inactive: new Set([
+				States.StagePointerDown,
+				States.RightMouseButtonPressed
+			]),
+		},
+		IsActive: false,
+		Enable: enableMousePan,
+		Cancel: cancelMousePan
+	}
+
+	function enableMousePan(this: Action, origin: Coordinates) {
+		this.IsActive = true;
+
+		toggleTangle(false);
+		panOrigin = {x: origin.x, y: origin.y}
+		prevMousePan = {x: $panzoom.getPan().x, y: $panzoom.getPan().y};		
+		ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+
+		$stage.on('pointermove.mouse', mouseMoveHandler);
+		$stage.on('pointerup.mouse', mouseUpHandler);		
+	}
+		
+	function cancelMousePan(this: Action) {
+		toggleTangle(true);
+		$stage.off('pointermove.mouse');
+		$stage.off('pointerup.mouse');
+		
+		this.IsActive = false;
+	}
+
+	function mouseMoveHandler(e: KonvaPointerEvent) {
+		$panzoom.pan(prevMousePan.x + ((e.evt.clientX - ifOverlay.left) / $panzoom.getScale()) - panOrigin.x, prevMousePan.y + ((e.evt.clientY - ifOverlay.top) / $panzoom.getScale()) - panOrigin.y);
+	}
+
+	function mouseUpHandler(event: KonvaPointerEvent) {
+		toggleTangle(true);
+		if ($panzoom.getScale() == 1) {
+			$panzoom.reset();
+			zoom = 1;
+		}
+
+		$stage.off('pointermove.mouse');
+		$stage.off('pointerup.mouse');
+		
+		$am.Actions[mousePanName].IsActive = false;
+	}
 
 
 	// This block is not used but I can't bring myself to get rid of it because it's cool code

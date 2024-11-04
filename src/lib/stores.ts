@@ -291,7 +291,7 @@ export function tripleTouch(node: HTMLElement, params: BaseParams = {composed: f
 
 	function onDown(activeEvents: PointerEvent[], event: PointerEvent) {
 		if (activeEvents.length == touchCount) {
-
+			event.preventDefault();
 
 			let midX = (activeEvents[0].clientX + activeEvents[activeEvents.length - 1].clientX) / 2;
 			let midY = (activeEvents[0].clientY + activeEvents[activeEvents.length - 1].clientY) / 2;
@@ -308,6 +308,7 @@ export function tripleTouch(node: HTMLElement, params: BaseParams = {composed: f
 
 	function onMove(activeEvents: PointerEvent[], event: PointerEvent) {
 		if (activeEvents.length == touchCount) {
+			event.preventDefault();
 			let midX = (activeEvents[0].clientX + activeEvents[activeEvents.length - 1].clientX) / 2;
 			let midY = (activeEvents[0].clientY + activeEvents[activeEvents.length - 1].clientY) / 2;
 			

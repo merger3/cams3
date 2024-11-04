@@ -59,6 +59,7 @@
 		}
 		$stage.on('pointerup.click', finshDrawing);
 
+		// Figure this out
 		$am.Actions[name].IsActive = true;
 	}
 
