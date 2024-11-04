@@ -61,9 +61,16 @@
 		Enable: enablePinch
 	}
 
+	const resetThresholdDefault: number = 1.4;
+	let resetThreshold: number = resetThresholdDefault;
 	function enablePinch(this: Action, origin: Coordinates) {
 		toggleTangle(false);
 
+		if ($panzoom.getScale() != 1) {
+			resetThreshold = Math.max($panzoom.getScale() / 1.8, resetThresholdDefault);
+		} else {
+			resetThreshold = resetThresholdDefault;
+		}
 		zoomarea.addEventListener("multiTouchMove", doubleMoveHandler);
 		zoomarea.addEventListener("multiTouchUp", upHandlerDebounced);
 		this.IsActive = true;
@@ -82,11 +89,8 @@
 		let scale: number = prevScale * event.detail.scale;
 		// scale = scale < 1 ? 1 : scale;
 		if (zoomDebounced) {
-			$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x), clientY: (event.detail.center.y)}, {maxScale: 4})
-			setTimeout(() => $panzoom.pan(event.detail.rawDelta.x, event.detail.rawDelta.y, {relative: true}))
-			
-
-			// console.log(event.detail.rawDelta)
+			$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x), clientY: (event.detail.center.y)})
+			setTimeout(() => $panzoom.pan(event.detail.rawDelta.x / $panzoom.getScale(), event.detail.rawDelta.y / $panzoom.getScale(), {relative: true}))
 		} else {
 			zoomDebounced = true;
 		}
@@ -94,10 +98,13 @@
 
 	function doubleUpHandler(e: any) {	
 		zoomDebounced = false;
-		if ($panzoom.getScale() <= 1.3) {
+		
+		if ($panzoom.getScale() <= resetThreshold) {
 			$panzoom.reset();
+			resetThreshold = resetThresholdDefault;
 		}
 		prevScale = $panzoom.getScale();
+		zoom = prevScale;
 		zoomarea.removeEventListener("multiTouchMove", doubleMoveHandler);
 		zoomarea.removeEventListener("multiTouchUp", upHandlerDebounced);
 		toggleTangle(true);
@@ -156,7 +163,7 @@
 
 	function tripleUpHandler(e: any) {
 		toggleTangle(true);
-		if ($panzoom.getScale() <= 1.3) {
+		if ($panzoom.getScale() == 1) {
 			$panzoom.reset();
 		}
 		zoomarea.removeEventListener("tripleTouchMove", tripleMoveHandler);
@@ -202,7 +209,7 @@
 			} 
 		}
 
-		$panzoom.zoomToPoint(zoom, {clientX: (origin.x - $panzoom.getPan().x / $panzoom.getScale()), clientY: (origin.y - $panzoom.getPan().y / $panzoom.getScale())}, {maxScale: 4, force: true});
+		$panzoom.zoomToPoint(zoom, {clientX: (origin.x - $panzoom.getPan().x / $panzoom.getScale()), clientY: (origin.y - $panzoom.getPan().y / $panzoom.getScale())}, {force: true});
 		if ($panzoom.getScale() <= 1.1) {
 			$panzoom.reset();
 			zoom = 1;
@@ -266,7 +273,7 @@
 
 	function wheelUpHandler(event: KonvaPointerEvent) {
 		toggleTangle(true);
-		if ($panzoom.getScale() <= 1.1) {
+		if ($panzoom.getScale() == 1) {
 			$panzoom.reset();
 			zoom = 1;
 		}
@@ -296,7 +303,7 @@
 
 
 	onMount(() => {
-		$panzoom = Panzoom(zoomarea, {noBind: true, cursor: 'default', pinchAndPan: false, disablePan: false, disableZoom: false, panOnlyWhenZoomed: false, canvas: false, step: 0.6})
+		$panzoom = Panzoom(zoomarea, {noBind: true, cursor: 'default', pinchAndPan: false, disablePan: false, disableZoom: false, panOnlyWhenZoomed: false, canvas: false, step: 0.6, maxScale: 4, minScale: .7})
 	});
 
   </script>

@@ -195,7 +195,7 @@
 
 		context.beginPath();
 		context.arc(0, 0, arc.outerRadius() * 1.75, 0, angle, clockwise);
-		context.arc(0, 0, arc.innerRadius() * .3, angle, 0, !clockwise);
+		context.arc(0, 0, arc.innerRadius() * .35, angle, 0, !clockwise);
 		context.closePath();
 		context.fillStrokeShape(arc);
 	}

@@ -244,6 +244,9 @@ export function multiTouch(node: HTMLElement, params: BaseParams = {composed: fa
 				rawDeltaY = midY - prevPosition.y;
 			}
 
+			rawDeltaX *= 1.6;
+			rawDeltaY *= 1.6;
+
 			prevPosition = {x: midX, y: midY}
 
 			node.dispatchEvent(
