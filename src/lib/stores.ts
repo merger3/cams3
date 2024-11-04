@@ -183,7 +183,7 @@ export function multiTouch(node: HTMLElement, params: BaseParams = {composed: fa
 	let initDistance = 0;
 	let prevDistance: number | undefined;
 	let scale = 1;
-	let prevScale = 1;
+	let prevScale: number;
 
 	function onUp(activeEvents: PointerEvent[], event: PointerEvent) {
 		if (activeEvents.length == 0) {
@@ -222,11 +222,13 @@ export function multiTouch(node: HTMLElement, params: BaseParams = {composed: fa
 
 			const curDistance = getPointersDistance(activeEvents);
 
-			if (prevDistance !== undefined && curDistance !== prevDistance) {
+			if (prevDistance !== undefined) {
+				if (curDistance == prevDistance) {
+					return false;
+				}
 				scale = curDistance / initDistance;
-			} else {
-				scale = prevScale;
-			}
+			} 
+	
 			prevScale = scale;
 			prevDistance = curDistance;
 
@@ -235,16 +237,23 @@ export function multiTouch(node: HTMLElement, params: BaseParams = {composed: fa
 				rawDeltaX = midX - origin.x;
 				rawDeltaY = midY - origin.y;
 			} else {
+				if (midX == prevPosition.x && midY == prevPosition.y) {
+					return false;
+				}
 				rawDeltaX = midX - prevPosition.x;
 				rawDeltaY = midY - prevPosition.y;
 			}
 
 			prevPosition = {x: midX, y: midY}
+
 			node.dispatchEvent(
 				new CustomEvent(`${gestureName}Move`, {
 				detail: { center: {x: midX, y: midY}, delta: {x: midX - origin.x, y: midY - origin.y}, rawDelta: {x: rawDeltaX, y: rawDeltaY}, scale: scale, target: event.target },
 				})
 			);	
+			return true;
+			
+			
 		}
 		return false;
 	}

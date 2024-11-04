@@ -47,9 +47,9 @@
 	function cancel(this: Action) {
 		jQuery('#overlay')[0].removeEventListener("multiTouchMove", panMove);
 		jQuery('#overlay')[0].removeEventListener("multiTouchUp", panUpDebounced);
-		$clickZoom = 100;
-		$clickFocus = 0;
-		this.IsActive = false;	}
+
+		this.IsActive = false;
+	}
 
 	function panMove(event: any) {
 		if ($commandText.startsWith("!ptzclick")) {
@@ -166,8 +166,6 @@
 	}
 
 	function cancelScroll(this: Action) {
-		$clickZoom = 100;
-		$clickFocus = 0;
 		this.IsActive = false;
 	}
 

@@ -7,7 +7,6 @@
 	import { panzoom, multiTouch, tripleTouch, am, stage } from '$lib/stores';
 	import { States, type Action } from '$lib/actions';
 	import type { KonvaPointerEvent } from 'konva/lib/PointerEvents';
-
 	let zoomarea: HTMLElement;
 
 	function toggleTangle(state: boolean) {
@@ -77,20 +76,24 @@
 		this.IsActive = false;
 	}
 
-	let zoomDebounce = 0;
+	let zoomDebounced: boolean = false;
 	let prevScale: number = 1;
 	function doubleMoveHandler(event: any) {
 		let scale: number = prevScale * event.detail.scale;
 		// scale = scale < 1 ? 1 : scale;
-		if (zoomDebounce > 2) {
-			$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x - $panzoom.getPan().x), clientY: (event.detail.center.y - $panzoom.getPan().y)}, {maxScale: 4})
+		if (zoomDebounced) {
+			$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x), clientY: (event.detail.center.y)}, {maxScale: 4})
+			setTimeout(() => $panzoom.pan(event.detail.rawDelta.x, event.detail.rawDelta.y, {relative: true}))
+			
+
+			// console.log(event.detail.rawDelta)
 		} else {
-			zoomDebounce++;
+			zoomDebounced = true;
 		}
   	}
 
 	function doubleUpHandler(e: any) {	
-		zoomDebounce = 0;
+		zoomDebounced = false;
 		if ($panzoom.getScale() <= 1.3) {
 			$panzoom.reset();
 		}
@@ -273,6 +276,22 @@
 		
 		$am.Actions[wheelPanName].IsActive = false;
 	}
+
+
+
+	// This block is not used but I can't bring myself to get rid of it because it's cool code
+
+	// const scrollPan: GestureCallback = (register: RegisterGestureType) => {
+	// 	const doubleFns = register(multiTouch, {composed: true, touchAction: "none"});
+	// 	const tripleFns = register(tripleTouch, {composed: true, touchAction: "none"});
+
+	// 	return (activeEvents: PointerEvent[], event: PointerEvent) => {
+	// 		doubleFns.onMove(activeEvents, event);
+	// 		tripleFns.onMove(activeEvents, event);
+	// 		return true;
+	// 	};
+	// };
+
 
 
 	onMount(() => {
