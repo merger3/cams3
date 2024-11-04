@@ -68,7 +68,7 @@
 		
 		toggleTangle(false);
 		if ($panzoom.getScale() != 1) {
-			resetThreshold = Math.max($panzoom.getScale() / 1.8, resetThresholdDefault);
+			resetThreshold = Math.max($panzoom.getScale() / 1.7, resetThresholdDefault);
 		} else {
 			resetThreshold = resetThresholdDefault;
 		}
@@ -139,7 +139,7 @@
 		Cancel: cancelPan
 	}
 	
-	let prevPan: Coordinates = {x: 0, y: 0}
+	let prevPan: Coordinates;
 	function enablePan(this: Action, origin: Coordinates) {
 		this.IsActive = true;
 	
