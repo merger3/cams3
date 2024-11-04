@@ -38,7 +38,7 @@ Chat
 				
 			</Tabs.Content>
 			<Tabs.Content value="both" class="h-100 m-0">
-				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
+				<!-- <iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
 				title="chat"
 				class="ml-auto"
 				height=43%
@@ -49,7 +49,7 @@ Chat
 				class="ml-auto"
 				height=43%
 				width=95%
-				/>
+				/> -->
 			</Tabs.Content>
 		</div>
 	</Tabs.Root>
