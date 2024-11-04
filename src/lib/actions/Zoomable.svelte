@@ -281,6 +281,7 @@
 
 	// This block is not used but I can't bring myself to get rid of it because it's cool code
 
+	// import { pinch, press, composedGesture, type PressCustomEvent, pan, type PinchCustomEvent , type GestureCustomEvent, type RegisterGestureType, type GestureCallback, type BaseParams, type GestureReturnType} from 'svelte-gestures';
 	// const scrollPan: GestureCallback = (register: RegisterGestureType) => {
 	// 	const doubleFns = register(multiTouch, {composed: true, touchAction: "none"});
 	// 	const tripleFns = register(tripleTouch, {composed: true, touchAction: "none"});
