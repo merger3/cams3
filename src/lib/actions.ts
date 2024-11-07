@@ -5,6 +5,7 @@ export enum States {
 	StagePointerUp,
 	StageDragging,
 	StageDraggingBuffered,
+	StageDraggingMinimal,
 	StageDraggingDejittered,
 	OnePointer,
 	TwoPointers,

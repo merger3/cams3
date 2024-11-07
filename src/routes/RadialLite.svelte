@@ -39,13 +39,11 @@
 				States.StagePressed
 			]),
 			Inactive: new Set([
-				States.StageDraggingBuffered
+				States.StageDraggingMinimal
 			]),
 		},
 		CancelConditions: {
-			Active: new Set([
-				States.StageDraggingBuffered
-			]),
+			Active: new Set(),
 			Inactive: new Set([
 				States.StagePressed,
 				States.StagePointerDown,

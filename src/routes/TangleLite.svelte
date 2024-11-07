@@ -39,10 +39,16 @@
 				$am.ActiveStates.delete(States.StageDraggingBuffered)
 			}
 
-			if (distance >= 10) {
+			if (distance >= 8) {
 				$am.ActiveStates.add(States.StageDraggingDejittered)
 			} else {
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
+			}
+
+			if (distance >= 3) {
+				$am.ActiveStates.add(States.StageDraggingMinimal)
+			} else {
+				$am.ActiveStates.delete(States.StageDraggingMinimal)
 			}
 		}
 	}
@@ -268,6 +274,7 @@
 			$am.ActiveStates.delete(States.StageDragging);
 			$am.ActiveStates.delete(States.StageDraggingBuffered);
 			$am.ActiveStates.delete(States.StageDraggingDejittered)
+			$am.ActiveStates.delete(States.StageDraggingMinimal)
 			$am.ActiveStates.delete(States.PointerRemoved)
 			$am.ActiveStates.delete(States.ClickedEmptySpace);
 
@@ -307,6 +314,7 @@
 				$am.ActiveStates.delete(States.StageDragging);
 				$am.ActiveStates.delete(States.StageDraggingBuffered);
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
+				$am.ActiveStates.delete(States.StageDraggingMinimal)
 				$am.ActiveStates.delete(States.PointerRemoved)
 				$am.ActiveStates.delete(States.ClickedEmptySpace);
 

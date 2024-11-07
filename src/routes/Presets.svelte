@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets } from '$lib/stores';
+	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, ClearStage } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -74,6 +74,7 @@
 			dispatch("sendcmd");
 		} else {
 			$commandText =  newCommand;
+			ClearStage($stage)
 		}
     }
 
