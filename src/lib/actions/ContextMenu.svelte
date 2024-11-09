@@ -3,7 +3,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { SwapResponse, Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { am, ifDimensions, GetZone, GetCam, server, stage, zones, panzoom } from '$lib/stores';
+	import { am, ifDimensions, GetZone, GetCam, server, swapsCache, zones, panzoom } from '$lib/stores';
 	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
 	import { AddSelection, RemoveSelection, Selector, GetSelectedRect } from '$lib/zones';
 	import type { KonvaPointerEvent } from "svelte-konva";
@@ -100,14 +100,25 @@
 			return;
 		}
 
-		let response = await $server.post('/camera/swaps', {camera: cam.cam});
-		topEntry = response.data;
-		if (!topEntry.found || !topEntry.swaps.subentries) {
-			$am.Actions[name].Cancel();
-			return;
-		}
+		let swaps = $swapsCache[cam.cam]
 
-		topEntry.position = Number(target.name());
+		if (!swaps) {
+			console.log("cache miss")
+			let response = await $server.post('/camera/swaps', {camera: cam.cam});
+			swaps = response.data;
+			if (!swaps.found || !swaps.swaps.subentries) {
+				$am.Actions[name].Cancel();
+				return;
+			} else {
+				swaps.position = Number(target.name());
+				$swapsCache[cam.cam] = swaps;
+			}
+		} else {
+			console.log("cache hit")
+		}
+		
+		topEntry = swaps;
+		
 		
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: ((coordinates.x * $panzoom.getScale())+ ifOverlay.left), clientY: ((coordinates.y * $panzoom.getScale()) + ifOverlay.top)});

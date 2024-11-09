@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, camPresets } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, camPresets, presetCache } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -299,11 +299,17 @@
 			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
 			dispatch('sendcmd');
 		} else if (action == "load") {
-			let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps.subentries[0].label});
-			if (!presetResponse.data.found) {
-				return;
+			let presets = $presetCache[swaps.swaps.subentries[0].label];
+			if (!presets) {
+				let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps.subentries[0].label});
+				if (!presetResponse.data.found) {
+					return;
+				} else {
+					$presetCache[swaps.swaps.subentries[0].label] = presetResponse.data.camPresets;
+					presets = presetResponse.data.camPresets;
+				}
 			}
-			$camPresets = presetResponse.data.camPresets;
+			$camPresets = presets;
 			RemoveSelection(Selector.Presets);
 		}
 	}

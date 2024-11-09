@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { type AxiosInstance } from 'axios';
-import type { CamRequest, CamResponse, Coordinates, Dimensions, CamPresets } from '$types';
+import type { CamRequest, CamResponse, Coordinates, Dimensions, CamPresets, SwapResponse } from '$types';
 import {type PanzoomObject} from '@panzoom/panzoom'
 import { type BaseParams } from 'svelte-gestures';
 import { setPointerControls } from 'svelte-gestures';
@@ -22,6 +22,9 @@ export let drawing = writable<boolean>();
 export let gesturing = writable<boolean>();
 export let panzoom = writable<PanzoomObject>();
 export let clickTimer = writable<number>();
+
+export let presetCache = writable<{[key: string]: CamPresets}>({})
+export let swapsCache = writable<{[key: string]: SwapResponse}>({})
 
 export let am = writable<ActionsManager>();
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, ClearStage } from '$lib/stores';
+	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, ClearStage, presetCache } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -57,14 +57,21 @@
 			return;
 		}
 
-		let response = await $server.post('/camera/presets', {camera: cam.cam})
-		if (!response.data.found) {
-			$am.Actions[name].Cancel();
-			return;
-		} else {
-			$camPresets = response.data.camPresets;
-			AddSelection(target, Selector.Presets);
+		let presets = $presetCache[cam.cam];
+
+		if (!presets) {
+			let response = await $server.post('/camera/presets', {camera: cam.cam})
+			if (!response.data.found) {
+				$am.Actions[name].Cancel();
+				return;
+			} else {
+				presets = response.data.camPresets;
+				$presetCache[cam.cam] = response.data.camPresets;
+			}
 		}
+		AddSelection(target, Selector.Presets);
+		$camPresets = presets;
+
 		$am.Actions[name].IsActive = false;
 	}
 

@@ -90,7 +90,7 @@
 		// scale = scale < 1 ? 1 : scale;
 		if (zoomDebounced) {
 			$panzoom.zoomToPoint(scale, {clientX: (event.detail.center.x), clientY: (event.detail.center.y)})
-			setTimeout(() => $panzoom.pan(event.detail.rawDelta.x / $panzoom.getScale(), event.detail.rawDelta.y / $panzoom.getScale(), {relative: true}))
+			$panzoom.pan(event.detail.rawDelta.x / $panzoom.getScale(), event.detail.rawDelta.y / $panzoom.getScale(), {relative: true})
 		} else {
 			zoomDebounced = true;
 		}
