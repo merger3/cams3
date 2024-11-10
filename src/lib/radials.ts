@@ -25,10 +25,12 @@ function setRotations(menu: RadialMenu) {
 }
 
 RadialMenus["misc"] =  {
+	rotation: 30, 
 	parts:  [
 		{size: 2, action: "submenu", label: "IR", icon: "lightbulb", submenu: "ptzir"},
 		{size: 1, action: "back", label: "back", icon: "arrow-bar-left"},
 		{size: 2, action: "submenu", label: "move", icon: "arrows-move", submenu: "ptzmove"},
+		{size: 1, action: "select", label: "select", icon: "square"},
 	]
 }
 

@@ -5,6 +5,7 @@
 	import Chat from './Chat.svelte';
 	import CamSelector from "./CamSelector.svelte";
 	import VideoLite from './VideoLite.svelte';
+	import Keyboard from './Keyboard.svelte';
 	import axios from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import { Selector, AddSelection, GetSelectedRect } from '$lib/zones';
@@ -22,30 +23,32 @@
 	let resize: HTMLElement;
 
 	async function sendCommand() {
+		if ($commandText == defaultCMD) {
+			return;
+		}
 		// Edge case with click delay must be manually cancelled here
 		$am.Actions["click"].Cancel();
 
+		let sentCommand = $commandText;
 		$server.post('/send', {
 			command: $commandText
 		}).then(function (response) {
-			// console.log(response);
+			let result = swapRegEx.exec(sentCommand);
+			if (result) {
+				let presetSelected = GetSelectedRect(Selector.Presets);
+				if (presetSelected?.name()) {
+					let presetZone = presetSelected.name();
+					let targetZone = presetZone === result[1] ? result[2] : (presetZone === result[2] ? result[1] : null);
+					
+					if (targetZone) {
+						AddSelection($zones.findOne(`.${targetZone}`), Selector.Presets);
+					}
+				}
+			}
 		}).catch(function (error) {
 			console.log(error);
 		});
 		
-		let result = swapRegEx.exec($commandText);
-		if (result) {
-			let presetSelected = GetSelectedRect(Selector.Presets);
-			if (presetSelected?.name()) {
-				let presetZone = presetSelected.name();
-				let targetZone = presetZone === result[1] ? result[2] : (presetZone === result[2] ? result[1] : null);
-				
-				if (targetZone) {
-					AddSelection($zones.findOne(`.${targetZone}`), Selector.Presets);
-				}
-			}
-		}
-
 		Reset($stage);
 		if (document.activeElement) {
 			(document.activeElement as HTMLElement).blur();
@@ -81,11 +84,7 @@
 
 		$server = axios.create({
 			timeout: 10000,
-			auth: {
-				username: 'merger3',
-				password: 'Merger!23'
-			},
-			baseURL: '/api/',
+			baseURL: 'https://alvsanc-cams.dev/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
@@ -149,7 +148,8 @@
 			</div>
 		</div>
 	</div>
-	<Chat />
+	<Keyboard on:sendcmd={sendCommand}/>
+	<!-- <Chat /> -->
 {/if}
 	
 <style>

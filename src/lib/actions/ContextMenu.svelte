@@ -3,7 +3,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { SwapResponse, Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { am, ifDimensions, GetZone, GetCam, server, swapsCache, zones, panzoom } from '$lib/stores';
+	import { am, ifDimensions, GetZone, GetCam, server, swapsCache, zones, panzoom, isOpen } from '$lib/stores';
 	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
 	import { AddSelection, RemoveSelection, Selector, GetSelectedRect } from '$lib/zones';
 	import type { KonvaPointerEvent } from "svelte-konva";
@@ -11,7 +11,6 @@
 	const dispatch = createEventDispatcher();
 	
 	let topEntry: SwapResponse = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
-	let isOpen: boolean;
 	let animationTimer: number;
 
 	const name = "swaps";
@@ -74,14 +73,15 @@
 
 	function cancel(this: Action) {
 		removeClickListener();
-		if (isOpen) {
-			isOpen = false;
+		if ($isOpen) {
+			$isOpen = false;
 			animationTimer = setTimeout(() => {
 				cancelled = true;
 				topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
+			RemoveSelection(Selector.ContexMenu);
 		} else {
 			cancelled = true;
 			topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
@@ -145,7 +145,7 @@
 </script>
    
 
-<ContextMenu.Root bind:open={isOpen} onOpenChange={opc}>
+<ContextMenu.Root bind:open={$isOpen} onOpenChange={opc} loop={true}>
 	{#if $am.Actions[name].IsActive && dataReady && !cancelled}
 		<ContextMenu.Trigger>
 			<slot></slot>

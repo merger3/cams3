@@ -50,25 +50,27 @@
 	}
 	
 	async function loadMenu(coordinates: Coordinates, target: Konva.Rect) {
+		let presets: CamPresets = {name: "", presets: []};
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
 		
-		if (!cam.found) {
-			$am.Actions[name].Cancel();
-			return;
-		}
 
-		let presets = $presetCache[cam.cam];
-
-		if (!presets) {
-			let response = await $server.post('/camera/presets', {camera: cam.cam})
-			if (!response.data.found) {
-				$am.Actions[name].Cancel();
-				return;
+		if (cam.found) {
+			let cachedPresets = $presetCache[cam.cam];
+			if (!cachedPresets) {
+				console.log("cache miss");
+				let response = await $server.post('/camera/presets', {camera: cam.cam})
+				if (response.data.found) {
+					presets = response.data.camPresets;
+					$presetCache[cam.cam] = response.data.camPresets;
+				} else {
+					$presetCache[cam.cam] = {name: cam.cam, presets: []}
+				}
 			} else {
-				presets = response.data.camPresets;
-				$presetCache[cam.cam] = response.data.camPresets;
+				console.log("cache hit");
+				presets = cachedPresets;
 			}
 		}
+
 		AddSelection(target, Selector.Presets);
 		$camPresets = presets;
 

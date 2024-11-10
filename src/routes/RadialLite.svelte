@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, camPresets, presetCache } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, camPresets, presetCache, swapsCache } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -227,10 +227,9 @@
 
 
 	// const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "focus": focusCam, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
-	let rh: {[key: string]: any} = {"send": send, "clear": clear, "focus": async () => await focuscam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load")};
-	rh = {...{"iroff": async () => await buildCommand("ptzir", ["off"]), "iron": async () => await buildCommand("ptzir", ["on"]), "irauto": async () => await buildCommand("ptzir", ["auto"])}, ...rh};
-	rh = {...{"iroff": async () => await buildCommand("ptzir", ["off"]), "iron": async () => await buildCommand("ptzir", ["on"]), "irauto": async () => await buildCommand("ptzir", ["auto"])}, ...rh};
-	rh = {...{"up": async () => await buildCommand("ptzmove", ["up"]), "upright": async () => await buildCommand("ptzmove", ["upright"]), "right": async () => await buildCommand("ptzmove", ["right"]), "downright": async () => await buildCommand("ptzmove", ["downright"]), "down": async () => await buildCommand("ptzmove", ["down"]), "downleft": async () => await buildCommand("ptzmove", ["downleft"]), "left": async () => await buildCommand("ptzmove", ["left"]), "upleft": async () => await buildCommand("ptzmove", ["upleft"])}, ...rh};
+	let rh: {[key: string]: any} = {"send": send, "clear": clear, "select": enableZone, "focus": () => focuscam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load")};
+	rh = {...{"iroff": () => buildCommand("ptzir", ["off"]), "iron": () => buildCommand("ptzir", ["on"]), "irauto": () => buildCommand("ptzir", ["auto"])}, ...rh};
+	rh = {...{"up": () => buildCommand("ptzmove", ["up"]), "upright": () => buildCommand("ptzmove", ["upright"]), "right": () => buildCommand("ptzmove", ["right"]), "downright": () => buildCommand("ptzmove", ["downright"]), "down": () => buildCommand("ptzmove", ["down"]), "downleft": () => buildCommand("ptzmove", ["downleft"]), "left": () => buildCommand("ptzmove", ["left"]), "upleft": () => buildCommand("ptzmove", ["upleft"])}, ...rh};
 
 	function send() {
 		if ($commandText == defaultCMD) {
@@ -245,6 +244,12 @@
 			}).command
 		}
 		dispatch("sendcmd");
+	}
+
+	function enableZone() {
+		if (activeMenu.target) {
+			$am.Actions["doubleclick"].Enable({x: activeMenu.target.x() + (activeMenu.target.width() / 2), y: activeMenu.target.y() + (activeMenu.target.height() / 2)})
+		}
 	}
 
 	function clear() {
@@ -289,12 +294,23 @@
 		if (!cam.found) {
 			return;
 		}
-		
-		let response = await $server.post('/camera/swaps', {camera: cam.cam});
-		let swaps: SwapResponse = response.data;
-		if (!swaps.found || !swaps.swaps.subentries[0] || swaps.swaps.subentries[0].subentries) {
+
+		let swaps = $swapsCache[cam.cam]
+		if (!swaps) {
+			console.log("cache miss")
+			let response = await $server.post('/camera/swaps', {camera: cam.cam});
+			swaps = response.data;
+			if (!swaps.found) {
+				return;
+			} else {
+				$swapsCache[cam.cam] = swaps;
+			}
+		}
+
+		if (!swaps.swaps.subentries[0] || swaps.swaps.subentries[0].subentries) {
 			return;
 		}
+
 		if (action == "swap") {
 			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
 			dispatch('sendcmd');

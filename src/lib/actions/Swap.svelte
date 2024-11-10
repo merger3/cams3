@@ -58,7 +58,7 @@
 		arrow.show();
 		arrow.moveToTop();
 		
-		AddSelection(startZone, Selector.SwapSource)
+		AddSelection(startZone, Selector.SwapSource);
 		
 		$stage.on('pointermove.swap', handleDrag);
 		$stage.on('pointerup.swap', finshDrawing);

@@ -18,10 +18,9 @@ export let zones = writable<Konva.Group>();
 export let camPresets = writable<CamPresets>({name: "", presets: []});
 export let clickZoom = writable<number>(100);
 export let clickFocus = writable<number>(0);
-export let drawing = writable<boolean>();
-export let gesturing = writable<boolean>();
 export let panzoom = writable<PanzoomObject>();
 export let clickTimer = writable<number>();
+export let isOpen = writable<boolean>();
 
 export let presetCache = writable<{[key: string]: CamPresets}>({})
 export let swapsCache = writable<{[key: string]: SwapResponse}>({})
@@ -136,8 +135,8 @@ export function ClearArrows(stage: Konva.Stage) {
 }
 
 export function ClearStage(stage: Konva.Stage, withHover = true) {
-	RemoveSelection(Selector.SwapSource);
 	if (withHover) {
+		RemoveSelection(Selector.SwapSource);
 		RemoveSelection(Selector.SwapTarget);
 	}
 	RemoveSelection(Selector.Focus);
@@ -154,9 +153,8 @@ export function ResetValues() {
 
 export function Reset(stage: Konva.Stage) {
 	get(am).CancelAll();
-	ClearStage(stage)
+	ClearStage(stage);
 	ResetValues();
-
 }
 
 export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamResponse> {
