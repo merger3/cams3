@@ -59,7 +59,7 @@ Chat
 <style>
 	#chat {
 		left: 100%; 
-		transform: translate(-105%, 10%); 
+		transform: translate(-105%, 15%); 
 		height: 10%; 
 		width: 9%; 
 	}
