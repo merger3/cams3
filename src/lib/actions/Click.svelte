@@ -2,7 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
 	import { Circle } from "svelte-konva";
-	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom, stage, ClearStage } from '$lib/stores';
+	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom, stage, ClearStage, isOpen } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import {  ClickTangle } from '$lib/rect';
@@ -47,9 +47,6 @@
 	}
 
 	function enable(this: Action, origin: Coordinates) {
-		if ($am.Actions["swaps"].IsActive) {
-			return;
-		}
 		if ($clickTimer) {
 			clearTimeout($clickTimer);
 		}
@@ -101,6 +98,12 @@
 	}
 
 	function finshDrawing(e: Konva.KonvaPointerEvent) {
+		if ($isOpen) {
+			$am.Actions["swaps"].Cancel();
+			$am.Actions["click"].Cancel();
+			return;
+		}
+		
 		$am.Actions[name].IsActive = true;
 		$stage.off('pointermove.click')
 		$stage.off('pointerup.click')
