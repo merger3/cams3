@@ -16,6 +16,7 @@
 
 	const defaultCMD: string = "​";
 	const swapRegEx = new RegExp('^\!swap ([0-9]) ([0-9])$');
+	export let videosource: number;
 
 	let selector: TangleLite;
 	$commandText = defaultCMD;
@@ -113,6 +114,10 @@
 		}
 	});
 	$: resizeObserverDefined && $commandText && resizeText();
+
+	// These are temporary pending settings implementation, as well as everywhere they are bound
+	let selected = "btn-outline-secondary"
+	let controls = 0;
 </script>
 
 <svelte:head>
@@ -136,7 +141,7 @@
 		<div class="row justify-content-between flex-nowrap ">
 			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector" style="max-height: {$commandHeight + $ifDimensions.height}px;">
 				<div style="min-height: {$commandHeight}px;max-height: {$commandHeight}px;">
-					<CamSelector />
+					<CamSelector bind:controls bind:selected />
 				</div>
 				<Presets on:sendcmd={sendCommand} />
 				<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
@@ -144,12 +149,12 @@
 				</div>
 			</div>
 			<div class="col-auto g-0" id="wrapper">
-				<VideoLite bind:selector on:sendcmd={sendCommand}/>
+				<VideoLite bind:controls bind:selector bind:videosource on:sendcmd={sendCommand}/>
 			</div>
 		</div>
 	</div>
-	<Keyboard on:sendcmd={sendCommand}/>
-	<!-- <Chat /> -->
+	<Keyboard bind:controls bind:selected on:sendcmd={sendCommand}/>
+	<Chat />
 {/if}
 	
 <style>

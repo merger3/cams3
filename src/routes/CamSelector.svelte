@@ -1,29 +1,37 @@
 <script lang="ts">
+	import { ifDimensions, commandHeight } from '$lib/stores';
 
-	import { onMount, createEventDispatcher } from 'svelte';
-	import 'simplebar'; // or "import SimpleBar from 'simplebar';" if you want to use it manually.
-	import 'simplebar/dist/simplebar.css';
-	import type { CamPresets } from '$types';
-	import { server, ifDimensions, commandHeight } from '$lib/stores';
+	// This is mostly temporary. I'm working on a more robust settings system that talks to the server
+	// and loads persistent settings from a sqlite DB but this is a quick and dirty way to do this single thing that's essential.
+	export let selected: string;
+	export let controls: number;
 
-	import ResizeObserver from 'resize-observer-polyfill';
-	// let selected = "btn-outline-secondary"
-	let selected = "btn-secondary"
-
-	const cars = ["Saab", "Volvo", "BMW", "Hondaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "Toyota", "Nissan", "Ford", "Chevy", "GM", "Kia", "Hyundai", "Cadillac", "Lincoln", "Mini", "Audi", "Lexus", "Acura", "Porsche"];
-	let camPresets: CamPresets = {name: "", presets: cars};
-
-	function getConfig(cam: string) {
-		if (selected == "btn-secondary") {
-			selected = "btn-outline-secondary";
-		} else {
+	function togglePlayerControls() {
+		if (selected == "btn-outline-secondary") {
 			selected = "btn-secondary";
+			jQuery('#cams').css('z-index', '100');
+			jQuery('#cams').css('pointer-events', 'all');
+			jQuery('#chat').css('visibility', 'hidden');
+			controls = 1;
+		} else {
+			selected = "btn-outline-secondary";
+			jQuery('#cams').css('z-index', '');
+			jQuery('#cams').css('pointer-events', '');
+			jQuery('#chat').css('visibility', '');
 		}
 	}
 
-	onMount(() => {
-		window.ResizeObserver = ResizeObserver;
-	});
+	function toggleVideoSource() {
+		if (window.location.pathname == "/lola") {
+			window.location.replace(`/twitch${window.location.hash}`);
+		} else if  (window.location.pathname == "/twitch") {
+			window.location.replace(`/lola${window.location.hash}`);
+		}
+	}
+
+	function getSwapString(): string {
+		return window.location.pathname == "/lola" ? "Twitch" : "Lola";
+	}
 </script>
 
 <div class="dropdown z-40 movedown">
@@ -31,36 +39,24 @@
 		Settings (wip)
 	</button>
 	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-2 border-danger-subtle shadow" style="max-height: {$ifDimensions.height - ($ifDimensions.height * .15)}px">
-			{#each camPresets.presets as c}
-				<button type="button" on:click={() => getConfig(c)} class="btn {selected} btn-sm d-block w-100 mb-2 overflow-hidden">{c}</button>
-			{/each}
-			{#if false}
-				<hr class="dropdown-divider">
-			{/if}
+		<button type="button" on:click={() => togglePlayerControls()} class="btn {selected} btn-lg d-block w-100 mb-2 overflow-hidden">Toggle Video<br>Controls</button>
+		<button type="button" on:click={() => toggleVideoSource()} class="btn btn-outline-secondary btn-sm d-block w-100 mb-2 overflow-hidden">Swap to {getSwapString()}</button>
 	</div>
 </div>
 
 
 <style>
 	#dropdown-menu {
-		background-color: coral;
-		/* background: transparent; */
+		background-color: #1c1b22;
 		margin-top: -2px!important;
 		overflow: scroll;
-		-ms-overflow-style: none;  /* IE and Edge */
-		scrollbar-width: none; /* Firefox */
-		/* padding: 0 8px; Add equal padding on the left and right */
+		-ms-overflow-style: none;  
+		scrollbar-width: none; 
 	}
 	#dropdown-menu::-webkit-scrollbar { /* Chrome */
 		display: none;
 	}
 	#dropdown-menu button:last-child {
    	 	margin-bottom: 0!important;
-	}
-	#dropdown-menu .dropdown-divider {
-		border-top-width: 3px; /* Adjust this value for the desired thickness */
-		border-color: rgba(70, 63, 63, 0.4); 
-		/* background-color: #000; /* Optional: Change the color if needed 
-		margin: 0.5rem 0; Optional: Adjust the vertical spacing */
 	}
 </style>

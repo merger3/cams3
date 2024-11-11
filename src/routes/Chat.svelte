@@ -21,7 +21,7 @@ Chat
 		</div>
 		<div class="offcanvas-body h-100 p-0">
 			<Tabs.Content value="alveus" class="h-100 m-0">
-				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
+				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
 				title="chat"
 				class="ml-auto"
 				height=87%
@@ -29,7 +29,7 @@ Chat
 				/>
 			</Tabs.Content>
 			<Tabs.Content value="agg" class="h-100 m-0">
-				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=localhost&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
+				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
 				title="chat"
 				class="ml-auto"
 				height=87%

@@ -12,9 +12,13 @@
 	import ContextMenu from '$lib/actions/ContextMenu.svelte';
 	
 	export let selector: TangleLite;
+	export let controls: number;
 
+	const lola = 0;
+	const twitch = 1;
 	const dispatch = createEventDispatcher();
 
+	export let videosource: number;
 	
 	var zoneDefinitions: Box[];
 
@@ -90,7 +94,9 @@
 	let doit: number;
 	var player: any;
 	onMount(() => {
-		// player = new Twitch.Player("cams", {width: "100%", height: "100%", channel: "alveussanctuary", parent: ["not"]});
+		if (videosource == twitch) {
+			player = new Twitch.Player("cams", {width: "100%", height: "100%", channel: "alveussanctuary", parent: ["localhost", "alvsanc-cams.dev", "alvsanc-cams.app"]});
+		}
 		winWidth = window.innerWidth;
 		winHeight = window.innerHeight;
 		resizeIframeRaw();
@@ -111,7 +117,7 @@
 <svelte:head>
 	<!-- <script src="https://player.twitch.tv/js/embed/v1.js"></script> -->
 </svelte:head>
-<div class="vstack gap-1" id="wrapper">
+<div class="vstack gap-1" id="videowrapper">
 	<div class="hstack gap-1">
 		<Motion whileFocus={{ scale: 1.3 }} let:motion>
 			<div style={parent_style}height:{$commandHeight}px;>
@@ -125,7 +131,7 @@
 	</div>
 	<div id="stage" class="unselectable" />
 	<div id="vid2" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
-			<Zoomable>
+		<Zoomable>
 			<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 			<ContextMenu>
 				<div id="menutrigger" class="overlay unselectable z-100" />
@@ -135,16 +141,18 @@
 
 			<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} on:sendcmd={(e) => {dispatch("sendcmd")}}/>
 			
-			<!-- <div id="cams" class="unselectable" style="height: {$ifDimensions.height}px; width: {$ifDimensions.width}px;"/> -->
-			
-			<!-- <iframe
-			title="da cameras"
-			id="cams"
-			src="https://camops.ptz.app:8889/ptz-alv?controls=0&autoplay=1&mute=0"
-			class="unselectable"
-			allow="autoplay; fullscreen"
-			allowfullscreen
-			></iframe> -->
+			{#if videosource == lola}
+				<iframe
+				title="da cameras"
+				id="cams"
+				src="https://camops.ptz.app:8889/ptz-alv?autoplay=1&mute=0&controls={controls}"
+				class="unselectable"
+				allow="autoplay; fullscreen"
+				allowfullscreen
+				></iframe>
+			{:else if videosource == twitch}
+				<div id="cams" class="unselectable" />
+			{/if}
 		</div>
 	</Zoomable>
 	</div>
@@ -174,7 +182,7 @@
 			-1.25px 0 0 #000,
 			1.25px 0 0 #000;
 	}
-	#wrapper {
+	#videowrapper {
 		flex-grow: 0;
 	}
 	.overlay {

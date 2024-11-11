@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, createEventDispatcher } from 'svelte';
 	import { zones, am, commandText, ClearStage, stage, isOpen, GetCam, swapsCache, presetCache, server, ifDimensions, camPresets, Reset, clickFocus } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
@@ -7,6 +6,9 @@
 	import { Selector, GetSelectedRect, AddSelection, RemoveSelection } from '$lib/zones';
 	import Konva from "konva";
 	import { customAlphabet } from 'nanoid';
+
+	export let selected: string;
+	export let controls: number;
 
 	const dispatch = createEventDispatcher();
 	const tangleID = customAlphabet('0123456789abcdef', 5);
@@ -115,6 +117,7 @@
 		"iroff": () => buildCommand("ptzir", ["off"]),
 
 		"clear": clear,
+		"toggleplayercontrols": togglePlayerControls,
 	} 
 
 	let hotkeys: {[key: string]: string} = {
@@ -189,7 +192,24 @@
 
 		'i': "iron",
 		'o': "iroff",
-		'p': "irauto"
+		'p': "irauto",
+
+		't': "toggleplayercontrols",
+	}
+
+	function togglePlayerControls() {
+		if (selected == "btn-outline-secondary") {
+			selected = "btn-secondary";
+			jQuery('#cams').css('z-index', '100');
+			jQuery('#cams').css('pointer-events', 'all');
+			jQuery('#chat').css('visibility', 'hidden');
+			controls = 1;
+		} else {
+			selected = "btn-outline-secondary";
+			jQuery('#cams').css('z-index', '');
+			jQuery('#cams').css('pointer-events', '');
+			jQuery('#chat').css('visibility', '');
+		}
 	}
 
 	function clear() {
@@ -363,6 +383,6 @@
 				compiledHotkeys[hotkeyFromString(v).hotkey()] = value;
 			})
 		});
-		document.addEventListener('keydown', handleKeyboard);
+		window.addEventListener('keydown', handleKeyboard);
 	});
 </script>
