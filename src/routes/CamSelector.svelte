@@ -44,7 +44,7 @@
 
 <div class="dropdown z-40 movedown">
 	<button style="position: absolute;min-height: {$commandHeight}px;max-height: {$commandHeight}px;right: 0;top: 0;" id="dropdown-button" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
-		Settings (wip)
+		Settings
 	</button>
 	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-2 border-danger-subtle shadow" style="max-height: {$ifDimensions.height - ($ifDimensions.height * .15)}px">
 		<button type="button" on:click={() => forceResync()} class="btn btn-outline-secondary btn-md d-block w-100 mb-2 overflow-hidden">Force Resync</button>
