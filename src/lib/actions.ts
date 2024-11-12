@@ -1,6 +1,9 @@
 import type { Coordinates } from '$types';
 
 export enum States {
+	PositiveSentinel,
+	NegativeSentinel,
+
 	StagePointerDown,
 	StagePointerUp,
 	StageDragging,

@@ -78,7 +78,7 @@
 	}
 
 	let resizeObserverDefined = false;
-	onMount(() => {
+	onMount(async () => {
 		const fragment = window.location.hash.substring(1);
 		const params = new URLSearchParams(fragment);
 		$token = params.get("access_token");

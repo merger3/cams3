@@ -9,8 +9,8 @@
 	import Click from "$lib/actions/Click.svelte";
 	import Scroll from "$lib/actions/Scroll.svelte";
 	import { type PressCustomEvent } from 'svelte-gestures';
-	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
-	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones } from '$lib/stores';
+	import { Selector, AddSelection, RemoveSelection, Zones } from '$lib/zones';
+	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones, ifDimensions, GetCam, server, presetCache } from '$lib/stores';
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
 	import { CreateZones } from '$lib/zones';
@@ -55,7 +55,7 @@
 
 	function setCommandState() {
 		$am.ActiveStates.delete(States.CommandScrollable)
-		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzfocusr")) {
+		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzfocusr") || $commandText.startsWith("!ptzzoomr")) {
 			$am.ActiveStates.add(States.CommandScrollable)
 		}
 	}
@@ -426,6 +426,19 @@
 		// layer.toggleHitCanvas();
 
 		CreateZones($zones);
+
+		Zones.forEach(async (z) => {
+			let cam = await GetCam({coordinates: {x: z.Rect.x() + (z.Rect.width() / 2), y: z.Rect.y() + (z.Rect.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(z.Name)}, $server)
+			if (cam.found) {
+				let response = await $server.post('/camera/presets', {camera: cam.cam})
+				if (response.data.found) {
+					console.log("updating cache")
+					$presetCache[cam.cam] = response.data.camPresets;
+				} else {
+					$presetCache[cam.cam] = {name: cam.cam, presets: []}
+				}
+			}
+		})
    
  	});
 </script>

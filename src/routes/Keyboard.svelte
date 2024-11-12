@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { zones, am, commandText, ClearStage, stage, isOpen, GetCam, swapsCache, presetCache, server, ifDimensions, camPresets, Reset, clickFocus } from '$lib/stores';
+	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, presetCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, GetSelectedRect, AddSelection, RemoveSelection } from '$lib/zones';
@@ -13,7 +13,7 @@
 	const dispatch = createEventDispatcher();
 	const tangleID = customAlphabet('0123456789abcdef', 5);
 
-	let compiledHotkeys: {[key: string]: any} = {};
+	let compiledHotkeys: {[key: string]: string[]} = {};
 
 	const Mod = 0;
 	const Alt = 1;
@@ -111,6 +111,7 @@
 
 		"resetcam": () => buildCommand("resetcam"),
 		"focuscam": focusCam,
+		"zoomcam": zoomCam,
 
 		"irauto": () => buildCommand("ptzir", ["auto"]),
 		"iron": () => buildCommand("ptzir", ["on"]),
@@ -118,12 +119,39 @@
 
 		"clear": clear,
 		"toggleplayercontrols": togglePlayerControls,
+
+		"selectbelowzone": selectBelowZone,
+		"selectabovezone": selectAboveZone,
+		"selectleftzone" : selectLeftZone,
+		"selectrightzone": selectRightZone,
+
+		"increasevalue": increaseValue,
+		"decreasevalue": decreaseValue,
+		"resetvalue": resetValue,
+
+		"spintiltup": () => spin(tilt, 30),
+		"spintiltdown": () => spin(tilt, -30),
+		"spintiltright": () => spin(pan, 30),
+		"spintiltleft": () => spin(pan, -30),
+		"spinzoomin": () => spin(zoom, 30),
+		"spinzoomout": () => spin(zoom, -30),
+
+		"spintiltupsmall": () => spin(tilt, 15),
+		"spintiltdownsmall": () => spin(tilt, -15),
+		"spintiltrightsmall": () => spin(pan, 15),
+		"spintiltleftsmall": () => spin(pan, -15),
+		"spinzoominsmall": () => spin(zoom, 15),
+		"spinzoomoutsmall": () => spin(zoom, -15),
+
+		"resetspin": resetSpin,
+
+		"loadpreset": loadPreset,
 	} 
 
 	let hotkeys: {[key: string]: string} = {
 		'Space Enter NumpadEnter': "send",
 
-		'Escape': "clear",
+		'Escape Backspace': "clear",
 
 		'Digit1': "select1",
 		'Digit2': "select2",
@@ -189,12 +217,344 @@
 
 		'r': "resetcam",
 		'f': 'focuscam',
-
+		'!z': "zoomcam",
+		
+		'u': "irauto",
 		'i': "iron",
 		'o': "iroff",
-		'p': "irauto",
 
 		't': "toggleplayercontrols",
+
+		'ArrowUp': "selectabovezone increasevalue",
+		'ArrowDown': "selectbelowzone decreasevalue",
+		'ArrowRight': "selectrightzone increasevalue",
+		'ArrowLeft': "selectleftzone decreasevalue",
+
+		"Equal": "increasevalue",
+		"Minus": "decreasevalue",
+		"Digit0": "resetvalue",
+
+		'^ArrowUp': "spintiltup",
+		'^ArrowDown': "spintiltdown",
+		'^ArrowRight': "spintiltright",
+		'^ArrowLeft': "spintiltleft",
+		"^Equal": "spinzoomin",
+		"^Minus": "spinzoomout",
+
+		'+ArrowUp': "spintiltupsmall",
+		'+ArrowDown': "spintiltdownsmall",
+		'+ArrowRight': "spintiltrightsmall",
+		'+ArrowLeft': "spintiltleftsmall",
+		"+Equal": "spinzoominsmall",
+		"+Minus": "spinzoomoutsmall",
+
+		"Slash": "resetspin",
+
+		"Tab": "loadpreset"
+	}
+
+	function cancelPresetSelection() {
+		window.removeEventListener('keydown', listenForPreset);
+		presetHotkeys = {};
+		window.addEventListener('keydown', handleKeyboard);
+		RemoveSelection(Selector.SelectingPreset);
+	}
+
+	let presetHotkeys: {[key: string]: any} = {};
+	function listenForPreset(e: KeyboardEvent) {
+		if (presetTimer) {
+			clearTimeout(presetTimer);
+		}
+
+		if (e.repeat) {
+			return;
+		}
+
+		if (e.code == "Backspace") {
+			cancelPresetSelection();
+			return;
+		}
+
+		let action = presetHotkeys[newHotkey(e).hotkey()];
+		if (action) {
+			e.preventDefault();
+			action();
+			cancelPresetSelection();
+		}
+	} 
+
+	let presetTimer: number;
+	async function loadPreset() {
+		if (!$camPresets || $camPresets.presets.length == 0) {
+			return;
+		}
+
+		let zone = GetSelectedRect(Selector.Presets);
+		if (!zone) {
+			return;
+		}
+
+		$camPresets.presets.forEach((preset) => {
+			preset.hotkeys.forEach((v) => {
+				presetHotkeys[hotkeyFromString(v).hotkey()] = () => {
+					$commandText = `!ptzload ${$camPresets.name} ${preset.name}`;
+					ClearStage($stage)
+				};
+			})
+		});
+
+		window.removeEventListener('keydown', handleKeyboard);
+		window.addEventListener('keydown', listenForPreset);
+		AddSelection(zone, Selector.SelectingPreset);
+
+		presetTimer = setTimeout(() => {
+			cancelPresetSelection();
+		}, 30000);
+	}
+
+	const pan = 0;
+	const tilt = 1;
+	const zoom = 2
+	let spinningCam: string;
+	let spinValues = [0, 0, 0];
+	async function spin(target: number, amount: number) {
+		if (!spinningCam) {
+			let name: string;
+			if ($camPresets && $camPresets.name != "") {
+				name = $camPresets.name;
+			} else {
+				let zone = GetSelectedRect(Selector.Presets);
+				if (!zone) {
+					return;
+				}
+
+				let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
+				if (!cam.found) {
+					return;
+				}
+				name = cam.cam;
+			}
+
+			spinningCam = name;
+		}
+
+		spinValues[target] += amount;
+		if (spinValues[target] > 90) {
+			spinValues[target] = 90;
+		} else if (spinValues[target] < -90) {
+			spinValues[target] = -90;
+		}
+
+		$commandText = `!ptzspin ${spinningCam} ${spinValues[pan]} ${spinValues[tilt]} ${spinValues[zoom]}`
+		// dispatch('sendcmd');
+		if (spinValues[pan] == 0 && spinValues[tilt] == 0 && spinValues[zoom] == 0) {
+			spinningCam = undefined;
+		}
+	}
+
+	async function resetSpin() {
+		if (!spinningCam) {
+			let name: string;
+			if ($camPresets && $camPresets.name != "") {
+				name = $camPresets.name;
+			} else {
+				let zone = GetSelectedRect(Selector.Presets);
+				if (!zone) {
+					return;
+				}
+
+				let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
+				if (!cam.found) {
+					return;
+				}
+				name = cam.cam;
+			}
+
+			spinningCam = name;
+		}
+
+		$commandText = `!ptzspin ${spinningCam} 0 0 0`;
+		// dispatch('sendcmd');
+		spinValues = [0, 0, 0];
+		spinningCam = undefined;
+	}
+
+	function resetValue() {
+		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzzoomr")) {
+			$clickZoom = 100;
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickZoom}`;
+		} else if ($commandText.startsWith("!ptzfocusr")) {
+			$clickFocus = 0;
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickFocus}`;
+		}
+	}
+
+	const maxZoom: number = 300;
+	function increaseValue() {
+		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzzoomr")) {
+			if ($clickZoom >= 100) {
+				$clickZoom += 20;
+			} else if ($clickZoom < 10) {
+				$clickZoom += 10;
+			} else {
+				$clickZoom += 10;
+			}
+			if ($clickZoom > maxZoom) {
+				$clickZoom = 10000;
+			}
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickZoom}`;
+		} else if ($commandText.startsWith("!ptzfocusr")) {
+			$clickFocus += 25;
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickFocus}`;
+		}
+	}
+
+	function decreaseValue() {
+		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzzoomr")) {
+			if ($clickZoom >= 10000) {
+				$clickZoom = maxZoom;			
+			} else if ($clickZoom > 0) {
+				if ($clickZoom > 100) {
+					$clickZoom -= 20;
+				} else if ($clickZoom <= 10) {
+					$clickZoom -= 10;
+				} else {
+					$clickZoom -= 10;
+				}
+			} 
+			if ($clickZoom < 0) {
+				$clickZoom = 0;
+			}
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickZoom}`;
+		} else if ($commandText.startsWith("!ptzfocusr")) {
+			$clickFocus -= 25;
+			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickFocus}`;
+		}
+	}
+	
+	function scrollable(): boolean {
+		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzfocusr") || $commandText.startsWith("!ptzzoomr")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	function selectBelowZone() {
+		if (scrollable()) {
+			return;
+		}
+
+		let sourceZone = GetSelectedRect(Selector.Presets);
+		if (!sourceZone) {
+			return;
+		}
+		let target: string;
+		let zone = sourceZone.name();
+
+		switch (zone) {
+		case "1":
+			target = "5";
+			break;
+		case "2":
+			target = "3";
+			break;
+		case "3":
+			target = "4";
+			break;
+		default:
+			return;
+		}
+
+		enableZone(target);
+	}
+
+	function selectAboveZone() {
+		if (scrollable()) {
+			return;
+		}
+		
+		let sourceZone = GetSelectedRect(Selector.Presets);
+		if (!sourceZone) {
+			return;
+		}
+		let target: string;
+		let zone = sourceZone.name();
+
+		switch (zone) {
+		case "3":
+			target = "2";
+			break;
+		case "4":
+			target = "3";
+			break;
+		case "5": case "6":
+			target = "1";
+			break;
+		default:
+			return;
+		}
+
+		enableZone(target);
+	}
+
+
+	function selectLeftZone() {
+		if (scrollable()) {
+			return;
+		}
+		
+		let sourceZone = GetSelectedRect(Selector.Presets);
+		if (!sourceZone) {
+			return;
+		}
+		let target: string;
+		let zone = sourceZone.name();
+
+		switch (zone) {
+		case "1":
+			target = "3";
+			break;
+		case "5":
+			target = "4";
+			break;
+		case "6":
+			target = "5";
+			break;
+		default:
+			return;
+		}
+
+		enableZone(target);
+	}
+
+	function selectRightZone() {
+		if (scrollable()) {
+			return;
+		}
+		
+		let sourceZone = GetSelectedRect(Selector.Presets);
+		if (!sourceZone) {
+			return;
+		}
+		let target: string;
+		let zone = sourceZone.name();
+
+		switch (zone) {
+		case "2": case "3":
+			target = "1";
+			break;
+		case "4":
+			target = "5"
+			break;
+		case "5":
+			target = "6"
+			break;
+		default:
+			return;
+		}
+
+		enableZone(target);
 	}
 
 	function togglePlayerControls() {
@@ -216,57 +576,100 @@
 		Reset($stage);
 	}
 
+	async function zoomCam() {
+		let zone = GetSelectedRect(Selector.Presets);
+		if (!zone) {
+			return;
+		}
+
+		let name: string;
+		if ($camPresets && $camPresets.name != "") {
+			name = $camPresets.name;
+		} else {
+			let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
+			if (!cam.found) {
+				return;
+			}
+			name = cam.cam;
+		}
+
+		$commandText = `!ptzzoomr ${name} 100`
+		$clickZoom = 100;
+		ClearStage($stage);
+		AddSelection(zone, Selector.Zoom);
+	}
+
 	async function focusCam() {
 		let zone = GetSelectedRect(Selector.Presets);
 		if (!zone) {
 			return;
 		}
 
-		let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
-		if (!cam.found) {
-			return;
+		let name: string;
+		if ($camPresets && $camPresets.name != "") {
+			name = $camPresets.name;
+		} else {
+			let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
+			if (!cam.found) {
+				return;
+			}
+			name = cam.cam;
 		}
 
-		$commandText = `!ptzfocusr ${cam.cam} 0`
+		$commandText = `!ptzfocusr ${name} 0`
 		$clickFocus = 0;
+		ClearStage($stage);
 		AddSelection(zone, Selector.Focus);
 	}
 
 	async function buildCommand(command: string, values: string[] = []) {
-		let zone = GetSelectedRect(Selector.Presets);
-		if (!zone) {
-			return;
+		let name: string;
+		if ($camPresets && $camPresets.name != "") {
+			name = $camPresets.name;
+		} else {
+			let zone = GetSelectedRect(Selector.Presets);
+			if (!zone) {
+				return;
+			}
+
+			let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
+			if (!cam.found) {
+				return;
+			}
+			name = cam.cam;
 		}
 
-		let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
-		if (!cam.found) {
-			return;
-		}
 		ClearStage($stage);
-		$commandText = `!${command} ${cam.cam} ${values.join(" ")}`
+		$commandText = `!${command} ${name} ${values.join(" ")}`
 		// dispatch('sendcmd');
 	}
 
 	async function loadNextCam(action: string) {
-		let zone = GetSelectedRect(Selector.Presets);
-		if (!zone) {
-			return;
+		let name: string;
+		if ($camPresets && $camPresets.name != "") {
+			name = $camPresets.name;
+		} else {
+			let zone = GetSelectedRect(Selector.Presets);
+			if (!zone) {
+				return;
+			}
+
+			let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
+			if (!cam.found) {
+				return;
+			}
+			name = cam.cam;
 		}
 
-		let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
-		if (!cam.found) {
-			return;
-		}
-
-		let swaps = $swapsCache[cam.cam]
+		let swaps = $swapsCache[name]
 		if (!swaps) {
 			console.log("cache miss")
-			let response = await $server.post('/camera/swaps', {camera: cam.cam});
+			let response = await $server.post('/camera/swaps', {camera: name});
 			swaps = response.data;
 			if (!swaps.found) {
 				return;
 			} else {
-				$swapsCache[cam.cam] = swaps;
+				$swapsCache[name] = swaps;
 			}
 		}
 
@@ -334,7 +737,7 @@
 	}
 
 	function swapMenu() {
-		if ($isOpen) {
+		if ($swapsIsOpen) {
 			$am.Actions["swaps"].Cancel();
 			return;
 		}
@@ -360,27 +763,28 @@
 	}
 
 	function handleKeyboard(e: KeyboardEvent) {
-		
-		if (e.repeat) {
+		if (e.repeat && !(scrollable() && (e.code == "Equal" || e.code == "Minus"))) {
 			return;
 		}
-		console.log("keyabord event registerd")
 		console.log(e)
-		let pressedHotkey = compiledHotkeys[newHotkey(e).hotkey()];
+		console.log("keyabord event registerd")
+		let actions = compiledHotkeys[newHotkey(e).hotkey()];
 		console.log(newHotkey(e).hotkey())
-		if (pressedHotkey) {
-			let outcome = functions[pressedHotkey];
-			if (outcome && !($isOpen && outcome != swapMenu)) {
-				e.preventDefault()
-				outcome();
-			}
+		if (actions) {
+			actions.forEach((action) => {
+				let outcome = functions[action];
+				if (outcome && !($swapsIsOpen && outcome != swapMenu)) {
+					e.preventDefault()
+					Promise.resolve().then(outcome);
+				}
+			})
 		}
 	}
 
 	onMount(() => {
 		Object.entries(hotkeys).forEach(([key, value]) => {
 			key.trim().split(" ").forEach((v) => {
-				compiledHotkeys[hotkeyFromString(v).hotkey()] = value;
+				compiledHotkeys[hotkeyFromString(v).hotkey()] = value.trim().split(" ");
 			})
 		});
 		window.addEventListener('keydown', handleKeyboard);

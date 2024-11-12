@@ -5,6 +5,7 @@ import {type PanzoomObject} from '@panzoom/panzoom'
 import { type BaseParams } from 'svelte-gestures';
 import { setPointerControls } from 'svelte-gestures';
 import { type ActionsManager } from '$lib/actions';
+import { States } from '$lib/actions';
 import { RemoveSelection, Selector, Zones } from '$lib/zones';
 import Konva from "konva";
 
@@ -20,7 +21,8 @@ export let clickZoom = writable<number>(100);
 export let clickFocus = writable<number>(0);
 export let panzoom = writable<PanzoomObject>();
 export let clickTimer = writable<number>();
-export let isOpen = writable<boolean>();
+export let swapsIsOpen = writable<boolean>();
+export let presetsIsOpen = writable<boolean>();
 
 export let presetCache = writable<{[key: string]: CamPresets}>({})
 export let swapsCache = writable<{[key: string]: SwapResponse}>({})
@@ -30,7 +32,7 @@ export let am = writable<ActionsManager>();
 export function InitializeAM() {
 	let newAM: ActionsManager = {
 		Actions: {},  
-		ActiveStates: new Set(),
+		ActiveStates: new Set([States.PositiveSentinel]),
 		IsAvailable: function (actionName: string): boolean {
 			let action = this.Actions[actionName];
 			if (action == undefined) {
@@ -140,6 +142,7 @@ export function ClearStage(stage: Konva.Stage, withHover = true) {
 		RemoveSelection(Selector.SwapTarget);
 	}
 	RemoveSelection(Selector.Focus);
+	RemoveSelection(Selector.Zoom);
 	ClearTangles(stage);
 	ClearClicks(stage);
 	ClearArrows(stage);

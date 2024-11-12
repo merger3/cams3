@@ -81,15 +81,15 @@
 	var redrawSelectionsDebounced = _.debounce(RedrawSelections, 50, { 'leading': false, 'trailing': true })
 
 
-	function submitCommand(e: KeyboardEvent) {
-		if (e.code == "Enter") {
-			e.preventDefault()
-			dispatch("sendcmd");
-			if (document.activeElement) {
-				(document.activeElement as HTMLElement).blur();
-			}
-		}
-	}
+	// function submitCommand(e: KeyboardEvent) {
+	// 	if (e.code == "Enter") {
+	// 		e.preventDefault()
+	// 		dispatch("sendcmd");
+	// 		if (document.activeElement) {
+	// 			(document.activeElement as HTMLElement).blur();
+	// 		}
+	// 	}
+	// }
 
 	let doit: number;
 	var player: any;
@@ -122,7 +122,8 @@
 		<Motion whileFocus={{ scale: 1.3 }} let:motion>
 			<div style={parent_style}height:{$commandHeight}px;>
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
-				<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;" bind:innerHTML={$commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} >
+				<!-- <div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;" bind:innerHTML={$commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} > -->
+				<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;">
 					{$commandText}
 				</div>
 			</div>
@@ -162,9 +163,9 @@
 	#cams {
 		pointer-events: none;
 	}
-	[contenteditable="true"]:focus {
+	/* [contenteditable="true"]:focus {
 		outline: none;
-	}
+	} */
 	.command {
 		font-family: "consolas", sans-serif;
 		font-weight: 600;

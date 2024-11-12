@@ -1,36 +1,30 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { createEventDispatcher, onMount, tick } from 'svelte';
-	import type { SwapResponse, Coordinates } from '$types';
+	import type { CamPresets, Coordinates, Preset } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { am, ifDimensions, GetZone, GetCam, server, swapsCache, zones, panzoom, swapsIsOpen } from '$lib/stores';
-	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
+	import { am, ifDimensions, GetZone, GetCam, server, presetCache, zones, panzoom, presetsIsOpen, commandText, stage, ClearStage } from '$lib/stores';
 	import { AddSelection, RemoveSelection, Selector, GetSelectedRect } from '$lib/zones';
 	import type { KonvaPointerEvent } from "svelte-konva";
 	import Konva from "konva";
 	const dispatch = createEventDispatcher();
 	
-	let topEntry: SwapResponse = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
+	let presets: CamPresets = {name: "", presets: []};
 	let animationTimer: number;
 
-	const name = "swaps";
+	const name = "presetsmenu";
 	$am.Actions[name] = {
 		Name: name,
 		TriggerConditions: {
 			Active: new Set([
-				States.OnePointer,
-				States.RightMouseButtonPressed,
-				States.ClickedZone
+				States.NegativeSentinel
 			]),
 			Inactive: new Set([
-				States.StageDraggingDejittered
+				States.PositiveSentinel
 			]),
 		},
 		CancelConditions: {
-			Active: new Set([
-				States.MiddleMouseButtonPressed,
-				States.StageDraggingDejittered
-			]),
+			Active: new Set(),
 			Inactive: new Set(),
 		},
 		IsActive: false,
@@ -49,10 +43,6 @@
 	let dataReady: boolean = false;
 	let cancelled: boolean = true;
 	function enable(this: Action, origin: Coordinates) {
-		if ($am.Actions["mousePan"] && $am.Actions["mousePan"].IsActive) {
-			return;
-		}
-
 		$am.Actions[name].IsActive = true;
 		let target = GetSelectedRect(Selector.Radial);
 		if (!target) {
@@ -73,52 +63,52 @@
 
 	function cancel(this: Action) {
 		removeClickListener();
-		if ($swapsIsOpen) {
-			$swapsIsOpen = false;
+		if ($presetsIsOpen) {
+			$presetsIsOpen = false;
 			animationTimer = setTimeout(() => {
 				cancelled = true;
-				topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
+				presets = {name: "", presets: []};
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
-			RemoveSelection(Selector.ContexMenu);
+			RemoveSelection(Selector.SelectingPreset);
 		} else {
 			cancelled = true;
-			topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
+			presets = {name: "", presets: []};
 			dataReady = false;
 			$am.Actions[name].IsActive = false;
-			RemoveSelection(Selector.ContexMenu);
+			RemoveSelection(Selector.SelectingPreset);
 		}
 
 	}
 
 	async function loadMenu(e: KonvaPointerEvent, coordinates: Coordinates, target: Konva.Rect) {
-		AddSelection(target, Selector.ContexMenu);
+		AddSelection(target, Selector.SelectingPreset);
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
 		if (!cam.found) {
 			$am.Actions[name].Cancel();
 			return;
 		}
-
-		let swaps = $swapsCache[cam.cam]
-
-		if (!swaps) {
-			console.log("cache miss")
-			let response = await $server.post('/camera/swaps', {camera: cam.cam});
-			swaps = response.data;
-			if (!swaps.found || !swaps.swaps.subentries) {
-				$am.Actions[name].Cancel();
-				return;
+		
+		if (cam.found) {
+			let cachedPresets = $presetCache[cam.cam];
+			if (!cachedPresets) {
+				console.log("cache miss");
+				let response = await $server.post('/camera/presets', {camera: cam.cam})
+				if (response.data.found) {
+					presets = response.data.camPresets;
+					$presetCache[cam.cam] = response.data.camPresets;
+				} else {
+					$presetCache[cam.cam] = {name: cam.cam, presets: []}
+				}
 			} else {
-				swaps.position = Number(target.name());
-				$swapsCache[cam.cam] = swaps;
+				console.log("cache hit");
+				presets = cachedPresets;
 			}
 		} else {
-			console.log("cache hit")
+			$am.Actions[name].Cancel();
+			return;
 		}
-		
-		topEntry = swaps;
-		
 		
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: ((coordinates.x * $panzoom.getScale())+ ifOverlay.left), clientY: ((coordinates.y * $panzoom.getScale()) + ifOverlay.top)});
@@ -129,30 +119,37 @@
 		jQuery('#menutrigger')[0].dispatchEvent(rightClickEvent);
 	}
 
+	function handleClick(cam: string, preset: string) {
+		$commandText = `!ptzload ${cam} ${preset}`;
+		ClearStage($stage)
+	}
+
 	function opc(open: boolean) {
 		if (open) {
 			dispatch("openmenu");
 		} else {
 			animationTimer = setTimeout(() => {
-				topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
+				presets = {name: "", presets: []};
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
-			RemoveSelection(Selector.ContexMenu);
+			RemoveSelection(Selector.SelectingPreset);
 			removeClickListener();
 		}
 	}
 </script>
    
 
-<ContextMenu.Root bind:open={$swapsIsOpen} onOpenChange={opc} loop={true}>
+<ContextMenu.Root bind:open={$presetsIsOpen} onOpenChange={opc} loop={true}>
 	{#if $am.Actions[name].IsActive && dataReady && !cancelled}
 		<ContextMenu.Trigger>
 			<slot></slot>
 		</ContextMenu.Trigger>
 
 		<ContextMenu.Content class="w-52 dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
-			<SubContextMenu entries={topEntry.swaps.subentries} cam={{cam: topEntry.cam, position: topEntry.position, found: true, swaps: {label: "", subentries: []}}} />
+			{#each presets.presets as p}
+				<ContextMenu.Item class="h-10" on:click={() => handleClick(presets.name, p.name)}>{p.name}</ContextMenu.Item>
+			{/each}		
 		</ContextMenu.Content>
 	{/if}
 </ContextMenu.Root>

@@ -92,7 +92,7 @@
 {#if $camPresets.presets.length != 0}
 	<div id="presets-menu" class="d-block text-center px-3 py-3 mt-1.5 mb-auto ms-1 me-1.5 z-20 rounded shadow ">
 		{#each $camPresets.presets as p}
-			<button type="button" on:click={() => buildCommand(p)} class="btn btn-outline-warning btn-lg d-block w-100 px-0 mb-2 overflow-hidden position-relative h-16">{p}</button>
+			<button type="button" on:click={() => buildCommand(p.name)} class="btn btn-outline-warning btn-lg d-block w-100 px-0 mb-2 overflow-hidden position-relative h-16">{p.name}</button>
 		{/each}
 	</div>
 	<div class="mt-2.5" />
