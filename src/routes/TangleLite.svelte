@@ -351,9 +351,6 @@
 			$am.ActiveStates.add(States.WheelScrollDown);
 		}
 
-		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-		let coords = {x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()}
-
 		setPointerCountStates(pointers);
 		setCommandState();
 

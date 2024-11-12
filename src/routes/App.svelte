@@ -141,7 +141,7 @@
 		<div class="row justify-content-between flex-nowrap ">
 			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector" style="max-height: {$commandHeight + $ifDimensions.height}px;">
 				<div style="min-height: {$commandHeight}px;max-height: {$commandHeight}px;">
-					<CamSelector bind:controls bind:selected />
+					<CamSelector bind:controls bind:selected on:sendcmd={sendCommand}/>
 				</div>
 				<Presets on:sendcmd={sendCommand} />
 				<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, presetCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom } from '$lib/stores';
+	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, presetCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, presetsIsOpen } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, GetSelectedRect, AddSelection, RemoveSelection } from '$lib/zones';
@@ -91,6 +91,8 @@
 
 	let functions: {[key: string]: any} = {
 		"send": sendCommand,
+
+		"openpresetsmenu": presetsMenu,
 		"openswapmenu": swapMenu,
 		"loadnext": () => loadNextCam("load"),
 		"swapnext": () => loadNextCam("swap"), 
@@ -146,6 +148,15 @@
 		"resetspin": resetSpin,
 
 		"loadpreset": loadPreset,
+
+		"movedownleft": () => buildCommand("ptzmove", ["downleft"]),
+		"movedown": () => buildCommand("ptzmove", ["down"]),
+		"movedownright": () => buildCommand("ptzmove", ["downright"]),
+		"moveleft": () => buildCommand("ptzmove", ["left"]),
+		"moveright": () => buildCommand("ptzmove", ["right"]),
+		"moveupleft": () => buildCommand("ptzmove", ["upleft"]),
+		"moveup": () => buildCommand("ptzmove", ["up"]),
+		"moveupright": () => buildCommand("ptzmove", ["upright"])
 	} 
 
 	let hotkeys: {[key: string]: string} = {
@@ -210,7 +221,8 @@
 		'+e': "swapto1",
 		'+s': "swapto1",
 		'+d': "swapto1",
-
+		
+		"b p": "openpresetsmenu",
 		'v Period': "openswapmenu",
 		'l': "loadnext",
 		'n': "swapnext",
@@ -250,7 +262,16 @@
 
 		"Slash": "resetspin",
 
-		"Tab": "loadpreset"
+		"Tab": "loadpreset",
+
+		'^Numpad1': "movedownleft",
+		'^Numpad2': "movedown",
+		'^Numpad3': "movedownright",
+		'^Numpad4': "moveleft",
+		'^Numpad6': "moveright",
+		'^Numpad7': "moveupleft",
+		'^Numpad8': "moveup",
+		'^Numpad9': "moveupright",
 	}
 
 	function cancelPresetSelection() {
@@ -270,7 +291,8 @@
 			return;
 		}
 
-		if (e.code == "Backspace") {
+		if (e.code == "Backspace" || e.code == "Tab") {
+			e.preventDefault();
 			cancelPresetSelection();
 			return;
 		}
@@ -309,7 +331,7 @@
 
 		presetTimer = setTimeout(() => {
 			cancelPresetSelection();
-		}, 30000);
+		}, 5000);
 	}
 
 	const pan = 0;
@@ -346,7 +368,7 @@
 		}
 
 		$commandText = `!ptzspin ${spinningCam} ${spinValues[pan]} ${spinValues[tilt]} ${spinValues[zoom]}`
-		// dispatch('sendcmd');
+		dispatch('sendcmd');
 		if (spinValues[pan] == 0 && spinValues[tilt] == 0 && spinValues[zoom] == 0) {
 			spinningCam = undefined;
 		}
@@ -374,7 +396,7 @@
 		}
 
 		$commandText = `!ptzspin ${spinningCam} 0 0 0`;
-		// dispatch('sendcmd');
+		dispatch('sendcmd');
 		spinValues = [0, 0, 0];
 		spinningCam = undefined;
 	}
@@ -573,6 +595,14 @@
 	}
 
 	function clear() {
+		if ($presetsIsOpen) {
+			$am.Actions["presetsmenu"].Cancel();
+			return;
+		}
+		if ($swapsIsOpen) {
+			$am.Actions["swaps"].Cancel();
+			return;
+		}
 		Reset($stage);
 	}
 
@@ -663,7 +693,6 @@
 
 		let swaps = $swapsCache[name]
 		if (!swaps) {
-			console.log("cache miss")
 			let response = await $server.post('/camera/swaps', {camera: name});
 			swaps = response.data;
 			if (!swaps.found) {
@@ -681,17 +710,7 @@
 			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
 			// dispatch('sendcmd');
 		} else if (action == "load") {
-			let presets = $presetCache[swaps.swaps.subentries[0].label];
-			if (!presets) {
-				let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps.subentries[0].label});
-				if (!presetResponse.data.found) {
-					return;
-				} else {
-					$presetCache[swaps.swaps.subentries[0].label] = presetResponse.data.camPresets;
-					presets = presetResponse.data.camPresets;
-				}
-			}
-			$camPresets = presets;
+			presetsMenu();
 		}
 	}
 
@@ -736,6 +755,20 @@
 		}
 	}
 
+	function presetsMenu() {
+		if ($presetsIsOpen) {
+			$am.Actions["presetsmenu"].Cancel();
+			return;
+		}
+		let zone = GetSelectedRect(Selector.Presets);
+		if (!zone) {
+			return;
+		}
+		$am.Actions["presetsmenu"].Enable({x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)})
+		const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: 0, clientY: 0, button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+		jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
+	}
+
 	function swapMenu() {
 		if ($swapsIsOpen) {
 			$am.Actions["swaps"].Cancel();
@@ -766,14 +799,11 @@
 		if (e.repeat && !(scrollable() && (e.code == "Equal" || e.code == "Minus"))) {
 			return;
 		}
-		console.log(e)
-		console.log("keyabord event registerd")
 		let actions = compiledHotkeys[newHotkey(e).hotkey()];
-		console.log(newHotkey(e).hotkey())
 		if (actions) {
 			actions.forEach((action) => {
 				let outcome = functions[action];
-				if (outcome && !($swapsIsOpen && outcome != swapMenu)) {
+				if (outcome && !(($swapsIsOpen && outcome != swapMenu) || $presetsIsOpen && outcome != presetsMenu)) {
 					e.preventDefault()
 					Promise.resolve().then(outcome);
 				}

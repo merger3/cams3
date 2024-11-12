@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { ifDimensions, commandHeight } from '$lib/stores';
+	import { onMount, createEventDispatcher } from 'svelte';
+	import { ifDimensions, commandHeight, commandText } from '$lib/stores';
 
+	const dispatch = createEventDispatcher();
 	// This is mostly temporary. I'm working on a more robust settings system that talks to the server
 	// and loads persistent settings from a sqlite DB but this is a quick and dirty way to do this single thing that's essential.
 	export let selected: string;
@@ -29,6 +31,12 @@
 		}
 	}
 
+	function forceResync() {
+		$commandText = "!scenecams";
+		dispatch('sendcmd');
+	}
+
+
 	function getSwapString(): string {
 		return window.location.pathname == "/lola" ? "Twitch" : "Lola";
 	}
@@ -39,6 +47,7 @@
 		Settings (wip)
 	</button>
 	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-2 border-danger-subtle shadow" style="max-height: {$ifDimensions.height - ($ifDimensions.height * .15)}px">
+		<button type="button" on:click={() => forceResync()} class="btn btn-outline-secondary btn-md d-block w-100 mb-2 overflow-hidden">Force Resync</button>
 		<button type="button" on:click={() => togglePlayerControls()} class="btn {selected} btn-lg d-block w-100 mb-2 overflow-hidden">Toggle Video<br>Controls</button>
 		<button type="button" on:click={() => toggleVideoSource()} class="btn btn-outline-secondary btn-sm d-block w-100 mb-2 overflow-hidden">Swap to {getSwapString()}</button>
 	</div>

@@ -139,9 +139,7 @@
 			dot.hide();
 
 			$am.Actions[name].IsActive = false;
-		} else (
-			console.log("no mouse pos")
-		)
+		} 
 	}
 
 

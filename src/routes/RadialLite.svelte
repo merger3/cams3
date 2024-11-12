@@ -26,6 +26,7 @@
 	let radials: Konva.Group;
 	let label: Konva.Text;
 	
+	let lastPointerEvent: any;
 
 	const name = "radial";
 	$am.Actions[name] = {
@@ -88,7 +89,7 @@
 		}
 		activeMenu.location = origin;
 		activeMenu.target = zone;
-
+		hovered = false;
 
 		AddSelection(zone, Selector.Radial);
 		// zone.stroke('rgba(136, 48, 10, 1)');
@@ -120,6 +121,7 @@
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
 		}
+		hovered = false;
 		activeMenu = undefined;
 		radialLayer.listening(false);
 		radialStage.listening(false);
@@ -132,7 +134,13 @@
 
 	function getFunctionFromName(name: string) {
 		let func = rh[name] ? rh[name] : defaultAction;
-    	return func;
+    	return async () => {
+			radials.hide();
+			label.hide();
+			jQuery(".vanish").css("visibility", "hidden");
+			await func();
+			_.defer(function() {dispatch("simulatepointerup", {event: lastPointerEvent});});
+		};
 	}
 
 	function loadNewMenu(r: RadialPart) {
@@ -152,7 +160,9 @@
 	}
 
 	let hoverTimeout: number;
+	let hovered = false;
 	function highlightRadial(e: CustomEvent, r: RadialPart) {
+		hovered = true;
 		(e.detail.target as Konva.Shape).fill("rgba(92, 150, 255, 0.15)")
 		let hoveredElementPos = e.detail.target.getPosition();
 		label.position({x: hoveredElementPos.x, y: hoveredElementPos.y});
@@ -172,6 +182,7 @@
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
 		}
+		hovered = false;
 		(e.detail.target as Konva.Shape).fill(r.color);
 		label.hide();
 	}
@@ -182,8 +193,14 @@
 		}
 	};
 
-	function radialStageHandlePointerUp(e: any) {
-		dispatch("simulatepointerup", {event: e});
+	function radialStageHandlePointerUp(e: any, force: boolean = false) {
+		if (e.evt) {
+			e = e.evt;
+		}
+		lastPointerEvent = e;
+		if (force || !hovered) {
+			dispatch("simulatepointerup", {event: e});
+		}
 	}
 
 	function arcCustomHitbox(context: Konva.Context, shape: any) {
@@ -222,12 +239,10 @@
 	onMount(async () => {
 		await tick();
 		jQuery("#stage")[0].addEventListener("pointerup", radialStageHandlePointerUp);
-		jQuery("#stage")[0].addEventListener("pointerdown", radialStageHandlePointerUp);
+		jQuery("#stage")[0].addEventListener("pointerdown", (e) => radialStageHandlePointerUp(e, true));
  	});
 
-
-	// const buttonHandlers: {[key: string]: any} = {"send": send, "swap": swapMenu, "focus": focusCam, "reset": resetCam, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load"), "back": loadPreviousMenu, "iroff": async () => await irCMD("off"), "iron": async () => await irCMD("on"), "irauto": async () => await irCMD("auto"), "up": async () => await moveCMD("up"), "upright": async () => await moveCMD("upright"), "right": async () => await moveCMD("right"), "downright": async () => await moveCMD("downright"), "down": async () => await moveCMD("down"), "downleft": async () => await moveCMD("downleft"), "left": async () => await moveCMD("left"), "upleft": async () => await moveCMD("upleft")};
-	let rh: {[key: string]: any} = {"send": send, "clear": clear, "select": enableZone, "focus": () => focuscam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload": () => loadNextCam("load")};
+	let rh: {[key: string]: any} = {"send": send, "clear": clear, "select": enableZone, "presets": presetsMenu, "focus": () => focuscam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload":  () => loadNextCam("load")};
 	rh = {...{"iroff": () => buildCommand("ptzir", ["off"]), "iron": () => buildCommand("ptzir", ["on"]), "irauto": () => buildCommand("ptzir", ["auto"])}, ...rh};
 	rh = {...{"up": () => buildCommand("ptzmove", ["up"]), "upright": () => buildCommand("ptzmove", ["upright"]), "right": () => buildCommand("ptzmove", ["right"]), "downright": () => buildCommand("ptzmove", ["downright"]), "down": () => buildCommand("ptzmove", ["down"]), "downleft": () => buildCommand("ptzmove", ["downleft"]), "left": () => buildCommand("ptzmove", ["left"]), "upleft": () => buildCommand("ptzmove", ["upleft"])}, ...rh};
 
@@ -290,6 +305,19 @@
 		jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
 	}
 
+	function presetsMenu() {
+		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+		let mousePos = radialStage.getPointerPosition();
+		if (mousePos && $am.ActiveStates.has(States.MousePointer)) {
+			$am.Actions["presetsmenu"].Enable({x: (mousePos.x - ifOverlay.left) / $panzoom.getScale(), y: (mousePos.y - ifOverlay.top) / $panzoom.getScale()})
+		} else {
+			$am.Actions["presetsmenu"].Enable({x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()})
+		}
+
+		const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: 0, clientY: 0, button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+		jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
+	}
+
 	async function loadNextCam(action: string) {
 		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server)
 		if (!cam.found) {
@@ -298,7 +326,6 @@
 
 		let swaps = $swapsCache[cam.cam]
 		if (!swaps) {
-			console.log("cache miss")
 			let response = await $server.post('/camera/swaps', {camera: cam.cam});
 			swaps = response.data;
 			if (!swaps.found) {
@@ -316,21 +343,20 @@
 			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
 			dispatch('sendcmd');
 		} else if (action == "load") {
-			let presets = $presetCache[swaps.swaps.subentries[0].label];
-			if (!presets) {
-				let presetResponse = await $server.post('/camera/presets', {camera: swaps.swaps.subentries[0].label});
-				if (!presetResponse.data.found) {
-					return;
-				} else {
-					$presetCache[swaps.swaps.subentries[0].label] = presetResponse.data.camPresets;
-					presets = presetResponse.data.camPresets;
-				}
+			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+			let mousePos = radialStage.getPointerPosition();
+			if (mousePos && $am.ActiveStates.has(States.MousePointer)) {
+				// @ts-ignore: presetsmenu can take an extra argument
+				$am.Actions["presetsmenu"].Enable({x: (mousePos.x - ifOverlay.left) / $panzoom.getScale(), y: (mousePos.y - ifOverlay.top) / $panzoom.getScale()}, swaps.swaps.subentries[0].label)
+			} else {
+				// @ts-ignore: presetsmenu can take an extra argument
+				$am.Actions["presetsmenu"].Enable({x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()}, swaps.swaps.subentries[0].label)
 			}
-			$camPresets = presets;
-			RemoveSelection(Selector.Presets);
+
+			const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: 0, clientY: 0, button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+			jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
 		}
 	}
-
 </script>
 
 <Stage
@@ -346,7 +372,7 @@
 >
 	<Layer bind:handle={radialLayer} config={{listening: false}}>
 		{#if $am.Actions[name].IsActive && activeMenu}
-			<Group bind:handle={radials}>
+			<Group bind:handle={radials} config={{visible: true}}>
 				{#each activeMenu.parts as r}
 					<Arc 
 						config={{
@@ -366,7 +392,7 @@
 						on:pointerleave={(e) => unhighlightRadial(e, r)}
 						on:pointerup={getFunctionFromName(r.action)}
 					/>
-					<i class="bi bi-{r.icon} absolute z-100 pointer-events-none text-2xl" style={iconStyle(r)} use:portal={"#stage"}/>
+					<i class="bi bi-{r.icon} absolute z-100 pointer-events-none text-2xl vanish" style={iconStyle(r)} use:portal={"#stage"}/>
 				{/each}
 				<Text bind:handle={label} 
 					config={{

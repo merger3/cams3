@@ -103,7 +103,6 @@
 		let swaps = $swapsCache[cam.cam]
 
 		if (!swaps) {
-			console.log("cache miss")
 			let response = await $server.post('/camera/swaps', {camera: cam.cam});
 			swaps = response.data;
 			if (!swaps.found || !swaps.swaps.subentries) {
@@ -113,8 +112,6 @@
 				swaps.position = Number(target.name());
 				$swapsCache[cam.cam] = swaps;
 			}
-		} else {
-			console.log("cache hit")
 		}
 		
 		topEntry = swaps;

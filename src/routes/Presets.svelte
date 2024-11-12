@@ -53,11 +53,9 @@
 		let presets: CamPresets = {name: "", presets: []};
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
 		
-
 		if (cam.found) {
 			let cachedPresets = $presetCache[cam.cam];
 			if (!cachedPresets) {
-				console.log("cache miss");
 				let response = await $server.post('/camera/presets', {camera: cam.cam})
 				if (response.data.found) {
 					presets = response.data.camPresets;
@@ -66,7 +64,6 @@
 					$presetCache[cam.cam] = {name: cam.cam, presets: []}
 				}
 			} else {
-				console.log("cache hit");
 				presets = cachedPresets;
 			}
 		}

@@ -10,6 +10,7 @@
 	import TangleLite from './TangleLite.svelte';
 	import Zoomable from '$lib/actions/Zoomable.svelte';
 	import ContextMenu from '$lib/actions/ContextMenu.svelte';
+	import PresetsMenu from '$lib/actions/PresetsMenu.svelte';
 	
 	export let selector: TangleLite;
 	export let controls: number;
@@ -134,9 +135,12 @@
 	<div id="vid2" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 		<Zoomable>
 			<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
-			<ContextMenu>
-				<div id="menutrigger" class="overlay unselectable z-100" />
-			</ContextMenu>
+				<ContextMenu>
+					<div id="menutrigger" class="overlay unselectable z-100" />
+				</ContextMenu>
+			<PresetsMenu>
+				<div id="presetsmenutrigger" class="overlay unselectable z-100" />
+			</PresetsMenu>
 
 			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 12 }} />
 

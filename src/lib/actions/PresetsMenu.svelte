@@ -32,17 +32,16 @@
 		Cancel: cancel
 	}
 
-
 	let boundHandleClick: any;
 	function removeClickListener() {
-    if (boundHandleClick) {
-		jQuery("#overlay")[0].removeEventListener("pointerup",boundHandleClick);
-        boundHandleClick = null;
-    }
-}
+		if (boundHandleClick) {
+			jQuery("#overlay")[0].removeEventListener("pointerup",boundHandleClick);
+			boundHandleClick = null;
+		}
+	}
 	let dataReady: boolean = false;
 	let cancelled: boolean = true;
-	function enable(this: Action, origin: Coordinates) {
+	function enable(this: Action, origin: Coordinates, cam: string = undefined) {
 		$am.Actions[name].IsActive = true;
 		let target = GetSelectedRect(Selector.Radial);
 		if (!target) {
@@ -54,7 +53,7 @@
 		}
 		
 		boundHandleClick = function (e: any) {
-			loadMenu(e, origin, target);
+			loadMenu(e, origin, target, cam);
 		};
 
 		jQuery("#overlay")[0].addEventListener("pointerup", boundHandleClick);
@@ -79,44 +78,42 @@
 			$am.Actions[name].IsActive = false;
 			RemoveSelection(Selector.SelectingPreset);
 		}
-
 	}
 
-	async function loadMenu(e: KonvaPointerEvent, coordinates: Coordinates, target: Konva.Rect) {
+	async function loadMenu(e: KonvaPointerEvent, coordinates: Coordinates, target: Konva.Rect, camName: string) {
 		AddSelection(target, Selector.SelectingPreset);
-		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
-		if (!cam.found) {
-			$am.Actions[name].Cancel();
-			return;
-		}
 		
-		if (cam.found) {
-			let cachedPresets = $presetCache[cam.cam];
-			if (!cachedPresets) {
-				console.log("cache miss");
-				let response = await $server.post('/camera/presets', {camera: cam.cam})
-				if (response.data.found) {
-					presets = response.data.camPresets;
-					$presetCache[cam.cam] = response.data.camPresets;
-				} else {
-					$presetCache[cam.cam] = {name: cam.cam, presets: []}
-				}
+		if (!camName) {
+			let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
+			if (!cam.found) {
+				$am.Actions[name].Cancel();
+				return;
+			}
+			camName = cam.cam
+		} 
+		
+		let cachedPresets = $presetCache[camName];
+		if (!cachedPresets) {
+			let response = await $server.post('/camera/presets', {camera: camName})
+			if (response.data.found) {
+				presets = response.data.camPresets;
+				$presetCache[camName] = response.data.camPresets;
 			} else {
-				console.log("cache hit");
-				presets = cachedPresets;
+				$presetCache[camName] = {name: camName, presets: []}
+				$am.Actions[name].Cancel();
+				return;
 			}
 		} else {
-			$am.Actions[name].Cancel();
-			return;
+			presets = cachedPresets;
 		}
-		
+	
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: ((coordinates.x * $panzoom.getScale())+ ifOverlay.left), clientY: ((coordinates.y * $panzoom.getScale()) + ifOverlay.top)});
+		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: ((coordinates.x * $panzoom.getScale()) + ifOverlay.left), clientY: ((coordinates.y * $panzoom.getScale()) + ifOverlay.top)});
 		
 		dataReady = true;
 		removeClickListener();
 		await tick();
-		jQuery('#menutrigger')[0].dispatchEvent(rightClickEvent);
+		jQuery('#presetsmenutrigger')[0].dispatchEvent(rightClickEvent);
 	}
 
 	function handleClick(cam: string, preset: string) {
@@ -146,11 +143,10 @@
 			<slot></slot>
 		</ContextMenu.Trigger>
 
-		<ContextMenu.Content class="w-52 dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
+		<ContextMenu.Content class="w-36 dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
 			{#each presets.presets as p}
-				<ContextMenu.Item class="h-10" on:click={() => handleClick(presets.name, p.name)}>{p.name}</ContextMenu.Item>
+				<ContextMenu.Item class="h-9" on:click={() => handleClick(presets.name, p.name)}>{p.name}</ContextMenu.Item>
 			{/each}		
 		</ContextMenu.Content>
 	{/if}
 </ContextMenu.Root>
-	
