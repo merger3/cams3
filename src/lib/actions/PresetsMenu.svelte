@@ -5,6 +5,7 @@
 	import { States, type Action } from '$lib/actions';
 	import { am, ifDimensions, GetZone, GetCam, server, presetCache, zones, panzoom, presetsIsOpen, commandText, stage, ClearStage } from '$lib/stores';
 	import { AddSelection, RemoveSelection, Selector, GetSelectedRect } from '$lib/zones';
+	import SubPresetsMenu from './SubPresetsMenu.svelte';
 	import type { KonvaPointerEvent } from "svelte-konva";
 	import Konva from "konva";
 	const dispatch = createEventDispatcher();
@@ -70,18 +71,18 @@
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
-			RemoveSelection(Selector.SelectingPreset);
+			RemoveSelection(Selector.PresetMenu);
 		} else {
 			cancelled = true;
 			presets = {name: "", presets: []};
 			dataReady = false;
 			$am.Actions[name].IsActive = false;
-			RemoveSelection(Selector.SelectingPreset);
+			RemoveSelection(Selector.PresetMenu);
 		}
 	}
 
 	async function loadMenu(e: KonvaPointerEvent, coordinates: Coordinates, target: Konva.Rect, camName: string) {
-		AddSelection(target, Selector.SelectingPreset);
+		AddSelection(target, Selector.PresetMenu);
 		
 		if (!camName) {
 			let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
@@ -130,7 +131,7 @@
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
-			RemoveSelection(Selector.SelectingPreset);
+			RemoveSelection(Selector.PresetMenu);
 			removeClickListener();
 		}
 	}
@@ -143,10 +144,8 @@
 			<slot></slot>
 		</ContextMenu.Trigger>
 
-		<ContextMenu.Content class="w-36 dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
-			{#each presets.presets as p}
-				<ContextMenu.Item class="h-9" on:click={() => handleClick(presets.name, p.name)}>{p.name}</ContextMenu.Item>
-			{/each}		
+		<ContextMenu.Content class="w-[10.5rem] dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
+			<SubPresetsMenu bind:cam={presets.name} bind:preset={presets.presets} />
 		</ContextMenu.Content>
 	{/if}
 </ContextMenu.Root>

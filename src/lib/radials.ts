@@ -25,13 +25,14 @@ function setRotations(menu: RadialMenu) {
 }
 
 RadialMenus["misc"] =  {
-	rotation: 102, 
+	rotation: 90, 
 	parts:  [
-		{size: 1, action: "submenu", label: "IR", icon: "lightbulb", submenu: "ptzir"},
-		{size: 1, action: "back", label: "back", icon: "arrow-bar-left"},
 		{size: 1, action: "submenu", label: "move", icon: "arrows-move", submenu: "ptzmove"},
-		{size: 2, action: "presets", label: "presets", icon: "bullseye"},
-		{size: 2, action: "select", label: "select", icon: "square"},
+		{size: 1, action: "back", label: "back", icon: "arrow-bar-left"},
+		{size: 1, action: "submenu", label: "IR", icon: "lightbulb", submenu: "ptzir"},
+		{size: 1, action: "zoom", label: "zoom", icon: "search"},
+		{size: 1, action: "select", label: "select", icon: "square"},
+		{size: 1, action: "focus", label: "focus", icon: "eye"},
 	]
 }
 
@@ -78,7 +79,7 @@ RadialMenus["main"] = {
 		{size: 1, action: "reset", label: "reset", icon: "arrow-repeat"},
 		{size: 1.5, action: "clear", label: "clear", icon: "recycle"},
 		{size: 1, action: "submenu", label: "misc", icon: "list", submenu: "misc"},
-		{size: 1, action: "focus", label: "focus", icon: "eye"},
+		{size: 1, action: "presets", label: "presets", icon: "bullseye"},
 	]
 }
 

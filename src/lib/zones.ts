@@ -13,7 +13,8 @@ export enum Selector {
 	ContexMenu,
 	Focus,
 	Zoom,
-	SelectingPreset
+	SelectingPreset,
+	PresetMenu
 }
 
 export interface Selection {
@@ -42,6 +43,7 @@ let configs: {[key in Selector]?: any} = {};
 
 configs[Selector.Presets] = {stroke: 'rgba(186, 137, 14, 1)', strokeWidth: 2.5};
 configs[Selector.SelectingPreset] = {stroke: 'rgba(172, 0, 0, 1)', strokeWidth: 2.5};
+configs[Selector.PresetMenu] = {stroke: 'rgba(10, 112, 82, 1)', strokeWidth: 2.5};
 configs[Selector.Focus] = {stroke: 'rgba(13, 150, 252, 1)', strokeWidth: 2.5};
 configs[Selector.Zoom] = {stroke: 'rgba(253, 117, 13, 1)', strokeWidth: 2.5};
 configs[Selector.Keyboard] = {stroke: 'rgba(136, 48, 10, 1)', strokeWidth: 2.5};

@@ -12,7 +12,6 @@
 	import ContextMenu from '$lib/actions/ContextMenu.svelte';
 	import PresetsMenu from '$lib/actions/PresetsMenu.svelte';
 	
-	export let selector: TangleLite;
 	export let controls: number;
 
 	const lola = 0;
@@ -144,7 +143,7 @@
 
 			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 300, triggerBeforeFinished: true, spread: 12 }} />
 
-			<TangleLite bind:this={selector} bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} on:sendcmd={(e) => {dispatch("sendcmd")}}/>
+			<TangleLite bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} on:sendcmd={(e) => {dispatch("sendcmd")}}/>
 			
 			{#if videosource == lola}
 				<iframe

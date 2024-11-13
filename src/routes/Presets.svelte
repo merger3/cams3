@@ -5,6 +5,7 @@
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
+	import Subpresets from './Subpresets.svelte';
 	import type Konva from "konva";
 
 	const dispatch = createEventDispatcher();
@@ -74,23 +75,12 @@
 		$am.Actions[name].IsActive = false;
 	}
 
-    function buildCommand(preset: string) {
-		let newCommand: string = `!ptzload ${$camPresets.name} ${preset}`;
-		if (newCommand == $commandText) {
-			dispatch("sendcmd");
-		} else {
-			$commandText =  newCommand;
-			ClearStage($stage)
-		}
-    }
 
 </script>
 
 {#if $camPresets.presets.length != 0}
 	<div id="presets-menu" class="d-block text-center px-3 py-3 mt-1.5 mb-auto ms-1 me-1.5 z-20 rounded shadow ">
-		{#each $camPresets.presets as p}
-			<button type="button" on:click={() => buildCommand(p.name)} class="btn btn-outline-warning btn-lg d-block w-100 px-0 mb-2 overflow-hidden position-relative h-16">{p.name}</button>
-		{/each}
+		<Subpresets bind:preset={$camPresets.presets} on:sendcmd={() => dispatch("sendcmd")} />
 	</div>
 	<div class="mt-2.5" />
 {/if}
@@ -107,7 +97,7 @@
 		/* padding: 0 8px; Add equal padding on the left and right */
 	}
 
-    #presets-menu button:last-child {
+    #presets-menu:last-child {
    	 	margin-bottom: 0!important;
 	}
 </style>

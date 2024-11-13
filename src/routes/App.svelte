@@ -18,7 +18,8 @@
 	const swapRegEx = new RegExp('^\!swap ([0-9]) ([0-9])$');
 	export let videosource: number;
 
-	let selector: TangleLite;
+
+	let keyhandler: Keyboard;
 	$commandText = defaultCMD;
 
 	let resize: HTMLElement;
@@ -50,6 +51,7 @@
 			console.log(error);
 		});
 		
+		keyhandler.cancelPresetSelection();
 		Reset($stage);
 		if (document.activeElement) {
 			(document.activeElement as HTMLElement).blur();
@@ -149,11 +151,11 @@
 				</div>
 			</div>
 			<div class="col-auto g-0" id="wrapper">
-				<VideoLite bind:controls bind:selector bind:videosource on:sendcmd={sendCommand}/>
+				<VideoLite bind:controls bind:videosource on:sendcmd={sendCommand}/>
 			</div>
 		</div>
 	</div>
-	<Keyboard bind:controls bind:selected on:sendcmd={sendCommand}/>
+	<Keyboard bind:this={keyhandler} bind:controls bind:selected on:sendcmd={sendCommand}/>
 	<Chat />
 {/if}
 	

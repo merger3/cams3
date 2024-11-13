@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, camPresets, presetCache, swapsCache, ClearStage } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, clickZoom, camPresets, presetCache, swapsCache, ClearStage } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -242,7 +242,7 @@
 		jQuery("#stage")[0].addEventListener("pointerdown", (e) => radialStageHandlePointerUp(e, true));
  	});
 
-	let rh: {[key: string]: any} = {"send": send, "clear": clear, "select": enableZone, "presets": presetsMenu, "focus": () => focuscam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload":  () => loadNextCam("load")};
+	let rh: {[key: string]: any} = {"send": send, "clear": clear, "select": enableZone, "presets": presetsMenu, "focus": () => focuscam(activeMenu.target), "zoom": () => zoomcam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload":  () => loadNextCam("load")};
 	rh = {...{"iroff": () => buildCommand("ptzir", ["off"]), "iron": () => buildCommand("ptzir", ["on"]), "irauto": () => buildCommand("ptzir", ["auto"])}, ...rh};
 	rh = {...{"up": () => buildCommand("ptzmove", ["up"]), "upright": () => buildCommand("ptzmove", ["upright"]), "right": () => buildCommand("ptzmove", ["right"]), "downright": () => buildCommand("ptzmove", ["downright"]), "down": () => buildCommand("ptzmove", ["down"]), "downleft": () => buildCommand("ptzmove", ["downleft"]), "left": () => buildCommand("ptzmove", ["left"]), "upleft": () => buildCommand("ptzmove", ["upleft"])}, ...rh};
 
@@ -278,6 +278,18 @@
 		}
 		$commandText = `!${command} ${cam.cam} ${values.join(" ")}`
 		dispatch('sendcmd');
+	}
+
+	async function zoomcam(zone: Konva.Rect) {
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server)
+		if (!cam.found) {
+			return;
+		}
+
+		$commandText = `!ptzzoomr ${cam.cam} 100`
+		$clickZoom = 100;
+		ClearStage($stage);
+		AddSelection(zone, Selector.Zoom);
 	}
 
 	async function focuscam(zone: Konva.Rect) {

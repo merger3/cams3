@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, presetCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, presetsIsOpen } from '$lib/stores';
-	import type { Coordinates, CamPresets } from '$types';
+	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, presetCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, presetsIsOpen, GetZone } from '$lib/stores';
+	import type { Coordinates, CamPresets, Preset } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, GetSelectedRect, AddSelection, RemoveSelection } from '$lib/zones';
 	import Konva from "konva";
@@ -13,7 +13,17 @@
 	const dispatch = createEventDispatcher();
 	const tangleID = customAlphabet('0123456789abcdef', 5);
 
-	let compiledHotkeys: {[key: string]: string[]} = {};
+	interface Actions {
+		action: string;
+		args: any[]; 
+	}
+
+	interface Layer {
+		[key: string]: Actions[];
+	}
+
+	let compiledHotkeys: Layer = {};
+	let layers:  Layer[] = [compiledHotkeys];
 
 	const Mod = 0;
 	const Alt = 1;
@@ -115,9 +125,9 @@
 		"focuscam": focusCam,
 		"zoomcam": zoomCam,
 
-		"irauto": () => buildCommand("ptzir", ["auto"]),
-		"iron": () => buildCommand("ptzir", ["on"]),
-		"iroff": () => buildCommand("ptzir", ["off"]),
+		"irauto": () => buildCommand("ptzir", "auto"),
+		"iron": () => buildCommand("ptzir", "on"),
+		"iroff": () => buildCommand("ptzir", "off"),
 
 		"clear": clear,
 		"toggleplayercontrols": togglePlayerControls,
@@ -148,165 +158,199 @@
 		"resetspin": resetSpin,
 
 		"loadpreset": loadPreset,
+		"selectpreset": (p: string) => {if (presetTimer) {clearTimeout(presetTimer);}; buildCommand("ptzload", p);},
 
-		"movedownleft": () => buildCommand("ptzmove", ["downleft"]),
-		"movedown": () => buildCommand("ptzmove", ["down"]),
-		"movedownright": () => buildCommand("ptzmove", ["downright"]),
-		"moveleft": () => buildCommand("ptzmove", ["left"]),
-		"moveright": () => buildCommand("ptzmove", ["right"]),
-		"moveupleft": () => buildCommand("ptzmove", ["upleft"]),
-		"moveup": () => buildCommand("ptzmove", ["up"]),
-		"moveupright": () => buildCommand("ptzmove", ["upright"])
+		"movedownleft": () => buildCommand("ptzmove", "downleft"),
+		"movedown": () => buildCommand("ptzmove", "down"),
+		"movedownright": () => buildCommand("ptzmove", "downright"),
+		"moveleft": () => buildCommand("ptzmove", "left"),
+		"moveright": () => buildCommand("ptzmove", "right"),
+		"moveupleft": () => buildCommand("ptzmove", "upleft"),
+		"moveup": () => buildCommand("ptzmove", "up"),
+		"moveupright": () => buildCommand("ptzmove", "upright"),
+
+		"cancelpresets": cancelPresetSelection,
+		"previouslayer": previousLayer,
+		"resetlayers": cancelPresetSelection,
+		"loadlayer": addLayer,
 	} 
 
-	let hotkeys: {[key: string]: string} = {
-		'Space Enter NumpadEnter': "send",
+	let hotkeys: {[key: string]: string[]} = {
+		'Space Enter NumpadEnter': ["send"],
 
-		'Escape Backspace': "clear",
+		'Escape Backspace': ["clear"],
 
-		'Digit1': "select1",
-		'Digit2': "select2",
-		'Digit3': "select3",
-		'Digit4': "select4",
-		'Digit5': "select5",
-		'Digit6': "select6",
+		'Digit1': ["select1"],
+		'Digit2': ["select2"],
+		'Digit3': ["select3"],
+		'Digit4': ["select4"],
+		'Digit5': ["select5"],
+		'Digit6': ["select6"],
 
-		'Numpad7': "select2",
-		'Numpad4': "select3",
-		'Numpad1': "select4",
-		'Numpad2': "select5",
-		'Numpad3': "select6",
+		'Numpad7':["select2"],
+		'Numpad4':["select3"],
+		'Numpad1':["select4"],
+		'Numpad2':["select5"],
+		'Numpad3':["select6"],
 
-		'Numpad8': "select1",
-		'Numpad9': "select1",
-		'Numpad5': "select1",
-		'Numpad6': "select1",
+		'Numpad8':["select1"],
+		'Numpad9':["select1"],
+		'Numpad5':["select1"],
+		'Numpad6':["select1"],
 
-		'q': "select2",
-		'a': "select3",
-		'z': "select4",
-		'x': "select5",
-		'c': "select6",
+		'q': ["select2"],
+		'a': ["select3"],
+		'z': ["select4"],
+		'x': ["select5"],
+		'c': ["select6"],
 
-		'w': "select1",
-		'e': "select1",
-		's': "select1",
-		'd': "select1",
+		'w': ["select1"],
+		'e': ["select1"],
+		's': ["select1"],
+		'd': ["select1"],
 
-		'+Digit1': "swapto1",
-		'+Digit2': "swapto2",
-		'+Digit3': "swapto3",
-		'+Digit4': "swapto4",
-		'+Digit5': "swapto5",
-		'+Digit6': "swapto6",
+		'+Digit1': ["swapto1"],
+		'+Digit2': ["swapto2"],
+		'+Digit3': ["swapto3"],
+		'+Digit4': ["swapto4"],
+		'+Digit5': ["swapto5"],
+		'+Digit6': ["swapto6"],
 
-		'+Numpad7': "swapto2",
-		'+Numpad4': "swapto3",
-		'+Numpad1': "swapto4",
-		'+Numpad2': "swapto5",
-		'+Numpad3': "swapto6",
+		'+Numpad7': ["swapto2"],
+		'+Numpad4': ["swapto3"],
+		'+Numpad1': ["swapto4"],
+		'+Numpad2': ["swapto5"],
+		'+Numpad3': ["swapto6"],
 
-		'+Numpad8': "swapto1",
-		'+Numpad9': "swapto1",
-		'+Numpad5': "swapto1",
-		'+Numpad6': "swapto1",
+		'+Numpad8': ["swapto1"],
+		'+Numpad9': ["swapto1"],
+		'+Numpad5': ["swapto1"],
+		'+Numpad6': ["swapto1"],
 
-		'+q': "swapto2",
-		'+a': "swapto3",
-		'+z': "swapto4",
-		'+x': "swapto5",
-		'+c': "swapto6",
+		'+q': ["swapto2"],
+		'+a': ["swapto3"],
+		'+z': ["swapto4"],
+		'+x': ["swapto5"],
+		'+c': ["swapto6"],
 
-		'+w': "swapto1",
-		'+e': "swapto1",
-		'+s': "swapto1",
-		'+d': "swapto1",
+		'+w': ["swapto1"],
+		'+e': ["swapto1"],
+		'+s': ["swapto1"],
+		'+d': ["swapto1"],
 		
-		"b p": "openpresetsmenu",
-		'v Period': "openswapmenu",
-		'l': "loadnext",
-		'n': "swapnext",
+		"b p": ["openpresetsmenu"],
+		'v Period': ["openswapmenu"],
+		'l': ["loadnext"],
+		'n': ["swapnext"],
 
-		'r': "resetcam",
-		'f': 'focuscam',
-		'!z': "zoomcam",
+		'r': ["resetcam"],
+		'f': ['focuscam'],
+		'!z': ["zoomcam"],
 		
-		'u': "irauto",
-		'i': "iron",
-		'o': "iroff",
+		'u': ["irauto"],
+		'i': ["iron"],
+		'o': ["iroff"],
 
-		't': "toggleplayercontrols",
+		't': ["toggleplayercontrols"],
 
-		'ArrowUp': "selectabovezone increasevalue",
-		'ArrowDown': "selectbelowzone decreasevalue",
-		'ArrowRight': "selectrightzone increasevalue",
-		'ArrowLeft': "selectleftzone decreasevalue",
+		'ArrowUp': ["selectabovezone", "increasevalue"],
+		'ArrowDown': ["selectbelowzone", "decreasevalue"],
+		'ArrowRight': ["selectrightzone", "increasevalue"],
+		'ArrowLeft': ["selectleftzone", "decreasevalue"],
 
-		"Equal": "increasevalue",
-		"Minus": "decreasevalue",
-		"Digit0": "resetvalue",
+		"Equal": ["increasevalue"],
+		"Minus": ["decreasevalue"],
+		"Digit0": ["resetvalue"],
 
-		'^ArrowUp': "spintiltup",
-		'^ArrowDown': "spintiltdown",
-		'^ArrowRight': "spintiltright",
-		'^ArrowLeft': "spintiltleft",
-		"^Equal": "spinzoomin",
-		"^Minus": "spinzoomout",
+		'^ArrowUp': ["spintiltup"],
+		'^ArrowDown': ["spintiltdown"],
+		'^ArrowRight': ["spintiltright"],
+		'^ArrowLeft': ["spintiltleft"],
+		"^Equal": ["spinzoomin"],
+		"^Minus": ["spinzoomout"],
 
-		'+ArrowUp': "spintiltupsmall",
-		'+ArrowDown': "spintiltdownsmall",
-		'+ArrowRight': "spintiltrightsmall",
-		'+ArrowLeft': "spintiltleftsmall",
-		"+Equal": "spinzoominsmall",
-		"+Minus": "spinzoomoutsmall",
+		'+ArrowUp': ["spintiltupsmall"],
+		'+ArrowDown': ["spintiltdownsmall"],
+		'+ArrowRight': ["spintiltrightsmall"],
+		'+ArrowLeft': [],
+		"+Equal": ["spinzoominsmall"],
+		"+Minus": ["spinzoomoutsmall"],
 
-		"Slash": "resetspin",
+		"Slash": ["resetspin"],
 
-		"Tab": "loadpreset",
+		"Tab": ["loadpreset"],
 
-		'^Numpad1': "movedownleft",
-		'^Numpad2': "movedown",
-		'^Numpad3': "movedownright",
-		'^Numpad4': "moveleft",
-		'^Numpad6': "moveright",
-		'^Numpad7': "moveupleft",
-		'^Numpad8': "moveup",
-		'^Numpad9': "moveupright",
+		'^Numpad1': ["movedownleft"],
+		'^Numpad2': ["movedown"],
+		'^Numpad3': ["movedownright"],
+		'^Numpad4': ["moveleft"],
+		'^Numpad6': ["moveright"],
+		'^Numpad7': ["moveupleft"],
+		'^Numpad8': ["moveup"],
+		'^Numpad9': ["moveupright"],
 	}
 
-	function cancelPresetSelection() {
-		window.removeEventListener('keydown', listenForPreset);
-		presetHotkeys = {};
-		window.addEventListener('keydown', handleKeyboard);
-		RemoveSelection(Selector.SelectingPreset);
-	}
-
-	let presetHotkeys: {[key: string]: any} = {};
-	function listenForPreset(e: KeyboardEvent) {
+	export function cancelPresetSelection() {
 		if (presetTimer) {
 			clearTimeout(presetTimer);
 		}
+		layers = [compiledHotkeys];
+		RemoveSelection(Selector.SelectingPreset);
+	}
 
-		if (e.repeat) {
-			return;
-		}
 
-		if (e.code == "Backspace" || e.code == "Tab") {
-			e.preventDefault();
-			cancelPresetSelection();
-			return;
+	function previousLayer() {
+		if (layers.length > 1) {
+			layers.pop();
+		} 
+		if (layers.length == 1) {
+			RemoveSelection(Selector.SelectingPreset);
 		}
+	}
 
-		let action = presetHotkeys[newHotkey(e).hotkey()];
-		if (action) {
-			e.preventDefault();
-			action();
-			cancelPresetSelection();
+	function unpackPresets(presets: Preset[], presetHotkeys: Layer = undefined): {[key: string]: any[]} {
+		if (!presetHotkeys) {
+			let base: {[key: string]: string[]} = {
+				"Escape Tab": ["resetlayers"],
+				"Backspace ArrowLeft": ["previouslayer"],
+				'Space Enter NumpadEnter': ["send"]
+			} 
+			presetHotkeys = compileHotkeys(base);
 		}
-	} 
+		presets.forEach((p) => {
+			if (!p.subentries || p.subentries.length == 0) {
+				if (p.name != "separator") {
+					if (p.sublayer && p.sublayer.length != 0) {
+						let sublayer = unpackPresets(p.sublayer);
+						p.hotkeys.forEach((v) => {
+							presetHotkeys[hotkeyFromString(v).hotkey()] = [
+								{"action": "selectpreset", "args": [p.name]},
+								{"action": "loadlayer", "args": [sublayer]}
+							]
+						});
+					} else {
+						p.hotkeys.forEach((v) => {
+							presetHotkeys[hotkeyFromString(v).hotkey()] = [{"action": "selectpreset", "args": [p.name]}]
+						});
+					}
+					
+				}
+				return;
+			}
+			unpackPresets(p.subentries, presetHotkeys)
+		});
+		return presetHotkeys;
+	}
+
+	
 
 	let presetTimer: number;
-	async function loadPreset() {
+	function loadPreset() {
+		if (GetSelectedRect(Selector.SelectingPreset)) {
+			cancelPresetSelection();
+			return;
+		}
+
 		if (!$camPresets || $camPresets.presets.length == 0) {
 			return;
 		}
@@ -316,22 +360,23 @@
 			return;
 		}
 
-		$camPresets.presets.forEach((preset) => {
-			preset.hotkeys.forEach((v) => {
-				presetHotkeys[hotkeyFromString(v).hotkey()] = () => {
-					$commandText = `!ptzload ${$camPresets.name} ${preset.name}`;
-					ClearStage($stage)
-				};
-			})
-		});
+		let base: {[key: string]: string[]} = {
+			"Escape Tab": ["resetlayers"],
+			"Backspace ArrowLeft": ["previouslayer"],
+			'Space Enter NumpadEnter': ["send"]
+		} 
 
-		window.removeEventListener('keydown', handleKeyboard);
-		window.addEventListener('keydown', listenForPreset);
+		let newLayer = unpackPresets($camPresets.presets, compileHotkeys(base));
+		layers.push(newLayer);
 		AddSelection(zone, Selector.SelectingPreset);
 
 		presetTimer = setTimeout(() => {
 			cancelPresetSelection();
 		}, 5000);
+	}
+
+	function addLayer(newLayer: Layer) {
+		layers.push(newLayer);
 	}
 
 	const pan = 0;
@@ -417,7 +462,7 @@
 			if ($clickZoom >= 100) {
 				$clickZoom += 20;
 			} else if ($clickZoom < 10) {
-				$clickZoom += 10;
+				$clickZoom += 5;
 			} else {
 				$clickZoom += 10;
 			}
@@ -439,7 +484,7 @@
 				if ($clickZoom > 100) {
 					$clickZoom -= 20;
 				} else if ($clickZoom <= 10) {
-					$clickZoom -= 10;
+					$clickZoom -= 5;
 				} else {
 					$clickZoom -= 10;
 				}
@@ -595,6 +640,10 @@
 	}
 
 	function clear() {
+		if (GetSelectedRect(Selector.SelectingPreset)) {
+			cancelPresetSelection();
+			return;
+		}
 		if ($presetsIsOpen) {
 			$am.Actions["presetsmenu"].Cancel();
 			return;
@@ -652,7 +701,7 @@
 		AddSelection(zone, Selector.Focus);
 	}
 
-	async function buildCommand(command: string, values: string[] = []) {
+	async function buildCommand(command: string, ...values: string[]) {
 		let name: string;
 		if ($camPresets && $camPresets.name != "") {
 			name = $camPresets.name;
@@ -669,8 +718,8 @@
 			name = cam.cam;
 		}
 
-		ClearStage($stage);
 		$commandText = `!${command} ${name} ${values.join(" ")}`
+		ClearStage($stage);
 		// dispatch('sendcmd');
 	}
 
@@ -799,24 +848,36 @@
 		if (e.repeat && !(scrollable() && (e.code == "Equal" || e.code == "Minus"))) {
 			return;
 		}
-		let actions = compiledHotkeys[newHotkey(e).hotkey()];
+		let actions = layers[layers.length-1][newHotkey(e).hotkey()];
 		if (actions) {
 			actions.forEach((action) => {
-				let outcome = functions[action];
+				let outcome = functions[action.action];
 				if (outcome && !(($swapsIsOpen && outcome != swapMenu) || $presetsIsOpen && outcome != presetsMenu)) {
+					console.log(action)
 					e.preventDefault()
-					Promise.resolve().then(outcome);
+					Promise.resolve().then(() => outcome(...action.args));
 				}
 			})
 		}
 	}
 
-	onMount(() => {
-		Object.entries(hotkeys).forEach(([key, value]) => {
+	function compileHotkeys(uncompiledHotkeys: {[key: string]: string[]}): Layer {
+		let compiled: Layer = {};
+		Object.entries(uncompiledHotkeys).forEach(([key, value]) => {
+			let values: Actions[] = [];
+			value.forEach((v) => {
+				values.push({"action": v, "args": []})
+			})
 			key.trim().split(" ").forEach((v) => {
-				compiledHotkeys[hotkeyFromString(v).hotkey()] = value.trim().split(" ");
+				compiled[hotkeyFromString(v).hotkey()] = values;
 			})
 		});
+		return compiled;
+	}
+
+	onMount(() => {
+		compiledHotkeys = compileHotkeys(hotkeys);
+		layers = [compiledHotkeys]
 		window.addEventListener('keydown', handleKeyboard);
 	});
 </script>

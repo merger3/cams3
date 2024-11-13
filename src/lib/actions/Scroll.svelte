@@ -52,7 +52,7 @@
 	}
 
 	function panMove(event: any) {
-		if ($commandText.startsWith("!ptzclick")) {
+		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzzoomr")) {
 			if (event.detail.notch == 1) {
 				if ($clickZoom >= 100) {
 					$clickZoom += 20;
@@ -124,12 +124,12 @@
 
 	function enableScroll(this: Action, origin: Coordinates) {
 		this.IsActive = true;
-		if ($commandText.startsWith("!ptzclick")) {
+		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzzoomr")) {
 			if ($am.ActiveStates.has(States.WheelScrollUp)) {
 				if ($clickZoom >= 100) {
 					$clickZoom += 20;
 				} else if ($clickZoom < 10) {
-					$clickZoom += 10;
+					$clickZoom += 5;
 				} else {
 					$clickZoom += 10;
 				}
@@ -143,7 +143,7 @@
 					if ($clickZoom > 100) {
 						$clickZoom -= 20;
 					} else if ($clickZoom <= 10) {
-						$clickZoom -= 10;
+						$clickZoom -= 5;
 					} else {
 						$clickZoom -= 10;
 					}
