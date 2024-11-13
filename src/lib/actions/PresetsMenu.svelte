@@ -144,7 +144,7 @@
 			<slot></slot>
 		</ContextMenu.Trigger>
 
-		<ContextMenu.Content class="w-[10.5rem] dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
+		<ContextMenu.Content class="w-[11rem] dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
 			<SubPresetsMenu bind:cam={presets.name} bind:preset={presets.presets} />
 		</ContextMenu.Content>
 	{/if}

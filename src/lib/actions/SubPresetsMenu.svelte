@@ -24,7 +24,7 @@
 	{:else} 
 		<ContextMenu.Sub>
 			<ContextMenu.SubTrigger class="h-10" inset>{p.name}</ContextMenu.SubTrigger>
-			<ContextMenu.SubContent class="w-4 overflow-visible text-center" fitViewport={false} overlap={true}> 
+			<ContextMenu.SubContent class="overflow-visible text-center" fitViewport={false} overlap={true}> 
 				<SubPresetsMenu bind:cam bind:preset={p.subentries} />
 			</ContextMenu.SubContent>
 		</ContextMenu.Sub>

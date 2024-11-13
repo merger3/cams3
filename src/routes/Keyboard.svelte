@@ -13,17 +13,38 @@
 	const dispatch = createEventDispatcher();
 	const tangleID = customAlphabet('0123456789abcdef', 5);
 
+	enum LayerType {
+		Default,
+		GeneralBase,
+		GeneralSub,
+		PresetsBase,
+		PresetsSub
+	}
+
 	interface Actions {
 		action: string;
 		args: any[]; 
 	}
 
-	interface Layer {
-		[key: string]: Actions[];
+	interface uncompiledLayer {
+		[key: string]: string;
 	}
 
-	let compiledHotkeys: Layer = {};
+	interface Layer {
+		type: LayerType;
+		hotkeys: {
+			[key: string]: Actions[];
+		}
+	}
+
+	let compiledHotkeys: Layer = {"type": LayerType.GeneralBase, "hotkeys": {}};
 	let layers:  Layer[] = [compiledHotkeys];
+
+	const presetBaseKeys: uncompiledLayer = {
+		"Escape Tab": "resetlayers",
+		"Backspace ArrowLeft": "previouslayer",
+		'Space Enter NumpadEnter': "send"
+	} 
 
 	const Mod = 0;
 	const Alt = 1;
@@ -143,15 +164,15 @@
 
 		"spintiltup": () => spin(tilt, 30),
 		"spintiltdown": () => spin(tilt, -30),
-		"spintiltright": () => spin(pan, 30),
-		"spintiltleft": () => spin(pan, -30),
+		"spinpanright": () => spin(pan, 30),
+		"spinpanleft": () => spin(pan, -30),
 		"spinzoomin": () => spin(zoom, 30),
 		"spinzoomout": () => spin(zoom, -30),
 
 		"spintiltupsmall": () => spin(tilt, 15),
 		"spintiltdownsmall": () => spin(tilt, -15),
-		"spintiltrightsmall": () => spin(pan, 15),
-		"spintiltleftsmall": () => spin(pan, -15),
+		"spinpanrightsmall": () => spin(pan, 15),
+		"spinpanleftsmall": () => spin(pan, -15),
 		"spinzoominsmall": () => spin(zoom, 15),
 		"spinzoomoutsmall": () => spin(zoom, -15),
 
@@ -175,120 +196,122 @@
 		"loadlayer": addLayer,
 	} 
 
-	let hotkeys: {[key: string]: string[]} = {
-		'Space Enter NumpadEnter': ["send"],
+	let hotkeys: uncompiledLayer = {
+		// Optional type identifier
+		'type': 'GeneralBase',
 
-		'Escape Backspace': ["clear"],
+		'Space Enter NumpadEnter': "send",
 
-		'Digit1': ["select1"],
-		'Digit2': ["select2"],
-		'Digit3': ["select3"],
-		'Digit4': ["select4"],
-		'Digit5': ["select5"],
-		'Digit6': ["select6"],
+		'Escape Backspace': "clear",
 
-		'Numpad7':["select2"],
-		'Numpad4':["select3"],
-		'Numpad1':["select4"],
-		'Numpad2':["select5"],
-		'Numpad3':["select6"],
+		'Digit1': "select1",
+		'Digit2': "select2",
+		'Digit3': "select3",
+		'Digit4': "select4",
+		'Digit5': "select5",
+		'Digit6': "select6",
 
-		'Numpad8':["select1"],
-		'Numpad9':["select1"],
-		'Numpad5':["select1"],
-		'Numpad6':["select1"],
+		'Numpad7': "select2",
+		'Numpad4': "select3",
+		'Numpad1': "select4",
+		'Numpad2': "select5",
+		'Numpad3': "select6",
 
-		'q': ["select2"],
-		'a': ["select3"],
-		'z': ["select4"],
-		'x': ["select5"],
-		'c': ["select6"],
+		'Numpad8': "select1",
+		'Numpad9': "select1",
+		'Numpad5': "select1",
+		'Numpad6': "select1",
 
-		'w': ["select1"],
-		'e': ["select1"],
-		's': ["select1"],
-		'd': ["select1"],
+		'q': "select2",
+		'a': "select3",
+		'z': "select4",
+		'x': "select5",
+		'c': "select6",
 
-		'+Digit1': ["swapto1"],
-		'+Digit2': ["swapto2"],
-		'+Digit3': ["swapto3"],
-		'+Digit4': ["swapto4"],
-		'+Digit5': ["swapto5"],
-		'+Digit6': ["swapto6"],
+		'w': "select1",
+		'e': "select1",
+		's': "select1",
+		'd': "select1",
 
-		'+Numpad7': ["swapto2"],
-		'+Numpad4': ["swapto3"],
-		'+Numpad1': ["swapto4"],
-		'+Numpad2': ["swapto5"],
-		'+Numpad3': ["swapto6"],
+		'+Digit1': "swapto1",
+		'+Digit2': "swapto2",
+		'+Digit3': "swapto3",
+		'+Digit4': "swapto4",
+		'+Digit5': "swapto5",
+		'+Digit6': "swapto6",
+		'+Numpad7': "swapto2",
+		'+Numpad4': "swapto3",
+		'+Numpad1': "swapto4",
+		'+Numpad2': "swapto5",
+		'+Numpad3': "swapto6",
+		'+Numpad8': "swapto1",
+		'+Numpad9': "swapto1",
+		'+Numpad5': "swapto1",
+		'+Numpad6': "swapto1",
 
-		'+Numpad8': ["swapto1"],
-		'+Numpad9': ["swapto1"],
-		'+Numpad5': ["swapto1"],
-		'+Numpad6': ["swapto1"],
+		'+q': "swapto2",
+		'+a': "swapto3",
+		'+z': "swapto4",
+		'+x': "swapto5",
+		'+c': "swapto6",
 
-		'+q': ["swapto2"],
-		'+a': ["swapto3"],
-		'+z': ["swapto4"],
-		'+x': ["swapto5"],
-		'+c': ["swapto6"],
-
-		'+w': ["swapto1"],
-		'+e': ["swapto1"],
-		'+s': ["swapto1"],
-		'+d': ["swapto1"],
+		'+w': "swapto1",
+		'+e': "swapto1",
+		'+s': "swapto1",
+		'+d': "swapto1",
 		
-		"b p": ["openpresetsmenu"],
-		'v Period': ["openswapmenu"],
-		'l': ["loadnext"],
-		'n': ["swapnext"],
+		"b p": "openpresetsmenu",
+		'v Period': "openswapmenu",
+		'l': "loadnext",
+		'n': "swapnext",
 
-		'r': ["resetcam"],
-		'f': ['focuscam'],
-		'!z': ["zoomcam"],
+		'r': "resetcam",
+		'f': 'focuscam',
+		'!z': "zoomcam",
 		
-		'u': ["irauto"],
-		'i': ["iron"],
-		'o': ["iroff"],
+		'u': "irauto",
+		'i': "iron",
+		'o': "iroff",
 
-		't': ["toggleplayercontrols"],
+		't': "toggleplayercontrols",
 
-		'ArrowUp': ["selectabovezone", "increasevalue"],
-		'ArrowDown': ["selectbelowzone", "decreasevalue"],
-		'ArrowRight': ["selectrightzone", "increasevalue"],
-		'ArrowLeft': ["selectleftzone", "decreasevalue"],
+		'ArrowUp': "selectabovezone increasevalue",
+		'ArrowDown': "selectbelowzone decreasevalue",
+		'ArrowRight': "selectrightzone increasevalue",
+		'ArrowLeft': "selectleftzone decreasevalue",
 
-		"Equal": ["increasevalue"],
-		"Minus": ["decreasevalue"],
-		"Digit0": ["resetvalue"],
+		"Equal": "increasevalue",
+		"Minus": "decreasevalue",
+		"Digit0": "resetvalue",
 
-		'^ArrowUp': ["spintiltup"],
-		'^ArrowDown': ["spintiltdown"],
-		'^ArrowRight': ["spintiltright"],
-		'^ArrowLeft': ["spintiltleft"],
-		"^Equal": ["spinzoomin"],
-		"^Minus": ["spinzoomout"],
+		'^ArrowUp': "spintiltup",
+		'^ArrowDown': "spintiltdown",
+		'^ArrowRight': "spinpanright",
+		'^ArrowLeft': "spinpanleft",
+		"^Equal": "spinzoomin",
+		"^Minus": "spinzoomout",
 
-		'+ArrowUp': ["spintiltupsmall"],
-		'+ArrowDown': ["spintiltdownsmall"],
-		'+ArrowRight': ["spintiltrightsmall"],
-		'+ArrowLeft': [],
-		"+Equal": ["spinzoominsmall"],
-		"+Minus": ["spinzoomoutsmall"],
+		'+ArrowUp': "spintiltupsmall",
+		'+ArrowDown': "spintiltdownsmall",
+		'+ArrowRight': "spinpanrightsmall",
+		'+ArrowLeft': "spinpanleftsmall",
+		"+Equal": "spinzoominsmall",
+		"+Minus": "spinzoomoutsmall",
 
-		"Slash": ["resetspin"],
+		"Slash": "resetspin",
 
-		"Tab": ["loadpreset"],
+		"Tab": "loadpreset",
 
-		'^Numpad1': ["movedownleft"],
-		'^Numpad2': ["movedown"],
-		'^Numpad3': ["movedownright"],
-		'^Numpad4': ["moveleft"],
-		'^Numpad6': ["moveright"],
-		'^Numpad7': ["moveupleft"],
-		'^Numpad8': ["moveup"],
-		'^Numpad9': ["moveupright"],
+		'^Numpad1': "movedownleft",
+		'^Numpad2': "movedown",
+		'^Numpad3': "movedownright",
+		'^Numpad4': "moveleft",
+		'^Numpad6': "moveright",
+		'^Numpad7': "moveupleft",
+		'^Numpad8': "moveup",
+		'^Numpad9': "moveupright",
 	}
+	
 
 	export function cancelPresetSelection() {
 		if (presetTimer) {
@@ -303,37 +326,26 @@
 		if (layers.length > 1) {
 			layers.pop();
 		} 
-		if (layers.length == 1) {
+		if (layers[layers.length-1].type != LayerType.PresetsBase && layers[layers.length-1].type != LayerType.PresetsSub) {
 			RemoveSelection(Selector.SelectingPreset);
 		}
 	}
 
-	function unpackPresets(presets: Preset[], presetHotkeys: Layer = undefined): {[key: string]: any[]} {
+	function unpackPresets(presets: Preset[], presetHotkeys: Layer = undefined): Layer {
 		if (!presetHotkeys) {
-			let base: {[key: string]: string[]} = {
-				"Escape Tab": ["resetlayers"],
-				"Backspace ArrowLeft": ["previouslayer"],
-				'Space Enter NumpadEnter': ["send"]
-			} 
-			presetHotkeys = compileHotkeys(base);
+			presetHotkeys = compileHotkeys(presetBaseKeys, LayerType.PresetsSub);
 		}
 		presets.forEach((p) => {
 			if (!p.subentries || p.subentries.length == 0) {
-				if (p.name != "separator") {
+				if (p.name != "" && p.name != "separator") {
+					let actionSet: Actions[] = [{"action": "selectpreset", "args": [p.name]}];
 					if (p.sublayer && p.sublayer.length != 0) {
 						let sublayer = unpackPresets(p.sublayer);
-						p.hotkeys.forEach((v) => {
-							presetHotkeys[hotkeyFromString(v).hotkey()] = [
-								{"action": "selectpreset", "args": [p.name]},
-								{"action": "loadlayer", "args": [sublayer]}
-							]
-						});
-					} else {
-						p.hotkeys.forEach((v) => {
-							presetHotkeys[hotkeyFromString(v).hotkey()] = [{"action": "selectpreset", "args": [p.name]}]
-						});
+						actionSet.push({"action": "loadlayer", "args": [sublayer]});
 					}
-					
+					p.hotkeys.trim().split(" ").forEach((v) => {
+						presetHotkeys.hotkeys[hotkeyFromString(v).hotkey()] = actionSet;
+					});
 				}
 				return;
 			}
@@ -359,14 +371,8 @@
 		if (!zone) {
 			return;
 		}
-
-		let base: {[key: string]: string[]} = {
-			"Escape Tab": ["resetlayers"],
-			"Backspace ArrowLeft": ["previouslayer"],
-			'Space Enter NumpadEnter': ["send"]
-		} 
-
-		let newLayer = unpackPresets($camPresets.presets, compileHotkeys(base));
+		
+		let newLayer = unpackPresets($camPresets.presets, compileHotkeys(presetBaseKeys, LayerType.PresetsBase));
 		layers.push(newLayer);
 		AddSelection(zone, Selector.SelectingPreset);
 
@@ -848,12 +854,11 @@
 		if (e.repeat && !(scrollable() && (e.code == "Equal" || e.code == "Minus"))) {
 			return;
 		}
-		let actions = layers[layers.length-1][newHotkey(e).hotkey()];
+		let actions = layers[layers.length-1].hotkeys[newHotkey(e).hotkey()];
 		if (actions) {
 			actions.forEach((action) => {
 				let outcome = functions[action.action];
 				if (outcome && !(($swapsIsOpen && outcome != swapMenu) || $presetsIsOpen && outcome != presetsMenu)) {
-					console.log(action)
 					e.preventDefault()
 					Promise.resolve().then(() => outcome(...action.args));
 				}
@@ -861,15 +866,25 @@
 		}
 	}
 
-	function compileHotkeys(uncompiledHotkeys: {[key: string]: string[]}): Layer {
-		let compiled: Layer = {};
-		Object.entries(uncompiledHotkeys).forEach(([key, value]) => {
+	function compileHotkeys(uncompiled: uncompiledLayer, type: LayerType = undefined): Layer {
+		if (type == undefined) {
+			if (uncompiled.type) {
+				type = LayerType[uncompiled.type as keyof typeof LayerType];
+				delete uncompiled.type;
+			} 
+		}
+		if (type == undefined) {
+			type = LayerType.Default;
+		}
+		let compiled: Layer = {"type": type , "hotkeys": {}};
+
+		Object.entries(uncompiled).forEach(([key, value]) => {
 			let values: Actions[] = [];
-			value.forEach((v) => {
+			value.trim().split(" ").forEach((v) => {
 				values.push({"action": v, "args": []})
 			})
 			key.trim().split(" ").forEach((v) => {
-				compiled[hotkeyFromString(v).hotkey()] = values;
+				compiled.hotkeys[hotkeyFromString(v).hotkey()] = values;
 			})
 		});
 		return compiled;
@@ -877,6 +892,7 @@
 
 	onMount(() => {
 		compiledHotkeys = compileHotkeys(hotkeys);
+		console.log(compiledHotkeys)
 		layers = [compiledHotkeys]
 		window.addEventListener('keydown', handleKeyboard);
 	});

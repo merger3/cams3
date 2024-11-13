@@ -16,7 +16,7 @@ interface CamPresets {
 
 interface Preset {
     name: string;
-    hotkeys: string[];
+    hotkeys: string;
 	subentries: Preset[];
 	sublayer: Preset[];
 } 
