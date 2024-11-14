@@ -414,26 +414,21 @@
 
 		$stage.on("pointerdown.stage", handlePointerDown);
 		$stage.on("pointerup.stage", handlePointerUp);
-		// $stage.on("pointerdblclick.stage", handlePointerDoubleClick);
 		$stage.on("wheel.stage", wheelHandler);
 
 		jQuery("#overlay")[0].addEventListener("pointerout",handlePointerOut);
 		jQuery("#overlay")[0].addEventListener("press", pressDownHandler);
-		// jQuery("#overlay")[0].addEventListener("pressup", pressUpHandler);
-		// layer.toggleHitCanvas();
 
 		CreateZones($zones);
 
 		let response = await $server.get('/synced');
-		console.log(response)
 		if (response.status == 200) {
 			Zones.forEach(async (z) => {
 				let cam = await GetCam({coordinates: {x: z.Rect.x() + (z.Rect.width() / 2), y: z.Rect.y() + (z.Rect.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(z.Name)}, $server)
 				if (cam.found) {
 					let response = await $server.post('/camera/presets', {camera: cam.cam})
-					console.log(response)
 					if (response.data.found) {
-						console.log("updating cache")
+						console.log(`Updating cache for ${cam.cam}`)
 						$presetCache[cam.cam] = response.data.camPresets;
 					} else {
 						$presetCache[cam.cam] = {name: cam.cam, presets: []}

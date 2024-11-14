@@ -12,7 +12,7 @@ Chat
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
 	<Tabs.Root value="agg" class="w-100 h-100">
 		<div class="offcanvas-header p-2">
-			<Tabs.List class="grid w-full grid-cols-3 w-100 ms-1 me-0">
+			<Tabs.List class="grid w-full grid-cols-2 w-100 ms-1 me-0">
 				<Tabs.Trigger value="alveus">Alveus</Tabs.Trigger>
 				<Tabs.Trigger value="agg">AGG</Tabs.Trigger>
 			</Tabs.List>
