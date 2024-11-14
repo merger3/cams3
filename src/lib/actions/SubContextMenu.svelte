@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import type { Entry, SwapResponse } from '$types';
-	import { commandText, stage, ClearStage, swapsCache, presetCache, server } from '$lib/stores';
+	import { commandText, stage, ClearStage, swapsCache, presetCache, server, SyncCache } from '$lib/stores';
 	import { Selector } from '$lib/zones';
 	import SubContextMenu from './SubContextMenu.svelte';
 
@@ -19,23 +19,7 @@
 		} else {
 			$commandText = `!swap ${source.cam} ${target}`
 
-			let response = await $server.post('/alias', {cam: target});
-			let targetName: string = response.data.result;
-			if (!$swapsCache[targetName]) {
-				response = await $server.post('/camera/swaps', {camera: targetName});
-				if (response.data.found) {
-					$swapsCache[targetName] = response.data;
-				}
-			}
-
-			if (!$presetCache[targetName]) {
-				response = await $server.post('/camera/presets', {camera: targetName})
-				if (response.data.found) {
-					$presetCache[targetName] = response.data.camPresets;
-				} else {
-					$presetCache[targetName] = {name: targetName, presets: []}
-				}
-			}
+			SyncCache(target);
 		}
 	}
 

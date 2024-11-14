@@ -88,6 +88,27 @@ export function GetZone(zones: Konva.Group, origin: Coordinates): Konva.Rect | u
 }
 
 
+
+export async function SyncCache(cam: string) {
+	let response = await get(server).post('/alias', {cam: cam});
+	let target: string = response.data.result;
+	if (!get(swapsCache)[target]) {
+		response = await get(server).post('/camera/swaps', {camera: target});
+		if (response.data.found) {
+			get(swapsCache)[target] = response.data;
+		}
+	}
+
+	if (!get(presetCache)[target]) {
+		response = await get(server).post('/camera/presets', {camera: target})
+		if (response.data.found) {
+			get(presetCache)[target] = response.data.camPresets;
+		} else {
+			get(presetCache)[target] = {name: target, presets: []}
+		}
+	}
+}
+
 export function GrowZone(stage: Konva.Stage, zone: Konva.Rect) {
 	zone.hitFunc(function(context: any) {
 		let xMargin = stage.width() * .06

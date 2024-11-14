@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, presetCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, presetsIsOpen, GetZone } from '$lib/stores';
+	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, SyncCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, presetsIsOpen, GetZone } from '$lib/stores';
 	import type { Coordinates, CamPresets, Preset } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, GetSelectedRect, AddSelection, RemoveSelection } from '$lib/zones';
@@ -145,13 +145,13 @@
 		"swapto5": () => swapPosition(5),
 		"swapto6": () => swapPosition(6),
 
-		"resetcam": () => buildCommand("resetcam"),
+		"resetcam": () => buildCommand("resetcam", autosend),
 		"focuscam": focusCam,
 		"zoomcam": zoomCam,
 
-		"irauto": () => buildCommand("ptzir", "auto"),
-		"iron": () => buildCommand("ptzir", "on"),
-		"iroff": () => buildCommand("ptzir", "off"),
+		"irauto": () => buildCommand("ptzir", autosend, "auto"),
+		"iron": () => buildCommand("ptzir", autosend, "on"),
+		"iroff": () => buildCommand("ptzir", autosend, "off"),
 
 		"clear": clear,
 		"toggleplayercontrols": togglePlayerControls,
@@ -182,16 +182,16 @@
 		"resetspin": resetSpin,
 
 		"loadpreset": loadPreset,
-		"selectpreset": (p: string) => {if (presetTimer) {clearTimeout(presetTimer);}; buildCommand("ptzload", p);},
+		"selectpreset": (p: string) => loadAndTestPreset(p),
 
-		"movedownleft": () => buildCommand("ptzmove", "downleft"),
-		"movedown": () => buildCommand("ptzmove", "down"),
-		"movedownright": () => buildCommand("ptzmove", "downright"),
-		"moveleft": () => buildCommand("ptzmove", "left"),
-		"moveright": () => buildCommand("ptzmove", "right"),
-		"moveupleft": () => buildCommand("ptzmove", "upleft"),
-		"moveup": () => buildCommand("ptzmove", "up"),
-		"moveupright": () => buildCommand("ptzmove", "upright"),
+		"movedownleft": () => buildCommand("ptzmove", true, "downleft"),
+		"movedown": () => buildCommand("ptzmove", true, "down"),
+		"movedownright": () => buildCommand("ptzmove", true, "downright"),
+		"moveleft": () => buildCommand("ptzmove", true, "left"),
+		"moveright": () => buildCommand("ptzmove", true, "right"),
+		"moveupleft": () => buildCommand("ptzmove", true, "upleft"),
+		"moveup": () => buildCommand("ptzmove", true, "up"),
+		"moveupright": () => buildCommand("ptzmove", true, "upright"),
 
 		"cancelpresets": cancelPresetSelection,
 		"previouslayer": previousLayer,
@@ -214,16 +214,16 @@
 		'Digit5': "select5",
 		'Digit6': "select6",
 
-		'Numpad7': "select2",
-		'Numpad4': "select3",
-		'Numpad1': "select4",
-		'Numpad2': "select5",
-		'Numpad3': "select6",
+		'^Numpad7': "select2",
+		'^Numpad4': "select3",
+		'^Numpad1': "select4",
+		'^Numpad2': "select5",
+		'^Numpad3': "select6",
 
-		'Numpad8': "select1",
-		'Numpad9': "select1",
-		'Numpad5': "select1",
-		'Numpad6': "select1",
+		'^Numpad8': "select1",
+		'^Numpad9': "select1",
+		'^Numpad5': "select1",
+		'^Numpad6': "select1",
 
 		'q': "select2",
 		'a': "select3",
@@ -305,14 +305,14 @@
 
 		"Tab": "loadpreset",
 
-		'^Numpad1': "movedownleft",
-		'^Numpad2': "movedown",
-		'^Numpad3': "movedownright",
-		'^Numpad4': "moveleft",
-		'^Numpad6': "moveright",
-		'^Numpad7': "moveupleft",
-		'^Numpad8': "moveup",
-		'^Numpad9': "moveupright",
+		'Numpad1': "movedownleft",
+		'Numpad2': "movedown",
+		'Numpad3': "movedownright",
+		'Numpad4': "moveleft",
+		'Numpad6': "moveright",
+		'Numpad7': "moveupleft",
+		'Numpad8': "moveup",
+		'Numpad9': "moveupright",
 	}
 	
 
@@ -453,6 +453,17 @@
 		dispatch('sendcmd');
 		spinValues = [0, 0, 0];
 		spinningCam = undefined;
+	}
+
+	async function loadAndTestPreset(p: string) {
+		if (presetTimer) {
+			clearTimeout(presetTimer);
+		} 
+		let lastCMD = $commandText;
+		await buildCommand("ptzload", false, p); 
+		if (lastCMD == $commandText) {
+			dispatch('sendcmd');
+		}
 	}
 
 	function resetValue() {
@@ -710,7 +721,9 @@
 		AddSelection(zone, Selector.Focus);
 	}
 
-	async function buildCommand(command: string, ...values: string[]) {
+
+	let autosend = false;
+	async function buildCommand(command: string, autosend: boolean, ...values: string[]): Promise<string> {
 		let name: string;
 		if ($camPresets && $camPresets.name != "") {
 			name = $camPresets.name;
@@ -727,9 +740,13 @@
 			name = cam.cam;
 		}
 
-		$commandText = `!${command} ${name} ${values.join(" ")}`
+		let cmd = `!${command} ${name} ${values.join(" ")}`
+		$commandText = cmd;
+		if (autosend) {
+			dispatch('sendcmd');
+		}
 		ClearStage($stage);
-		// dispatch('sendcmd');
+		return cmd;
 	}
 
 	async function loadNextCam(action: string) {
@@ -766,7 +783,8 @@
 
 		if (action == "swap") {
 			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
-			// dispatch('sendcmd');
+			dispatch('sendcmd');
+			SyncCache(swaps.swaps.subentries[0].label);
 		} else if (action == "load") {
 			presetsMenu();
 		}
