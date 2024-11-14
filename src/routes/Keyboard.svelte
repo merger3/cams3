@@ -13,6 +13,9 @@
 	const dispatch = createEventDispatcher();
 	const tangleID = customAlphabet('0123456789abcdef', 5);
 
+	let spinFast = 15;
+	let spinSlow = 5;
+
 	enum LayerType {
 		Default,
 		GeneralBase,
@@ -162,19 +165,19 @@
 		"decreasevalue": decreaseValue,
 		"resetvalue": resetValue,
 
-		"spintiltup": () => spin(tilt, 30),
-		"spintiltdown": () => spin(tilt, -30),
-		"spinpanright": () => spin(pan, 30),
-		"spinpanleft": () => spin(pan, -30),
-		"spinzoomin": () => spin(zoom, 30),
-		"spinzoomout": () => spin(zoom, -30),
+		"spintiltup": () => spin(tilt, spinFast),
+		"spintiltdown": () => spin(tilt, -spinFast),
+		"spinpanright": () => spin(pan, spinFast),
+		"spinpanleft": () => spin(pan, -spinFast),
+		"spinzoomin": () => spin(zoom, spinFast),
+		"spinzoomout": () => spin(zoom, -spinFast),
 
-		"spintiltupsmall": () => spin(tilt, 15),
-		"spintiltdownsmall": () => spin(tilt, -15),
-		"spinpanrightsmall": () => spin(pan, 15),
-		"spinpanleftsmall": () => spin(pan, -15),
-		"spinzoominsmall": () => spin(zoom, 15),
-		"spinzoomoutsmall": () => spin(zoom, -15),
+		"spintiltupsmall": () => spin(tilt, spinSlow),
+		"spintiltdownsmall": () => spin(tilt, -spinSlow),
+		"spinpanrightsmall": () => spin(pan, spinSlow),
+		"spinpanleftsmall": () => spin(pan, -spinSlow),
+		"spinzoominsmall": () => spin(zoom, spinSlow),
+		"spinzoomoutsmall": () => spin(zoom, -spinSlow),
 
 		"resetspin": resetSpin,
 
