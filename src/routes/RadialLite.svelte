@@ -105,8 +105,8 @@
 			innerRadius = (screenSize * .035);
 			outerRadius = (screenSize * .035) + (screenSize * .052);
 		} else if (screenSize <= 2000) {
-			innerRadius = (screenSize * .028);
-			outerRadius = (screenSize * .028) + (screenSize * .044);
+			innerRadius = (screenSize * .030);
+			outerRadius = (screenSize * .030) + (screenSize * .046);
 		} else {
 			innerRadius = (screenSize * .024);
 			outerRadius = (screenSize * .024) + (screenSize * .04);

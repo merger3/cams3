@@ -42,7 +42,15 @@
 			$ifDimensions.width = $ifDimensions.height * (16/9);
 		}
 
-		$commandHeight = $ifDimensions.height * .06;
+		let screenSize = window.innerHeight + window.innerWidth;
+		if (screenSize <= 1500) {
+			$commandHeight = $ifDimensions.height * .08;
+		} else if (screenSize <= 2000) {
+			$commandHeight = $ifDimensions.height * .06;
+		} else {
+			$commandHeight = $ifDimensions.height * .06;
+		}
+		
 
 		let trailingHeight: number = maxHeight - $commandHeight;
 

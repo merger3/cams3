@@ -467,7 +467,7 @@
 						fill: 'rgba(0, 0, 0, 0)',
 						fillEnabled: true,
 						stroke: 'rgba(149, 76, 30, 1)',
-						strokeWidth: 1.5,
+						strokeWidth: 2,
 						strokeScaleEnabled: false,
 						name: String(z.zone)
 					}}
