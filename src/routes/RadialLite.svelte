@@ -91,6 +91,7 @@
 		activeMenu.target = zone;
 		hovered = false;
 
+		$am.Actions["click"].Cancel();
 		AddSelection(zone, Selector.Radial);
 		// zone.stroke('rgba(136, 48, 10, 1)');
 		// zone.strokeWidth(2.5);
