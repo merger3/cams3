@@ -10,7 +10,7 @@
 	import Scroll from "$lib/actions/Scroll.svelte";
 	import { type PressCustomEvent } from 'svelte-gestures';
 	import { Selector, AddSelection, RemoveSelection, Zones } from '$lib/zones';
-	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones, ifDimensions, GetCam, server, presetCache } from '$lib/stores';
+	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones, ifDimensions, GetCam, server, presetCache, swapsCache } from '$lib/stores';
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
 	import { CreateZones } from '$lib/zones';
@@ -45,7 +45,7 @@
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
 			}
 
-			if (distance >= 3) {
+			if (distance >= 4) {
 				$am.ActiveStates.add(States.StageDraggingMinimal)
 			} else {
 				$am.ActiveStates.delete(States.StageDraggingMinimal)
@@ -428,13 +428,19 @@
 				if (cam.found) {
 					let response = await $server.post('/camera/presets', {camera: cam.cam})
 					if (response.data.found) {
-						console.log(`Updating cache for ${cam.cam}`)
+						console.log(`Updating preset cache for ${cam.cam}`)
 						$presetCache[cam.cam] = response.data.camPresets;
 					} else {
 						$presetCache[cam.cam] = {name: cam.cam, presets: []}
 					}
+
+					response = await $server.post('/camera/swaps', {camera: cam.cam});
+					if (response.data.found) {
+						console.log(`Updating swaps cache for ${cam.cam}`)
+						$swapsCache[cam.cam] = response.data;
+					}
 				}
-			})
+			});
 		} 
  	});
 </script>

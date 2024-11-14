@@ -40,7 +40,7 @@
 				States.StagePressed
 			]),
 			Inactive: new Set([
-				States.StageDraggingDejittered
+				States.StageDraggingMinimal
 			]),
 		},
 		CancelConditions: {
@@ -93,9 +93,6 @@
 
 		$am.Actions["click"].Cancel();
 		AddSelection(zone, Selector.Radial);
-		// zone.stroke('rgba(136, 48, 10, 1)');
-		// zone.strokeWidth(2.5);
-		// zone.moveToTop();
 
 		radialLayer.listening(true);
 		radialStage.listening(true);
