@@ -424,19 +424,23 @@
 
 		CreateZones($zones);
 
-		Zones.forEach(async (z) => {
-			let cam = await GetCam({coordinates: {x: z.Rect.x() + (z.Rect.width() / 2), y: z.Rect.y() + (z.Rect.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(z.Name)}, $server)
-			if (cam.found) {
-				let response = await $server.post('/camera/presets', {camera: cam.cam})
-				if (response.data.found) {
-					console.log("updating cache")
-					$presetCache[cam.cam] = response.data.camPresets;
-				} else {
-					$presetCache[cam.cam] = {name: cam.cam, presets: []}
+		let response = await $server.get('/synced');
+		console.log(response)
+		if (response.status == 200) {
+			Zones.forEach(async (z) => {
+				let cam = await GetCam({coordinates: {x: z.Rect.x() + (z.Rect.width() / 2), y: z.Rect.y() + (z.Rect.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(z.Name)}, $server)
+				if (cam.found) {
+					let response = await $server.post('/camera/presets', {camera: cam.cam})
+					console.log(response)
+					if (response.data.found) {
+						console.log("updating cache")
+						$presetCache[cam.cam] = response.data.camPresets;
+					} else {
+						$presetCache[cam.cam] = {name: cam.cam, presets: []}
+					}
 				}
-			}
-		})
-   
+			})
+		} 
  	});
 </script>
 
