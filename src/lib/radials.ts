@@ -64,7 +64,7 @@ RadialMenus["ptzir"] =  {
 RadialMenus["swap"] = {
 	rotation: 30,
 	parts: [
-		{size: 2, action: "nextswap", label: "swap", icon: "box-arrow-up-right"},
+		{size: 2, action: "nextswap", label: "next", icon: "box-arrow-up-right"},
 		{size: 1, action: "back", label: "back", icon: "arrow-bar-left"},
 		{size: 2, action: "nextload", label: "load", icon: "download"},
 		{size: 1, action: "swap", label: "swap", icon: "menu-button-wide"},

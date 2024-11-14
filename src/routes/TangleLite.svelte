@@ -422,7 +422,7 @@
 		CreateZones($zones);
 
 		let response = await $server.get('/synced');
-		if (response.status == 200) {
+		if (response.status == 200 && response.data.length == Zones.length) {
 			Zones.forEach(async (z) => {
 				let cam = await GetCam({coordinates: {x: z.Rect.x() + (z.Rect.width() / 2), y: z.Rect.y() + (z.Rect.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(z.Name)}, $server)
 				if (cam.found) {

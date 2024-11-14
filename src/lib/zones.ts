@@ -41,16 +41,19 @@ export function CreateZones(boxGroup: Konva.Group) {
 export let Zones: Zone[] = [];
 let configs: {[key in Selector]?: any} = {};
 
-configs[Selector.Presets] = {stroke: 'rgba(186, 137, 14, 1)', strokeWidth: 2.5};
-configs[Selector.SelectingPreset] = {stroke: 'rgba(172, 0, 0, 1)', strokeWidth: 2.5};
-configs[Selector.PresetMenu] = {stroke: 'rgba(10, 112, 82, 1)', strokeWidth: 2.5};
-configs[Selector.Focus] = {stroke: 'rgba(13, 150, 252, 1)', strokeWidth: 2.5};
-configs[Selector.Zoom] = {stroke: 'rgba(253, 117, 13, 1)', strokeWidth: 2.5};
-configs[Selector.Keyboard] = {stroke: 'rgba(136, 48, 10, 1)', strokeWidth: 2.5};
-configs[Selector.SwapSource] = {stroke: 'rgba(121, 173, 120, 1)', strokeWidth: 3};
-configs[Selector.SwapTarget] = {stroke: 'rgba(171, 119, 172, 1)', strokeWidth: 3};
-configs[Selector.ContexMenu] = {stroke: 'rgba(99, 60, 154, 1)', strokeWidth: 3};
-configs[Selector.Radial] = {stroke: 'rgba(153, 153, 153, 1)', strokeWidth: 3};
+configs[Selector.Presets] = {stroke: 'rgba(202, 148, 24, 1)', strokeWidth: 2.5}; // Bolder golden-brown
+configs[Selector.SelectingPreset] = {stroke: 'rgba(220, 53, 69, 1)', strokeWidth: 2.5}; // Rich red
+configs[Selector.PresetMenu] = {stroke: 'rgba(13, 90, 225, 1)', strokeWidth: 2.5}; // Bold blue
+configs[Selector.Focus] = {stroke: 'rgba(25, 100, 230, 1)', strokeWidth: 2.5}; // Stronger blue
+configs[Selector.Zoom] = {stroke: 'rgba(185, 110, 35, 1)', strokeWidth: 2.5}; // Muted warm amber
+configs[Selector.Keyboard] = {stroke: 'rgba(178, 60, 20, 1)', strokeWidth: 2.5}; // Intense brick red
+configs[Selector.SwapSource] = {stroke: 'rgba(96, 153, 95, 1)', strokeWidth: 3}; // Strong green
+configs[Selector.SwapTarget] = {stroke: 'rgba(150, 92, 151, 1)', strokeWidth: 3}; // Vibrant purple
+configs[Selector.ContexMenu] = {stroke: 'rgba(75, 45, 120, 1)', strokeWidth: 3}; // Rich dark purple
+configs[Selector.Radial] = {stroke: 'rgba(80, 120, 200, 1)', strokeWidth: 3}; // Standout blue-grey
+
+
+
 
 export function AddSelection(rect: Konva.Rect, config: Selector) {
 	let zone = Zones[Number(rect.name()) - 1];

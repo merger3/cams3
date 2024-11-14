@@ -67,6 +67,9 @@
 			} else {
 				presets = cachedPresets;
 			}
+		} else {
+			$am.Actions[name].Cancel();
+			return;
 		}
 
 		AddSelection(target, Selector.Presets);

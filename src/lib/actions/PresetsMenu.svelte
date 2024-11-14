@@ -107,6 +107,12 @@
 		} else {
 			presets = cachedPresets;
 		}
+
+		if (presets.presets.length == 0) {
+			$am.Actions[name].Cancel();
+			return;
+		}
+
 	
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: ((coordinates.x * $panzoom.getScale()) + ifOverlay.left), clientY: ((coordinates.y * $panzoom.getScale()) + ifOverlay.top)});
