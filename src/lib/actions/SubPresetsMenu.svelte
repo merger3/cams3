@@ -2,6 +2,7 @@
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import type { Preset } from '$types';
 	import { commandText, stage, ClearStage } from '$lib/stores';
+	import { Selector } from '$lib/zones';
 	import SubPresetsMenu from './SubPresetsMenu.svelte';
 
 	export let cam: string;
@@ -9,7 +10,7 @@
 
 	function handleClick(cam: string, preset: string) {
 		$commandText = `!ptzload ${cam} ${preset}`;
-		ClearStage($stage)
+		ClearStage($stage, [Selector.PresetMenu]);
 	}
 
 </script>

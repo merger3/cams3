@@ -786,10 +786,12 @@
 		AddSelection(targetZone, Selector.SwapTarget);
 		let swaps: number[] = [Number(sourceZone.name()), target]
 		if (swaps[0] == swaps[1]) {
+			ClearStage($stage);
 			return;
 		} else {
+			
 			swaps.sort(function(a, b){return a - b});
-			ClearStage($stage, false);
+			ClearStage($stage, [Selector.SwapSource, Selector.SwapTarget]);
 			let newArrow = new Konva.Arrow({
 				x: 0,
 				y: 0,

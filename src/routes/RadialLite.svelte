@@ -40,7 +40,7 @@
 				States.StagePressed
 			]),
 			Inactive: new Set([
-				States.StageDraggingMinimal
+				States.StageDraggingDejittered
 			]),
 		},
 		CancelConditions: {

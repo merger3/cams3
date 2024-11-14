@@ -3,13 +3,15 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { SwapResponse, Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { am, ifDimensions, GetZone, GetCam, server, swapsCache, zones, panzoom, swapsIsOpen } from '$lib/stores';
+	import { am, ifDimensions, GetZone, GetCam, server, swapsCache, zones, panzoom, swapsIsOpen, commandText } from '$lib/stores';
 	import SubContextMenu from '$lib/actions/SubContextMenu.svelte';
 	import { AddSelection, RemoveSelection, Selector, GetSelectedRect } from '$lib/zones';
 	import type { KonvaPointerEvent } from "svelte-konva";
 	import Konva from "konva";
 	const dispatch = createEventDispatcher();
 	
+	const defaultCMD: string = "​";
+
 	let topEntry: SwapResponse = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
 	let animationTimer: number;
 
@@ -135,7 +137,9 @@
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
-			RemoveSelection(Selector.ContexMenu);
+			if ($commandText == defaultCMD) {
+				RemoveSelection(Selector.ContexMenu);
+			} 
 			removeClickListener();
 		}
 	}

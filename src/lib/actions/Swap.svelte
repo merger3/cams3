@@ -53,7 +53,7 @@
 
 		arrow.points([(startZone.x() + (startZone.width() / 2)), (startZone.y() + (startZone.height() / 2))]);
 		
-		ClearStage($stage, false);
+		ClearStage($stage, [Selector.SwapSource, Selector.SwapTarget]);
 		
 		arrow.show();
 		arrow.moveToTop();

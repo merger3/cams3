@@ -30,14 +30,14 @@ RadialMenus["misc"] =  {
 		{size: 1, action: "submenu", label: "move", icon: "arrows-move", submenu: "ptzmove"},
 		{size: 1, action: "back", label: "back", icon: "arrow-bar-left"},
 		{size: 1, action: "submenu", label: "IR", icon: "lightbulb", submenu: "ptzir"},
-		{size: 1, action: "zoom", label: "zoom", icon: "search"},
-		{size: 1, action: "select", label: "select", icon: "square"},
 		{size: 1, action: "focus", label: "focus", icon: "eye"},
+		{size: 1, action: "select", label: "select", icon: "square"},
+		{size: 1, action: "zoom", label: "zoom", icon: "search"},
 	]
 }
 
 RadialMenus["ptzmove"] = {
-	color: `rgba(149, 91, 157, ${Transparency})`, 
+	// color: `rgba(149, 91, 157, ${Transparency})`, 
 	rotation: -112.5, 
 	parts: [
 		{size: 1, action: "up", label: "up", icon: "arrow-up"},
@@ -64,10 +64,10 @@ RadialMenus["ptzir"] =  {
 RadialMenus["swap"] = {
 	rotation: 30,
 	parts: [
-		{size: 2, action: "nextswap", label: "next", icon: "box-arrow-up-right"},
+		{size: 2, action: "nextswap", label: "swap", icon: "box-arrow-up-right"},
 		{size: 1, action: "back", label: "back", icon: "arrow-bar-left"},
 		{size: 2, action: "nextload", label: "load", icon: "download"},
-		{size: 1, action: "swap", label: "swap", icon: "menu-button-wide"},
+		{size: 1, action: "swap", label: "menu", icon: "menu-button-wide"},
 	]
 }
 

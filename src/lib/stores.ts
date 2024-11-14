@@ -136,13 +136,15 @@ export function ClearArrows(stage: Konva.Stage) {
 	});
 }
 
-export function ClearStage(stage: Konva.Stage, withHover = true) {
-	if (withHover) {
-		RemoveSelection(Selector.SwapSource);
-		RemoveSelection(Selector.SwapTarget);
-	}
-	RemoveSelection(Selector.Focus);
-	RemoveSelection(Selector.Zoom);
+export function ClearStage(stage: Konva.Stage, extraExcludes: Selector[] = []) {
+	let exclude = new Set([Selector.Presets, Selector.Radial, Selector.Keyboard]);
+	extraExcludes.forEach(exclude.add, exclude)
+	Object.entries(Selector).forEach((key, value) => {
+		if (!exclude.has(value)) {
+			RemoveSelection(value);
+		}
+	});
+	
 	ClearTangles(stage);
 	ClearClicks(stage);
 	ClearArrows(stage);

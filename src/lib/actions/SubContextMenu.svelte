@@ -2,6 +2,7 @@
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import type { Entry, SwapResponse } from '$types';
 	import { commandText, stage, ClearStage } from '$lib/stores';
+	import { Selector } from '$lib/zones';
 	import SubContextMenu from './SubContextMenu.svelte';
 
 	export let entries: Entry[];
@@ -17,7 +18,7 @@
 		} else {
 			$commandText = `!swap ${source.cam} ${target}`
 		}
-		ClearStage($stage);
+		ClearStage($stage, [Selector.ContexMenu]);
 	}
 
 </script>

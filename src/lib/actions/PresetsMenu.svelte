@@ -3,13 +3,15 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { CamPresets, Coordinates, Preset } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { am, ifDimensions, GetZone, GetCam, server, presetCache, zones, panzoom, presetsIsOpen, commandText, stage, ClearStage } from '$lib/stores';
+	import { am, ifDimensions, GetZone, GetCam, server, presetCache, zones, panzoom, presetsIsOpen, commandText } from '$lib/stores';
 	import { AddSelection, RemoveSelection, Selector, GetSelectedRect } from '$lib/zones';
 	import SubPresetsMenu from './SubPresetsMenu.svelte';
 	import type { KonvaPointerEvent } from "svelte-konva";
 	import Konva from "konva";
 	const dispatch = createEventDispatcher();
 	
+	const defaultCMD: string = "​";
+
 	let presets: CamPresets = {name: "", presets: []};
 	let animationTimer: number;
 
@@ -123,11 +125,6 @@
 		jQuery('#presetsmenutrigger')[0].dispatchEvent(rightClickEvent);
 	}
 
-	function handleClick(cam: string, preset: string) {
-		$commandText = `!ptzload ${cam} ${preset}`;
-		ClearStage($stage)
-	}
-
 	function opc(open: boolean) {
 		if (open) {
 			dispatch("openmenu");
@@ -137,7 +134,9 @@
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
-			RemoveSelection(Selector.PresetMenu);
+			if ($commandText == defaultCMD) {
+				RemoveSelection(Selector.PresetMenu);
+			} 
 			removeClickListener();
 		}
 	}
