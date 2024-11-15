@@ -534,6 +534,7 @@
 
 		let sourceZone = GetSelectedRect(Selector.Presets);
 		if (!sourceZone) {
+			enableZone("1");
 			return;
 		}
 		let target: string;
@@ -563,6 +564,7 @@
 		
 		let sourceZone = GetSelectedRect(Selector.Presets);
 		if (!sourceZone) {
+			enableZone("1");
 			return;
 		}
 		let target: string;
@@ -593,6 +595,7 @@
 		
 		let sourceZone = GetSelectedRect(Selector.Presets);
 		if (!sourceZone) {
+			enableZone("1");
 			return;
 		}
 		let target: string;
@@ -622,6 +625,7 @@
 		
 		let sourceZone = GetSelectedRect(Selector.Presets);
 		if (!sourceZone) {
+			enableZone("1");
 			return;
 		}
 		let target: string;
@@ -786,7 +790,7 @@
 			dispatch('sendcmd');
 			SyncCache(swaps.swaps.subentries[0].label);
 		} else if (action == "load") {
-			presetsMenu();
+			presetsMenu(swaps.swaps.subentries[0].label);
 		}
 	}
 
@@ -807,7 +811,6 @@
 			ClearStage($stage);
 			return;
 		} else {
-			
 			swaps.sort(function(a, b){return a - b});
 			ClearStage($stage, [Selector.SwapSource, Selector.SwapTarget]);
 			let newArrow = new Konva.Arrow({
@@ -833,7 +836,7 @@
 		}
 	}
 
-	function presetsMenu() {
+	function presetsMenu(cam: string = undefined) {
 		if ($presetsIsOpen) {
 			$am.Actions["presetsmenu"].Cancel();
 			return;
@@ -842,7 +845,9 @@
 		if (!zone) {
 			return;
 		}
-		$am.Actions["presetsmenu"].Enable({x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)})
+
+		// @ts-ignore: presetsmenu can take an extra argument
+		$am.Actions["presetsmenu"].Enable({x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, cam)
 		const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: 0, clientY: 0, button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
 		jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
 	}

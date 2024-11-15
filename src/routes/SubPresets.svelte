@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import Subpresets from './Subpresets.svelte';
+	import Subpresets from './SubPresets.svelte';
 	import { commandText, stage, camPresets, ClearStage } from '$lib/stores';
 	import type { Preset } from '$types';
 

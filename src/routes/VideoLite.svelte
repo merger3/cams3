@@ -145,7 +145,7 @@
 				<ContextMenu>
 					<div id="menutrigger" class="overlay unselectable z-100" />
 				</ContextMenu>
-			<PresetsMenu>
+			<PresetsMenu on:sendcmd={() => dispatch("sendcmd")}>
 				<div id="presetsmenutrigger" class="overlay unselectable z-100" />
 			</PresetsMenu>
 

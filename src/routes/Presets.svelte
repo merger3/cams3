@@ -5,7 +5,7 @@
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
-	import Subpresets from './Subpresets.svelte';
+	import Subpresets from './SubPresets.svelte';
 	import type Konva from "konva";
 
 	const dispatch = createEventDispatcher();
