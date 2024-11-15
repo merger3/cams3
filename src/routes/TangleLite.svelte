@@ -45,7 +45,11 @@
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
 			}
 
-			if (distance >= 4) {
+			let minDistance = 8;
+			if ($am.ActiveStates.has(States.ClickedListeningShape)) {
+				minDistance = 2;
+			}
+			if (distance >= minDistance) {
 				$am.ActiveStates.add(States.StageDraggingMinimal)
 			} else {
 				$am.ActiveStates.delete(States.StageDraggingMinimal)
@@ -205,6 +209,10 @@
 			} else if (e.evt.pointerType == 'pen') {
 				$am.ActiveStates.add(States.PenPointer);
 			}
+		}
+
+		if (e.target.getParent() != $zones) {
+			$am.ActiveStates.add(States.ClickedListeningShape);
 		}
 
 		setClickedZone(origin);
