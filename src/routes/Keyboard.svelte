@@ -207,12 +207,12 @@
 
 		'Escape Backspace': "clear",
 
-		'Digit1': "select1",
-		'Digit2': "select2",
-		'Digit3': "select3",
-		'Digit4': "select4",
-		'Digit5': "select5",
-		'Digit6': "select6",
+		'Digit1': "swapto1",
+		'Digit2': "swapto2",
+		'Digit3': "swapto3",
+		'Digit4': "swapto4",
+		'Digit5': "swapto5",
+		'Digit6': "swapto6",
 
 		'^Numpad7': "select2",
 		'^Numpad4': "select3",

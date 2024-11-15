@@ -45,7 +45,7 @@
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
 			}
 
-			let minDistance = 8;
+			let minDistance = 12;
 			if ($am.ActiveStates.has(States.ClickedListeningShape)) {
 				minDistance = 2;
 			}

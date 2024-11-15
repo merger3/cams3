@@ -35,16 +35,25 @@
 		$server.post('/send', {
 			command: $commandText
 		}).then(function (response) {
-			let result = swapRegEx.exec(sentCommand);
-			if (result) {
-				let presetSelected = GetSelectedRect(Selector.Presets);
-				if (presetSelected?.name()) {
-					let presetZone = presetSelected.name();
-					let targetZone = presetZone === result[1] ? result[2] : (presetZone === result[2] ? result[1] : null);
-					
-					if (targetZone) {
-						AddSelection($zones.findOne(`.${targetZone}`), Selector.Presets);
+			if (sentCommand.startsWith("!swap")) {
+				let result = swapRegEx.exec(sentCommand);
+				if (result) {
+					let presetSelected = GetSelectedRect(Selector.Presets);
+					if (presetSelected?.name()) {
+						let presetZone = presetSelected.name();
+						let targetZone = presetZone === result[1] ? result[2] : (presetZone === result[2] ? result[1] : null);
+						
+						if (targetZone) {
+							AddSelection($zones.findOne(`.${targetZone}`), Selector.Presets);
+						}
 					}
+				} else {
+					_.delay(function() {
+						let z = GetSelectedRect(Selector.Presets);
+						if (z) {
+							$am.Actions["doubleclick"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
+						}
+					}, 400);
 				}
 			}
 		}).catch(function (error) {
@@ -55,11 +64,6 @@
 		Reset($stage);
 		if (document.activeElement) {
 			(document.activeElement as HTMLElement).blur();
-		}
-
-		let z = GetSelectedRect(Selector.Presets);
-		if (z) {
-			$am.Actions["doubleclick"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
 		}
 	}
 
