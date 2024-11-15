@@ -184,14 +184,14 @@
 		"loadpreset": loadPreset,
 		"selectpreset": (p: string) => loadAndTestPreset(p),
 
-		"movedownleft": () => buildCommand("ptzmove", true, "downleft"),
-		"movedown": () => buildCommand("ptzmove", true, "down"),
-		"movedownright": () => buildCommand("ptzmove", true, "downright"),
-		"moveleft": () => buildCommand("ptzmove", true, "left"),
-		"moveright": () => buildCommand("ptzmove", true, "right"),
-		"moveupleft": () => buildCommand("ptzmove", true, "upleft"),
-		"moveup": () => buildCommand("ptzmove", true, "up"),
-		"moveupright": () => buildCommand("ptzmove", true, "upright"),
+		"movedownleft": () => buildCommand("ptzmove", autosend, "downleft"),
+		"movedown": () => buildCommand("ptzmove", autosend, "down"),
+		"movedownright": () => buildCommand("ptzmove", autosend, "downright"),
+		"moveleft": () => buildCommand("ptzmove", autosend, "left"),
+		"moveright": () => buildCommand("ptzmove", autosend, "right"),
+		"moveupleft": () => buildCommand("ptzmove", autosend, "upleft"),
+		"moveup": () => buildCommand("ptzmove", autosend, "up"),
+		"moveupright": () => buildCommand("ptzmove", autosend, "upright"),
 
 		"cancelpresets": cancelPresetSelection,
 		"previouslayer": previousLayer,
@@ -726,7 +726,7 @@
 	}
 
 
-	let autosend = false;
+	let autosend = true;
 	async function buildCommand(command: string, autosend: boolean, ...values: string[]): Promise<string> {
 		let name: string;
 		if ($camPresets && $camPresets.name != "") {

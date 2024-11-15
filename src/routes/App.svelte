@@ -56,6 +56,11 @@
 		if (document.activeElement) {
 			(document.activeElement as HTMLElement).blur();
 		}
+
+		let z = GetSelectedRect(Selector.Presets);
+		if (z) {
+			$am.Actions["doubleclick"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
+		}
 	}
 
 	function resizeTextRaw() {
