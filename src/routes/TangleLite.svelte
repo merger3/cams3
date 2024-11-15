@@ -45,10 +45,11 @@
 				$am.ActiveStates.delete(States.StageDraggingDejittered)
 			}
 
-			let minDistance = 12;
+			let minDistance = 8;
 			if ($am.ActiveStates.has(States.ClickedListeningShape)) {
 				minDistance = 2;
 			}
+			console.log(minDistance)
 			if (distance >= minDistance) {
 				$am.ActiveStates.add(States.StageDraggingMinimal)
 			} else {
@@ -246,6 +247,11 @@
 			isDragging(coords)
 			setCommandState()
 
+			if (e.target.getParent() != $zones) {
+				$am.ActiveStates.add(States.ClickedListeningShape);
+			} else {
+				$am.ActiveStates.delete(States.ClickedListeningShape);
+			}
 			if (log) {
 				console.log(printStates($am.ActiveStates))
 			}
@@ -285,10 +291,12 @@
 			$am.ActiveStates.delete(States.StageDraggingMinimal)
 			$am.ActiveStates.delete(States.PointerRemoved)
 			$am.ActiveStates.delete(States.ClickedEmptySpace);
+			$am.ActiveStates.delete(States.ClickedListeningShape);
 
 			$am.ActiveStates.delete(States.MousePointer);
 			$am.ActiveStates.delete(States.TouchPointer);
 			$am.ActiveStates.delete(States.PenPointer);
+
 
 			ResetZone(startZone as Konva.Rect)
 
@@ -297,6 +305,7 @@
 			$am.ActiveStates.delete(States.CrossedZones);
 		} 
 
+		
 		$am.ActiveStates.delete(States.StagePressed); 
 
 		if (log) {
@@ -325,6 +334,7 @@
 				$am.ActiveStates.delete(States.StageDraggingMinimal)
 				$am.ActiveStates.delete(States.PointerRemoved)
 				$am.ActiveStates.delete(States.ClickedEmptySpace);
+				$am.ActiveStates.delete(States.ClickedListeningShape);
 
 				ResetZone(startZone as Konva.Rect)
 				
