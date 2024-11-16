@@ -11,6 +11,7 @@
 	const dispatch = createEventDispatcher();
 	
 	const defaultCMD: string = "​";
+	const swapRegEx = new RegExp('^\!swap ([a-zA-Z0-9_]{2,}) ([a-zA-Z0-9_]{2,})$');
 
 	let topEntry: SwapResponse = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
 	let animationTimer: number;
@@ -83,15 +84,13 @@
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
-			RemoveSelection(Selector.ContexMenu);
 		} else {
 			cancelled = true;
 			topEntry = {found: false, cam: "", position: 0, swaps: {label: "", subentries: []}};
 			dataReady = false;
 			$am.Actions[name].IsActive = false;
-			RemoveSelection(Selector.ContexMenu);
 		}
-
+		RemoveSelection(Selector.ContexMenu);
 	}
 
 	async function loadMenu(e: KonvaPointerEvent, coordinates: Coordinates, target: Konva.Rect) {
@@ -137,7 +136,7 @@
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
-			if ($commandText == defaultCMD) {
+			if (!swapRegEx.exec($commandText)) {
 				RemoveSelection(Selector.ContexMenu);
 			} 
 			removeClickListener();

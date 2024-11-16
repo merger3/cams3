@@ -35,6 +35,7 @@
 
 	let target: Konva.Rect;
 	function enable(this: Action, origin: Coordinates) {
+		$am.Actions["click"].Cancel();
 		$am.Actions[name].IsActive = true;
 		target = GetZone($zones, origin);
 		if (!target) {

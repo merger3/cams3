@@ -73,14 +73,13 @@
 				dataReady = false;
 				$am.Actions[name].IsActive = false;
 			}, 200);
-			RemoveSelection(Selector.PresetMenu);
 		} else {
 			cancelled = true;
 			presets = {name: "", presets: []};
 			dataReady = false;
 			$am.Actions[name].IsActive = false;
-			RemoveSelection(Selector.PresetMenu);
 		}
+		RemoveSelection(Selector.PresetMenu);
 	}
 
 	async function loadMenu(e: KonvaPointerEvent, coordinates: Coordinates, target: Konva.Rect, camName: string) {
