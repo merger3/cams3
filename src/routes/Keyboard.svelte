@@ -236,12 +236,6 @@
 		's': "select1",
 		'd': "select1",
 
-		'+Digit1': "swapto1",
-		'+Digit2': "swapto2",
-		'+Digit3': "swapto3",
-		'+Digit4': "swapto4",
-		'+Digit5': "swapto5",
-		'+Digit6': "swapto6",
 		'+Numpad7': "swapto2",
 		'+Numpad4': "swapto3",
 		'+Numpad1': "swapto4",
@@ -270,7 +264,7 @@
 
 		'r': "resetcam",
 		'f': 'focuscam',
-		'!z': "zoomcam",
+		'!z g': "zoomcam",
 		
 		'u': "irauto",
 		'i': "iron",
