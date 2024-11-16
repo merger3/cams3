@@ -49,7 +49,7 @@
 			if ($am.ActiveStates.has(States.ClickedListeningShape)) {
 				minDistance = 2;
 			}
-			console.log(minDistance)
+
 			if (distance >= minDistance) {
 				$am.ActiveStates.add(States.StageDraggingMinimal)
 			} else {
@@ -247,11 +247,6 @@
 			isDragging(coords)
 			setCommandState()
 
-			if (e.target.getParent() != $zones) {
-				$am.ActiveStates.add(States.ClickedListeningShape);
-			} else {
-				$am.ActiveStates.delete(States.ClickedListeningShape);
-			}
 			if (log) {
 				console.log(printStates($am.ActiveStates))
 			}
