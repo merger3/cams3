@@ -152,7 +152,7 @@
 		</ContextMenu.Trigger>
 
 		<ContextMenu.Content class="w-52 dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
-			<SubContextMenu entries={topEntry.swaps.subentries} cam={{cam: topEntry.cam, position: topEntry.position, found: true, swaps: {label: "", subentries: []}}} />
+			<SubContextMenu entries={topEntry.swaps.subentries} cam={{cam: topEntry.cam, position: topEntry.position, found: true, swaps: {label: "", subentries: []}}} on:sendcmd={() => dispatch("sendcmd")}/>
 		</ContextMenu.Content>
 	{/if}
 </ContextMenu.Root>

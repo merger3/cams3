@@ -142,7 +142,7 @@
 	<div id="vid2" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 		<Zoomable>
 			<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
-				<ContextMenu>
+				<ContextMenu on:sendcmd={() => dispatch("sendcmd")}>
 					<div id="menutrigger" class="overlay unselectable z-100" />
 				</ContextMenu>
 			<PresetsMenu on:sendcmd={() => dispatch("sendcmd")}>
