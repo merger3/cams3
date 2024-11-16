@@ -67,7 +67,7 @@ RadialMenus["swap"] = {
 		{size: 2, action: "nextswap", label: "swap", icon: "box-arrow-up-right"},
 		{size: 1, action: "back", label: "back", icon: "arrow-bar-left"},
 		{size: 2, action: "nextload", label: "load", icon: "download"},
-		{size: 1, action: "swap", label: "menu", icon: "menu-button-wide"},
+		{size: 1, action: "reset", label: "reset", icon: "arrow-repeat"},
 	]
 }
 
@@ -76,7 +76,7 @@ RadialMenus["main"] = {
 	parts: [
 		{size: 1.5, action: "send", label: "send", icon: "arrow-return-left"},
 		{size: 1, action: "submenu", label: "next", icon: "arrow-left-right", submenu: "swap"},
-		{size: 1, action: "reset", label: "reset", icon: "arrow-repeat"},
+		{size: 1, action: "swap", label: "menu", icon: "menu-button-wide"},		
 		{size: 1.5, action: "clear", label: "clear", icon: "recycle"},
 		{size: 1, action: "submenu", label: "misc", icon: "list", submenu: "misc"},
 		{size: 1, action: "presets", label: "presets", icon: "bullseye"},
