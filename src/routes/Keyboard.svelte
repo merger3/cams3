@@ -257,7 +257,7 @@
 		'+s': "swapto1",
 		'+d': "swapto1",
 		
-		"b p": "openpresetsmenu",
+		"p": "openpresetsmenu",
 		'v Period': "openswapmenu",
 		'l': "loadnext",
 		'n': "swapnext",
