@@ -914,7 +914,6 @@
 
 	onMount(() => {
 		compiledHotkeys = compileHotkeys(hotkeys);
-		console.log(compiledHotkeys)
 		layers = [compiledHotkeys]
 		window.addEventListener('keydown', handleKeyboard);
 	});
