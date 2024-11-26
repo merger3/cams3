@@ -172,7 +172,7 @@
 		if (r.submenu) {
 			hoverTimeout = setTimeout(() => {
 				loadNewMenu(r);
-			}, 400);
+			}, 325);
 		}
 	}
 
