@@ -16,7 +16,7 @@
 		marginTop = embedHeight - baseHeight;
 	}
 	var resizeEmbed = _.throttle(resizeEmbedRaw, 50, { 'leading': true, 'trailing': true });
-	
+
 	onMount(() => {
 		resizeEmbedRaw()
 		window.addEventListener('resize', resizeEmbed);
@@ -40,18 +40,18 @@ Chat
 			</Tabs.List>
 			<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 		</div>
-		<div class="offcanvas-body h-100 p-0 " bind:clientHeight={bodyHeight}>
+		<div class="offcanvas-body h-100 w-100 p-0 " bind:clientHeight={bodyHeight}>
 			<Tabs.Content value="alveus" class="h-100 m-0" >
 				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev&parent=localhost"
 				title="chat"
-				class="w-100 ms-2 pb-1"
+				class="w-100 px-2 pb-1"
 				style="height: {embedHeight}px; margin-top: -{marginTop}px;"
 				/>
 			</Tabs.Content>
 			<Tabs.Content value="agg" class="h-100 m-0" >
 				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev&parent=localhost"
 				title="chat"
-				class="w-100 ms-2 pb-1"
+				class="w-100 px-2 pb-1"
 				style="height: {embedHeight}px; margin-top: -{marginTop}px;"
 				/>
 			</Tabs.Content>
