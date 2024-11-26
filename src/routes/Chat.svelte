@@ -23,7 +23,6 @@ Chat
 				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev&parent=localhost"
 				title="chat"
 				class="ml-auto alveuschat"
-				height=115%
 				width=95%
 				/>
 			</Tabs.Content>
@@ -31,7 +30,6 @@ Chat
 				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
 				title="chat"
 				class="ml-auto alveuschat"
-				height=115%
 				width=95%
 				/>
 				
@@ -50,5 +48,6 @@ Chat
 	}
 	.alveuschat {
 		margin-top: -42%; 
+		height: 115dvh;
 	}
 </style>
