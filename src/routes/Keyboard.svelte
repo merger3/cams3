@@ -756,7 +756,7 @@
 		if (autosend) {
 			dispatch('sendcmd');
 		}
-		ClearStage($stage, [Selector.SelectingPreset]);
+		ClearStage($stage, [Selector.SelectingPreset, Selector.SubSelectingPreset]);
 		return cmd;
 	}
 
