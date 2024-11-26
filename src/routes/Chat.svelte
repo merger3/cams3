@@ -11,8 +11,8 @@
 	let marginTop = 0;
 	function resizeEmbed() {
 		let baseHeight = bodyHeight - headerHeight;
-		embedHeight = 3 * baseHeight;
-		marginTop = 2 * baseHeight;
+		embedHeight = 1.5 * baseHeight;
+		marginTop = embedHeight - baseHeight;
 	}
 
 	onMount(() => {
@@ -37,11 +37,8 @@ Chat
 				<Tabs.Trigger value="agg">AGG</Tabs.Trigger>
 			</Tabs.List>
 			<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-			<button type="button">
-				<a href="https://www.twitch.tv/login?popup=true"> login </a>
-			</button>
 		</div>
-		<div class="offcanvas-body h-100 p-0 overflow-hidden" bind:clientHeight={bodyHeight}>
+		<div class="offcanvas-body h-100 p-0 " bind:clientHeight={bodyHeight}>
 			<Tabs.Content value="alveus" class="h-100 m-0" >
 				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev&parent=localhost"
 				title="chat"
