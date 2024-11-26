@@ -18,20 +18,20 @@ Chat
 			</Tabs.List>
 			<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 		</div>
-		<div class="offcanvas-body h-100 p-0">
+		<div class="offcanvas-body h-100 p-0 overflow-hidden">
 			<Tabs.Content value="alveus" class="h-100 m-0">
-				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
+				<iframe src="https://www.twitch.tv/embed/alveussanctuary/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev&parent=localhost"
 				title="chat"
-				class="ml-auto"
-				height=87%
+				class="ml-auto alveuschat"
+				height=115%
 				width=95%
 				/>
 			</Tabs.Content>
 			<Tabs.Content value="agg" class="h-100 m-0">
 				<iframe src="https://www.twitch.tv/embed/alveusgg/chat?darkpopout&parent=alvsanc-cams.app&parent=www.alvsanc-cams.app&parent=alvsanc-cams.dev&parent=www.alvsanc-cams.dev"
 				title="chat"
-				class="ml-auto"
-				height=87%
+				class="ml-auto alveuschat"
+				height=115%
 				width=95%
 				/>
 				
@@ -47,5 +47,8 @@ Chat
 		transform: translate(-105%, 15%); 
 		height: 10%; 
 		width: 9%; 
+	}
+	.alveuschat {
+		margin-top: -42%; 
 	}
 </style>

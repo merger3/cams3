@@ -743,7 +743,7 @@
 		if (autosend) {
 			dispatch('sendcmd');
 		}
-		ClearStage($stage);
+		ClearStage($stage, [Selector.SelectingPreset]);
 		return cmd;
 	}
 
