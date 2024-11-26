@@ -14,6 +14,7 @@ export enum Selector {
 	Focus,
 	Zoom,
 	SelectingPreset,
+	SubSelectingPreset,
 	PresetMenu
 }
 
@@ -43,6 +44,7 @@ let configs: {[key in Selector]?: any} = {};
 
 configs[Selector.Presets] = {stroke: 'rgba(202, 148, 24, 1)', strokeWidth: 2.5}; // Bolder golden-brown
 configs[Selector.SelectingPreset] = {stroke: 'rgba(220, 53, 69, 1)', strokeWidth: 2.5}; // Rich red
+configs[Selector.SubSelectingPreset] = {stroke: 'rgba(230, 113, 124, 1)', strokeWidth: 2.5}; // Pink
 configs[Selector.PresetMenu] = {stroke: 'rgba(13, 90, 225, 1)', strokeWidth: 2.5}; // Bold blue
 configs[Selector.Focus] = {stroke: 'rgba(25, 100, 230, 1)', strokeWidth: 2.5}; // Stronger blue
 configs[Selector.Zoom] = {stroke: 'rgba(185, 110, 35, 1)', strokeWidth: 2.5}; // Muted warm amber

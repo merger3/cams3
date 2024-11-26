@@ -26,7 +26,7 @@
 
 	interface Actions {
 		action: string;
-		args: any[]; 
+		args: any[];
 	}
 
 	interface uncompiledLayer {
@@ -47,7 +47,7 @@
 		"Escape Tab": "resetlayers",
 		"Backspace ArrowLeft": "previouslayer",
 		'Space Enter NumpadEnter': "send"
-	} 
+	}
 
 	const Mod = 0;
 	const Alt = 1;
@@ -80,7 +80,7 @@
 		})
 		hotString += this.key;
 		return hotString;
-	} 
+	}
 
 	function hotkeyFromString(s: string): Hotkey {
 		let newHotkey: Hotkey = {modifiers: new Set(), key: "", hotkey: hotkeyToString}
@@ -129,7 +129,7 @@
 		"openpresetsmenu": presetsMenu,
 		"openswapmenu": swapMenu,
 		"loadnext": () => loadNextCam("load"),
-		"swapnext": () => loadNextCam("swap"), 
+		"swapnext": () => loadNextCam("swap"),
 
 		"select1": () => enableZone('1'),
 		"select2": () => enableZone('2'),
@@ -197,7 +197,7 @@
 		"previouslayer": previousLayer,
 		"resetlayers": cancelPresetSelection,
 		"loadlayer": addLayer,
-	} 
+	}
 
 	let hotkeys: uncompiledLayer = {
 		// Optional type identifier
@@ -256,7 +256,7 @@
 		'+e': "swapto1",
 		'+s': "swapto1",
 		'+d': "swapto1",
-		
+
 		"p": "openpresetsmenu",
 		'v Period': "openswapmenu",
 		'l': "loadnext",
@@ -265,7 +265,7 @@
 		'r': "resetcam",
 		'f': 'focuscam',
 		'!z g': "zoomcam",
-		
+
 		'u': "irauto",
 		'i': "iron",
 		'o': "iroff",
@@ -308,13 +308,14 @@
 		'Numpad8': "moveup",
 		'Numpad9': "moveupright",
 	}
-	
+
 
 	export function cancelPresetSelection() {
 		if (presetTimer) {
 			clearTimeout(presetTimer);
 		}
 		layers = [compiledHotkeys];
+		RemoveSelection(Selector.SubSelectingPreset);
 		RemoveSelection(Selector.SelectingPreset);
 	}
 
@@ -322,9 +323,12 @@
 	function previousLayer() {
 		if (layers.length > 1) {
 			layers.pop();
-		} 
-		if (layers[layers.length-1].type != LayerType.PresetsBase && layers[layers.length-1].type != LayerType.PresetsSub) {
+		}
+		if (layers[layers.length-1].type != LayerType.PresetsBase) {
 			RemoveSelection(Selector.SelectingPreset);
+		}
+		if (layers[layers.length-1].type != LayerType.PresetsSub) {
+			RemoveSelection(Selector.SubSelectingPreset);
 		}
 	}
 
@@ -351,7 +355,7 @@
 		return presetHotkeys;
 	}
 
-	
+
 
 	let presetTimer: number;
 	function loadPreset() {
@@ -368,10 +372,10 @@
 		if (!zone) {
 			return;
 		}
-		
+
 		let newLayer = unpackPresets($camPresets.presets, compileHotkeys(presetBaseKeys, LayerType.PresetsBase));
-		layers.push(newLayer);
-		AddSelection(zone, Selector.SelectingPreset);
+		addLayer(newLayer);
+
 
 		presetTimer = setTimeout(() => {
 			cancelPresetSelection();
@@ -380,6 +384,15 @@
 
 	function addLayer(newLayer: Layer) {
 		layers.push(newLayer);
+		let zone = GetSelectedRect(Selector.Presets);
+		if (!zone) {
+			return;
+		}
+		if (newLayer.type == LayerType.PresetsBase) {
+			AddSelection(zone, Selector.SelectingPreset);
+		} else if (newLayer.type == LayerType.PresetsSub) {
+			AddSelection(zone, Selector.SubSelectingPreset);
+		}
 	}
 
 	const pan = 0;
@@ -452,9 +465,9 @@
 	async function loadAndTestPreset(p: string) {
 		if (presetTimer) {
 			clearTimeout(presetTimer);
-		} 
+		}
 		let lastCMD = $commandText;
-		await buildCommand("ptzload", false, p); 
+		await buildCommand("ptzload", false, p);
 		if (lastCMD == $commandText) {
 			dispatch('sendcmd');
 		}
@@ -493,7 +506,7 @@
 	function decreaseValue() {
 		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzzoomr")) {
 			if ($clickZoom >= 10000) {
-				$clickZoom = maxZoom;			
+				$clickZoom = maxZoom;
 			} else if ($clickZoom > 0) {
 				if ($clickZoom > 100) {
 					$clickZoom -= 20;
@@ -502,7 +515,7 @@
 				} else {
 					$clickZoom -= 10;
 				}
-			} 
+			}
 			if ($clickZoom < 0) {
 				$clickZoom = 0;
 			}
@@ -512,7 +525,7 @@
 			$commandText = `${$commandText.split(" ").slice(0, -1).join(" ")} ${$clickFocus}`;
 		}
 	}
-	
+
 	function scrollable(): boolean {
 		if ($commandText.startsWith("!ptzclick") || $commandText.startsWith("!ptzfocusr") || $commandText.startsWith("!ptzzoomr")) {
 			return true;
@@ -555,7 +568,7 @@
 		if (scrollable()) {
 			return;
 		}
-		
+
 		let sourceZone = GetSelectedRect(Selector.Presets);
 		if (!sourceZone) {
 			enableZone("1");
@@ -586,7 +599,7 @@
 		if (scrollable()) {
 			return;
 		}
-		
+
 		let sourceZone = GetSelectedRect(Selector.Presets);
 		if (!sourceZone) {
 			enableZone("1");
@@ -616,7 +629,7 @@
 		if (scrollable()) {
 			return;
 		}
-		
+
 		let sourceZone = GetSelectedRect(Selector.Presets);
 		if (!sourceZone) {
 			enableZone("1");
@@ -813,7 +826,7 @@
 				name: "arrow",
 				id: tangleID(),
 				points: [
-					sourceZone.x() + (sourceZone.width() / 2), sourceZone.y() + (sourceZone.height() / 2), 
+					sourceZone.x() + (sourceZone.width() / 2), sourceZone.y() + (sourceZone.height() / 2),
 					targetZone.x() + (targetZone.width() / 2), targetZone.y() + (targetZone.height() / 2)
 				],
 				stroke: "rgba(121, 173, 120, 0.7)",
@@ -824,7 +837,7 @@
 				listening: false,
 				draggable: false
 			});
-			
+
 			$zones.getLayer().add(newArrow);
 			$commandText = `!swap ${swaps[0]} ${swaps[1]}`
 		}
@@ -893,7 +906,7 @@
 			if (uncompiled.type) {
 				type = LayerType[uncompiled.type as keyof typeof LayerType];
 				delete uncompiled.type;
-			} 
+			}
 		}
 		if (type == undefined) {
 			type = LayerType.Default;
