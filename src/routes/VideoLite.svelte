@@ -108,16 +108,11 @@
 		winWidth = window.innerWidth;
 		winHeight = window.innerHeight;
 		resizeIframeRaw();
-		window.onresize = function() {
-			clearTimeout(doit);
-			doit = setTimeout(resizeIframe, 50);
-		};
 
 		window.addEventListener('resize', resizeIframe);
 		return () => {
 			window.removeEventListener('resize', resizeIframe);
 		};
-		
 	});
 
 </script>
