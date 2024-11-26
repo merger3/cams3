@@ -47,7 +47,7 @@ Chat
 		width: 9%; 
 	}
 	.alveuschat {
-		margin-top: -42%; 
-		height: 115dvh;
+		margin-top: -60px; 
+		height: 100svh;
 	}
 </style>
