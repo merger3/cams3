@@ -83,6 +83,9 @@
 		}
 		AddSelection(target, Selector.Presets);
 		$camPresets = presets;
+
+		setTimeout(updateButtonSizeRaw, 50);
+
 		$am.Actions[name].IsActive = false;
 	}
 
