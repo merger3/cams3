@@ -17,14 +17,16 @@
 			ClearStage($stage)
 		}
     }
+	
+	export let buttonWidth: string;
 </script>
 
 {#each preset as p}
 	{#if !p.subentries}
 		{#if p.name != "separator"}
-			<button type="button" on:click={() => buildCommand(p.name)} class="btn btn-outline-warning btn-lg d-block w-100 px-0 mb-2 overflow-hidden position-relative h-16">{p.name}</button>
+			<button type="button" on:click={() => buildCommand(p.name)} class="btn btn-outline-warning btn-lg d-block px-0 mb-2 overflow-hidden position-relative h-16" style="width: {buttonWidth}">{p.name}</button>
 		{/if}
 	{:else} 
-		<Subpresets bind:preset={p.subentries} on:sendcmd={() => dispatch("sendcmd")} />
+		<Subpresets bind:buttonWidth bind:preset={p.subentries} on:sendcmd={() => dispatch("sendcmd")} />
 	{/if}
 {/each}

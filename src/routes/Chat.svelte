@@ -3,20 +3,22 @@
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import { commandHeight } from '$lib/stores';
 	import { portal } from "svelte-portal";
+	import _ from 'lodash';
 
 	let headerHeight: number;
 	let bodyHeight: number;
 
 	let embedHeight = 0;
 	let marginTop = 0;
-	function resizeEmbed() {
+	function resizeEmbedRaw() {
 		let baseHeight = bodyHeight - headerHeight;
 		embedHeight = 1.5 * baseHeight;
 		marginTop = embedHeight - baseHeight;
 	}
-
+	var resizeEmbed = _.throttle(resizeEmbedRaw, 50, { 'leading': true, 'trailing': true });
+	
 	onMount(() => {
-		resizeEmbed()
+		resizeEmbedRaw()
 		window.addEventListener('resize', resizeEmbed);
 		return () => {
 			window.removeEventListener('resize', resizeEmbed);
