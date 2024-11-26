@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { am, commandText, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, ClearStage, presetCache } from '$lib/stores';
+	import { am, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, presetCache } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -73,32 +73,32 @@
 			return;
 		}
 
+		let el = jQuery('#presets-menu')[0];
+		if (el) {
+			el.scrollTop = 0;
+		}
 		AddSelection(target, Selector.Presets);
 		$camPresets = presets;
 
 		$am.Actions[name].IsActive = false;
 	}
-
-
 </script>
 
 {#if $camPresets.presets.length != 0}
-	<div id="presets-menu" class="d-block text-center px-3 py-3 mt-1.5 mb-auto ms-1 me-1.5 z-20 rounded shadow ">
+<ScrollArea class="bg-[#1c1b22] d-block text-center px-3 py-3 mt-1.5 mb-auto ms-1 me-1.5 z-20 rounded shadow" scrollbarYClasses="">
+	<div id="presets-menu" >
 		<Subpresets bind:preset={$camPresets.presets} on:sendcmd={() => dispatch("sendcmd")} />
 	</div>
 	<div class="mt-2.5" />
+</ScrollArea>
 {/if}
 
 <style>
     #presets-menu {
-		background-color: #1c1b22;
-
-        /* left: 5px; */
-		/* background: transparent; */
-		overflow: scroll;
-		-ms-overflow-style: none;  /* IE and Edge */
-		scrollbar-width: none; /* Firefox */
-		/* padding: 0 8px; Add equal padding on the left and right */
+		/* background-color: #1c1b22;
+		overflow: scroll; */
+		-ms-overflow-style: none;
+		scrollbar-width: none;
 	}
 
     #presets-menu:last-child {
