@@ -115,7 +115,7 @@
 
 		$server = axios.create({
 			timeout: 10000,
-			baseURL: 'https://alvsanc-cams.dev/api/',
+			baseURL: '/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
@@ -188,7 +188,7 @@
 		</div>
 	</div>
 	<Keyboard bind:this={$keyboardHandler} bind:controls bind:selected on:sendcmd={sendCommand}/>
-	<!-- <Chat /> -->
+	<Chat />
 {/if}
 	
 <style>
