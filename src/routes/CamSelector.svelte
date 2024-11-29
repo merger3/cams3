@@ -3,6 +3,8 @@
 	import { ifDimensions, commandHeight, commandText } from '$lib/stores';
 
 	const dispatch = createEventDispatcher();
+	const defaultCMD: string = "​";
+
 	// This is mostly temporary. I'm working on a more robust settings system that talks to the server
 	// and loads persistent settings from a sqlite DB but this is a quick and dirty way to do this single thing that's essential.
 	export let selected: string;
@@ -11,15 +13,11 @@
 	function togglePlayerControls() {
 		if (selected == "btn-outline-secondary") {
 			selected = "btn-secondary";
-			jQuery('#cams').css('z-index', '100');
-			jQuery('#cams').css('pointer-events', 'all');
-			jQuery('#chat').css('visibility', 'hidden');
+			jQuery('#cams').css('z-index', '100').css('pointer-events', 'all').css('visibility', 'hidden');
 			controls = 1;
 		} else {
 			selected = "btn-outline-secondary";
-			jQuery('#cams').css('z-index', '');
-			jQuery('#cams').css('pointer-events', '');
-			jQuery('#chat').css('visibility', '');
+			jQuery('#cams').css('z-index', '').css('pointer-events', '').css('visibility', '');
 		}
 	}
 
@@ -43,7 +41,7 @@
 </script>
 
 <div class="dropdown z-40 movedown">
-	<button style="position: absolute;min-height: {$commandHeight}px;max-height: {$commandHeight}px;right: 0;top: 0;" id="dropdown-button" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+	<button style="position: absolute;min-height: {$commandHeight}px;max-height: {$commandHeight}px;right: 0;top: 0;" id="dropdown-button" class="btn btn-outline-primary dropdown-toggle w-100 p-0 m-0 themed" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
 		Settings
 	</button>
 	<div id="dropdown-menu" class="dropdown-menu w-100 text-center px-2 border border-1 border-danger-subtle shadow" style="max-height: {$ifDimensions.height - ($ifDimensions.height * .15)}px">

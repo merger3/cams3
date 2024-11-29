@@ -14,6 +14,8 @@
 	
 	export let controls: number;
 
+	const defaultCMD: string = "​";
+
 	const lola = 0;
 	const twitch = 1;
 	const dispatch = createEventDispatcher();
@@ -127,11 +129,11 @@
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<!-- <div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;" bind:innerHTML={$commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} > -->
 				<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;">
-					{$commandText}
+					​
 				</div>
 			</div>
 		</Motion>
-		<button on:click={(e) => {dispatch("sendcmd")}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown" style="height: {$commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
+		<button on:click={(e) => {dispatch("sendcmd")}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown themed" style="height: {$commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
 	</div>
 	<div id="stage" class="unselectable" />
 	<div id="vid2" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">

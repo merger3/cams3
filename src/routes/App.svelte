@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import TangleLite from './TangleLite.svelte';
 	import Presets from './Presets.svelte';
 	import Chat from './Chat.svelte';
 	import CamSelector from "./CamSelector.svelte";
@@ -10,7 +9,7 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import { Selector, AddSelection, GetSelectedRect } from '$lib/zones';
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight } from '$lib/stores';
+	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight, keyboardHandler } from '$lib/stores';
 	import _ from 'lodash';
 	InitializeAM();
 
@@ -19,7 +18,6 @@
 	export let videosource: number;
 
 
-	let keyhandler: Keyboard;
 	$commandText = defaultCMD;
 
 	let resize: HTMLElement;
@@ -60,7 +58,7 @@
 			console.log(error);
 		});
 		
-		keyhandler.cancelPresetSelection();
+		$keyboardHandler.cancelPresetSelection();
 		Reset($stage);
 		if (document.activeElement) {
 			(document.activeElement as HTMLElement).blur();
@@ -74,6 +72,27 @@
 		fit(resize, {min_size: 8});
 	}
 	var resizeText = _.throttle(resizeTextRaw, 20, { 'leading': true, 'trailing': true });
+
+	function setTheme(): boolean {
+		const timeout = 50;
+		if ($commandText == defaultCMD) {
+			jQuery(".themed").removeClass("btn-outline-primary-alt").addClass("btn-outline-primary");
+			setTimeout(() => {
+				jQuery("#command").removeClass("border-primary-alt").addClass("border-primary").text("​");
+				jQuery("#sendbutton").text(" Send ");
+				resizeTextRaw();
+			}, timeout);
+		} else {
+			jQuery(".themed").removeClass("btn-outline-primary").addClass("btn-outline-primary-alt");
+			setTimeout(() => {
+				jQuery("#command").removeClass("border-primary").addClass("border-primary-alt").text($commandText);
+				jQuery("#sendbutton").text(` ${$commandText} `);
+				resizeTextRaw();
+			}, timeout);
+		}
+		return true;
+	}
+
 
 	let authorized: boolean = false;
 	function checkAuth() {
@@ -96,7 +115,7 @@
 
 		$server = axios.create({
 			timeout: 10000,
-			baseURL: '/api/',
+			baseURL: 'https://alvsanc-cams.dev/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
@@ -124,11 +143,15 @@
 			resizeText();
 		}
 	});
-	$: resizeObserverDefined && $commandText && resizeText();
+	$: resizeObserverDefined && $commandText && setTheme() && resizeText();
 
 	// These are temporary pending settings implementation, as well as everywhere they are bound
 	let selected = "btn-outline-secondary"
 	let controls = 0;
+
+
+
+
 </script>
 
 <svelte:head>
@@ -156,7 +179,7 @@
 				</div>
 				<Presets on:sendcmd={sendCommand} />
 				<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
-					<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown"> {$commandText == defaultCMD ? " Send " : " " + $commandText + " "} </button>
+					<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={sendCommand} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown themed" > Send </button>
 				</div>
 			</div>
 			<div class="col-auto g-0" id="wrapper">
@@ -164,8 +187,8 @@
 			</div>
 		</div>
 	</div>
-	<Keyboard bind:this={keyhandler} bind:controls bind:selected on:sendcmd={sendCommand}/>
-	<Chat />
+	<Keyboard bind:this={$keyboardHandler} bind:controls bind:selected on:sendcmd={sendCommand}/>
+	<!-- <Chat /> -->
 {/if}
 	
 <style>

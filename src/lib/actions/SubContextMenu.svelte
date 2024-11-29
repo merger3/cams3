@@ -3,7 +3,7 @@
 
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import type { Entry, SwapResponse } from '$types';
-	import { commandText, stage, ClearStage, swapsCache, presetCache, server, SyncCache } from '$lib/stores';
+	import { commandText, stage, ClearStage, swapsCache, server, SyncCache } from '$lib/stores';
 	import { GetSelectedRect, Selector } from '$lib/zones';
 	import SubContextMenu from './SubContextMenu.svelte';
 	const dispatch = createEventDispatcher();

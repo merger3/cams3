@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
-	import type { Preset } from '$types';
+	import type { MenuPreset } from '$types';
 	import { onMount, createEventDispatcher } from 'svelte';
 	import { commandText, stage, ClearStage } from '$lib/stores';
 	import { Selector } from '$lib/zones';
@@ -10,7 +10,7 @@
 
 
 	export let cam: string;
-	export let preset: Preset[];
+	export let preset: MenuPreset[];
 
 	function handleClick(cam: string, preset: string) {
 		$commandText = `!ptzload ${cam} ${preset}`;

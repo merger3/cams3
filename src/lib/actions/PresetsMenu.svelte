@@ -1,9 +1,9 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { createEventDispatcher, onMount, tick } from 'svelte';
-	import type { CamPresets, Coordinates, Preset } from '$types';
+	import type { CamPresets, Coordinates, MenuPreset } from '$types';
 	import { States, type Action } from '$lib/actions';
-	import { am, ifDimensions, GetZone, GetCam, server, presetCache, zones, panzoom, presetsIsOpen, commandText } from '$lib/stores';
+	import { am, ifDimensions, GetZone, GetCam, server, presetMenuCache, zones, panzoom, presetsIsOpen, commandText } from '$lib/stores';
 	import { AddSelection, RemoveSelection, Selector, GetSelectedRect } from '$lib/zones';
 	import SubPresetsMenu from './SubPresetsMenu.svelte';
 	import type { KonvaPointerEvent } from "svelte-konva";
@@ -94,14 +94,14 @@
 			camName = cam.cam
 		} 
 		
-		let cachedPresets = $presetCache[camName];
+		let cachedPresets = $presetMenuCache[camName];
 		if (!cachedPresets) {
-			let response = await $server.post('/camera/presets', {camera: camName})
+			let response = await $server.post('/camera/presets/menus', {camera: camName})
 			if (response.data.found) {
 				presets = response.data.camPresets;
-				$presetCache[camName] = response.data.camPresets;
+				$presetMenuCache[camName] = response.data.camPresets;
 			} else {
-				$presetCache[camName] = {name: camName, presets: []}
+				$presetMenuCache[camName] = {name: camName, presets: []}
 				$am.Actions[name].Cancel();
 				return;
 			}

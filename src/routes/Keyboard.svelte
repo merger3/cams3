@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, SyncCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, presetsIsOpen, GetZone } from '$lib/stores';
-	import type { Coordinates, CamPresets, Preset } from '$types';
+	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, presetHotkeyCache, SyncCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, presetsIsOpen, GetZone } from '$lib/stores';
+	import type { HotkeyPreset, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, GetSelectedRect, AddSelection, RemoveSelection } from '$lib/zones';
 	import Konva from "konva";
@@ -12,6 +12,7 @@
 
 	const dispatch = createEventDispatcher();
 	const tangleID = customAlphabet('0123456789abcdef', 5);
+	const defaultCMD: string = "​";
 
 	let spinFast = 15;
 	let spinSlow = 5;
@@ -182,7 +183,7 @@
 		"resetspin": resetSpin,
 
 		"loadpreset": loadPreset,
-		"selectpreset": (p: string) => loadAndTestPreset(p),
+		"selectpreset": (p: string, s=true) => loadAndTestPreset(p, s),
 
 		"movedownleft": () => buildCommand("ptzmove", autosend, "downleft"),
 		"movedown": () => buildCommand("ptzmove", autosend, "down"),
@@ -332,25 +333,21 @@
 		}
 	}
 
-	function unpackPresets(presets: Preset[], presetHotkeys: Layer = undefined): Layer {
+	function unpackPresets(presets: HotkeyPreset[], presetHotkeys: Layer = undefined): Layer {
 		if (!presetHotkeys) {
 			presetHotkeys = compileHotkeys(presetBaseKeys, LayerType.PresetsSub);
 		}
 		presets.forEach((p) => {
-			if (!p.subentries || p.subentries.length == 0) {
-				if (p.name != "" && p.name != "separator") {
-					let actionSet: Actions[] = [{"action": "selectpreset", "args": [p.name]}];
-					if (p.sublayer && p.sublayer.length != 0) {
-						let sublayer = unpackPresets(p.sublayer);
-						actionSet.push({"action": "loadlayer", "args": [sublayer]});
-					}
-					p.hotkeys.trim().split(" ").forEach((v) => {
-						presetHotkeys.hotkeys[hotkeyFromString(v).hotkey()] = actionSet;
-					});
-				}
-				return;
+			let actionSet: Actions[] = [{"action": "selectpreset", "args": [p.name]}];
+			if (p.sublayer && p.sublayer.length != 0) {
+				let sublayer = unpackPresets(p.sublayer);
+				actionSet[0].args.push(false);
+				actionSet.push({"action": "loadlayer", "args": [sublayer]});
 			}
-			unpackPresets(p.subentries, presetHotkeys)
+			console.log(p)
+			p.hotkeys.trim().split(" ").forEach((v) => {
+				presetHotkeys.hotkeys[hotkeyFromString(v).hotkey()] = actionSet;
+			});
 		});
 		return presetHotkeys;
 	}
@@ -358,7 +355,7 @@
 
 
 	let presetTimer: number;
-	function loadPreset() {
+	async function loadPreset() {
 		if (GetSelectedRect(Selector.SelectingPreset)) {
 			cancelPresetSelection();
 			return;
@@ -373,9 +370,26 @@
 			return;
 		}
 
-		let newLayer = unpackPresets($camPresets.presets, compileHotkeys(presetBaseKeys, LayerType.PresetsBase));
-		addLayer(newLayer);
+		let cam = $camPresets.name;
 
+		let presets: CamPresets = {name: "", presets: []};
+		let cachedPresets = $presetHotkeyCache[cam];
+		if (!cachedPresets) {
+			let response = await $server.post('/camera/presets/hotkeys', {camera: cam})
+			if (response.data.found) {
+				presets = response.data.camPresets;
+				$presetHotkeyCache[cam] = response.data.camPresets;
+			} else {
+				$presetHotkeyCache[cam] = {name: cam, presets: []}
+			}
+		} else {
+			presets = cachedPresets;
+		}
+
+		console.log(presets)
+
+		let newLayer = unpackPresets(presets.presets, compileHotkeys(presetBaseKeys, LayerType.PresetsBase));
+		addLayer(newLayer);
 
 		presetTimer = setTimeout(() => {
 			cancelPresetSelection();
@@ -462,13 +476,13 @@
 		spinningCam = undefined;
 	}
 
-	async function loadAndTestPreset(p: string) {
+	async function loadAndTestPreset(p: string, send: boolean = true) {
 		if (presetTimer) {
 			clearTimeout(presetTimer);
 		}
 		let lastCMD = $commandText;
 		await buildCommand("ptzload", false, p);
-		if (lastCMD == $commandText) {
+		if (send && lastCMD == $commandText) {
 			dispatch('sendcmd');
 		}
 	}
@@ -875,7 +889,11 @@
 	}
 
 	function sendCommand() {
-		dispatch("sendcmd");
+		if ($commandText == defaultCMD) {
+			loadPreset()
+		} else {
+			dispatch("sendcmd");
+		}
 	}
 
 	function enableZone(slot: string) {

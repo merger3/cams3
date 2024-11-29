@@ -7,6 +7,7 @@ import { setPointerControls } from 'svelte-gestures';
 import { type ActionsManager } from '$lib/actions';
 import { States } from '$lib/actions';
 import { RemoveSelection, Selector, Zones } from '$lib/zones';
+import Keyboard from '../routes/Keyboard.svelte';
 import Konva from "konva";
 
 export let commandText = writable<string>("​");
@@ -23,8 +24,12 @@ export let panzoom = writable<PanzoomObject>();
 export let clickTimer = writable<number>();
 export let swapsIsOpen = writable<boolean>();
 export let presetsIsOpen = writable<boolean>();
+export let keyboardHandler = writable<Keyboard>();
 
-export let presetCache = writable<{[key: string]: CamPresets}>({})
+
+export let presetButtonCache = writable<{[key: string]: CamPresets}>({})
+export let presetMenuCache = writable<{[key: string]: CamPresets}>({})
+export let presetHotkeyCache = writable<{[key: string]: CamPresets}>({})
 export let swapsCache = writable<{[key: string]: SwapResponse}>({})
 
 export let am = writable<ActionsManager>();
@@ -94,17 +99,39 @@ export async function SyncCache(cam: string) {
 	let target: string = response.data.result;
 	if (!get(swapsCache)[target]) {
 		response = await get(server).post('/camera/swaps', {camera: target});
+		console.log(`Updating swaps cache for ${cam}`)
 		if (response.data.found) {
 			get(swapsCache)[target] = response.data;
 		}
 	}
 
-	if (!get(presetCache)[target]) {
-		response = await get(server).post('/camera/presets', {camera: target})
+	if (!get(presetButtonCache)[target]) {
+		response = await get(server).post('/camera/presets/buttons', {camera: target})
+		console.log(`Updating button cache for ${cam}`)
 		if (response.data.found) {
-			get(presetCache)[target] = response.data.camPresets;
+			get(presetButtonCache)[target] = response.data.camPresets;
 		} else {
-			get(presetCache)[target] = {name: target, presets: []}
+			get(presetButtonCache)[target] = {name: target, presets: []}
+		}
+	}
+
+	if (!get(presetMenuCache)[target]) {
+		response = await get(server).post('/camera/presets/menus', {camera: target})
+		console.log(`Updating menus cache for ${cam}`)
+		if (response.data.found) {
+			get(presetMenuCache)[target] = response.data.camPresets;
+		} else {
+			get(presetMenuCache)[target] = {name: target, presets: []}
+		}
+	}
+
+	if (!get(presetHotkeyCache)[target]) {
+		response = await get(server).post('/camera/presets/hotkeys', {camera: target})
+		console.log(`Updating hotkeys cache for ${cam}`)
+		if (response.data.found) {
+			get(presetHotkeyCache)[target] = response.data.camPresets;
+		} else {
+			get(presetHotkeyCache)[target] = {name: target, presets: []}
 		}
 	}
 }

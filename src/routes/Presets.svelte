@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
-	import { am, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, presetCache } from '$lib/stores';
+	import { am, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, presetButtonCache, keyboardHandler } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -59,14 +59,14 @@
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
 		
 		if (cam.found) {
-			let cachedPresets = $presetCache[cam.cam];
+			let cachedPresets = $presetButtonCache[cam.cam];
 			if (!cachedPresets) {
-				let response = await $server.post('/camera/presets', {camera: cam.cam})
+				let response = await $server.post('/camera/presets/buttons', {camera: cam.cam})
 				if (response.data.found) {
 					presets = response.data.camPresets;
-					$presetCache[cam.cam] = response.data.camPresets;
+					$presetButtonCache[cam.cam] = response.data.camPresets;
 				} else {
-					$presetCache[cam.cam] = {name: cam.cam, presets: []}
+					$presetButtonCache[cam.cam] = {name: cam.cam, presets: []}
 				}
 			} else {
 				presets = cachedPresets;
@@ -81,6 +81,8 @@
 		} else {
 			buttonWidth = "100%";
 		}
+
+		$keyboardHandler.cancelPresetSelection();
 		AddSelection(target, Selector.Presets);
 		$camPresets = presets;
 

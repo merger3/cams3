@@ -11,14 +11,22 @@ interface Config {
 
 interface CamPresets {
     name: string;
-    presets: Preset[];
+    presets: any[];
 } 
 
-interface Preset {
+interface ButtonPreset {
+    name: string;
+} 
+
+interface MenuPreset {
+    name: string;
+	subentries: MenuPreset[];
+} 
+
+interface HotkeyPreset {
     name: string;
     hotkeys: string;
-	subentries: Preset[];
-	sublayer: Preset[];
+	sublayer: HotkeyPreset[];
 } 
 
 interface Entry {

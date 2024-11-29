@@ -10,7 +10,7 @@
 	import Scroll from "$lib/actions/Scroll.svelte";
 	import { type PressCustomEvent } from 'svelte-gestures';
 	import { Selector, AddSelection, RemoveSelection, Zones } from '$lib/zones';
-	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones, ifDimensions, GetCam, server, presetCache, swapsCache } from '$lib/stores';
+	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones, ifDimensions, GetCam, server, SyncCache } from '$lib/stores';
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
 	import { CreateZones } from '$lib/zones';
@@ -310,6 +310,34 @@
 
 
 	function handlePointerOut(e: PointerEvent) {
+		const target = e.target as HTMLElement;
+		if (!target || !target.getBoundingClientRect) {
+			console.error('Event target is not an HTMLElement.');
+			return;
+		}
+
+		const rect = target.getBoundingClientRect();
+
+		const clampedX = Math.min(Math.max(e.clientX, rect.left), rect.right);
+		const clampedY = Math.min(Math.max(e.clientY, rect.top), rect.bottom);
+
+		const syntheticEvent = new PointerEvent('pointerup', {
+			bubbles: true,
+			cancelable: true,
+			composed: true,
+			pointerId: e.pointerId,
+			pointerType: e.pointerType,
+			isPrimary: e.isPrimary,
+			screenX: e.screenX + (clampedX - e.clientX),
+			screenY: e.screenY + (clampedY - e.clientY),
+			clientX: clampedX,
+			clientY: clampedY,
+			buttons: e.buttons,
+			pressure: e.pressure,
+		});
+
+		e.target.dispatchEvent(syntheticEvent);
+		return;
 		if (e.pointerType != "touch" && $am.ActiveStates.has(States.StagePointerDown)) {
 			prevPointers = pointers;
 			if (pointers > 0) {
@@ -438,20 +466,8 @@
 		if (response.status == 200 && response.data.length == Zones.length) {
 			Zones.forEach(async (z) => {
 				let cam = await GetCam({coordinates: {x: z.Rect.x() + (z.Rect.width() / 2), y: z.Rect.y() + (z.Rect.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(z.Name)}, $server)
-				if (cam.found) {
-					let response = await $server.post('/camera/presets', {camera: cam.cam})
-					if (response.data.found) {
-						console.log(`Updating preset cache for ${cam.cam}`)
-						$presetCache[cam.cam] = response.data.camPresets;
-					} else {
-						$presetCache[cam.cam] = {name: cam.cam, presets: []}
-					}
-
-					response = await $server.post('/camera/swaps', {camera: cam.cam});
-					if (response.data.found) {
-						console.log(`Updating swaps cache for ${cam.cam}`)
-						$swapsCache[cam.cam] = response.data;
-					}
+				if (cam.found) {	
+					SyncCache(cam.cam);
 				}
 			});
 		} 
