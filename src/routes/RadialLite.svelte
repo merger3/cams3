@@ -99,17 +99,18 @@
 		}
 		activeMenu.location = origin;
 		activeMenu.target = zone;
-		hovered = false;
+		hovered = undefined;
 
 		$am.Actions["click"].Cancel();
 		AddSelection(zone, Selector.Radial);
 
+		
 		radialLayer.listening(true);
 		radialStage.listening(true);
 		jQuery('#stage').css('z-index', '49');
-
+		
 		fontSize = (1.8 * parseFloat(getComputedStyle(document.documentElement).fontSize));
-
+		
 		let screenSize = window.innerHeight + window.innerWidth;
 		if (screenSize <= 1500) {
 			innerRadius = (screenSize * .035);
@@ -121,19 +122,21 @@
 			innerRadius = (screenSize * .024);
 			outerRadius = (screenSize * .024) + (screenSize * .04);
 		}
-
+		
 		calculatedRadius = innerRadius * .35;
 		this.IsActive = true;
+		addCollision();
 	}
 
 	function cancel(this: Action) {
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
 		}
-		hovered = false;
+		hovered = undefined;
 		activeMenu = undefined;
 		radialLayer.listening(false);
 		radialStage.listening(false);
+		collision.destroy();
 		jQuery('#stage').css('z-index', '');
 
 		RemoveSelection(Selector.Radial);
@@ -147,6 +150,7 @@
 			radials.hide();
 			label.hide();
 			jQuery(".vanish").css("visibility", "hidden");
+			collision.destroy();
 			radialStage.container().style.cursor = "default";
 			await func();
 			_.defer(function() {dispatch("simulatepointerup", {event: lastPointerEvent});});
@@ -169,19 +173,21 @@
 		}	
 	}
 
-	function adjustInnerHitboxes(value: number) {
+	function adjustInnerHitboxes(value: number, exempt: string = undefined) {
 		radials.getChildren(function(node){
-			return node.getClassName() == "Arc" && node.name() != "collision";
+			return node.getClassName() == "Arc" && (!exempt || node.id() != exempt);
 		}).forEach(function (shape: Konva.Node) {
-			calculatedRadius = innerRadius * value;
+			// console.log(`${shape.id()} ${shape.id() == exempt ? "==" : "!!"} ${exempt}`)
+
+			// calculatedRadius = innerRadius * value;
 			(shape as Konva.Arc).hitFunc(function(context: any) {
 				var arc = shape as Konva.Arc;
 				var angle = Konva.getAngle(arc.angle()),
 				clockwise = arc.clockwise();
 
 				context.beginPath();
-				context.arc(0, 0, arc.outerRadius() * 1.75, 0, angle, clockwise);
-				context.arc(0, 0, calculatedRadius, angle, 0, !clockwise);
+				context.arc(0, 0, arc.outerRadius() * 2, 0, angle, clockwise);
+				context.arc(0, 0, innerRadius * value, angle, 0, !clockwise);
 				context.closePath();
 				context.fillStrokeShape(arc);
 			});
@@ -189,9 +195,21 @@
 	}
 
 	let hoverTimeout: number;
-	let hovered = false;
+	let hovered: Konva.Arc;
 	function highlightRadial(e: CustomEvent, r: RadialPart) {
-		hovered = true;
+		console.log(hovered)
+		if (hovered) {
+
+			console.log(e.detail.target.id() != hovered.id())
+		}
+		if (hovered && e.detail.target.id() != hovered.id()) {
+			console.log("checking timeout")
+			if (unhoverTimeout) {
+				console.log("clearing timeout")
+				clearTimeout(unhoverTimeout);
+			}
+		}
+		hovered = e.detail.target;
 		let shape: Konva.Shape = e.detail.target;
 
 		shape.fill("rgba(92, 150, 255, 0.15)")
@@ -202,9 +220,9 @@
 		label.text(r.label);
 		label.show();
 
-		// adjustInnerHitboxes(0);
-		radialStage.container().style.cursor = "not-allowed";
-		collision.moveToTop();
+		// adjustInnerHitboxes(1, shape.id());
+		radialStage.container().style.cursor = "none";
+
 
 		if (r.submenu) {
 			hoverTimeout = setTimeout(() => {
@@ -213,14 +231,17 @@
 		}
 	}
 
+	let unhoverTimeout: number;
 	function unhighlightRadial(e: CustomEvent, r: RadialPart) {
-		if (hoverTimeout) {
-			clearTimeout(hoverTimeout);
-		}
-	
-		(e.detail.target as Konva.Shape).fill(r.color);
-		label.hide();
-		hovered = false;
+		unhoverTimeout = setTimeout(() => {
+			if (hoverTimeout) {
+				clearTimeout(hoverTimeout);
+			}
+		
+			(e.detail.target as Konva.Shape).fill(r.color);
+			label.hide();
+			// hovered = undefined;
+		}, 300);
 	}
 
 	function defaultAction() {
@@ -245,7 +266,7 @@
 		clockwise = arc.clockwise();
 
 		context.beginPath();
-		context.arc(0, 0, arc.outerRadius() * 1.75, 0, angle, clockwise);
+		context.arc(0, 0, arc.outerRadius() * 2, 0, angle, clockwise);
 		context.arc(0, 0, calculatedRadius, angle, 0, !clockwise);
 		context.closePath();
 		context.fillStrokeShape(arc);
@@ -272,10 +293,34 @@
 		return `left: ${polar.x + location.x}px; top: ${polar.y + location.y}px; transform: translate(-50%, -50%)`
 	}
 
+	function addCollision() {
+		collision = new Konva.Arc({
+			x: activeMenu.location.x,
+			y: activeMenu.location.y,
+			innerRadius: innerRadius,
+			outerRadius: outerRadius,
+			angle: 360,
+			fill: "rgba(10,100,150,0)",
+			strokeWidth: 1,
+			name: "collision"
+		});
+		collision.on("pointerenter", (e) => {
+			e.target.moveToBottom()
+			e.target.listening(false);
+			radialStage.container().style.cursor = "none";
+			adjustInnerHitboxes(1);
+		})
+
+		radialLayer.add(collision);
+		radialLayer.draw();
+	}
+
 	onMount(async () => {
 		await tick();
 		jQuery("#stage")[0].addEventListener("pointerup", radialStageHandlePointerUp);
 		jQuery("#stage")[0].addEventListener("pointerdown", (e) => radialStageHandlePointerUp(e, true));
+		// radialLayer.toggleHitCanvas()
+		
  	});
 
 	let rh: {[key: string]: any} = {"send": send, "clear": clear, "click": click, "select": enableZone, "presets": presetsMenu, "focus": () => focuscam(activeMenu.target), "zoom": () => zoomcam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload":  () => loadNextCam("load")};
@@ -432,7 +477,7 @@
 						x: activeMenu.location.x,
 						y: activeMenu.location.y,
 						radius: innerRadius * 1,
-						fill: "rgba(1,1,1,1)",
+						fill: "rgba(1,1,1,0)",
 						strokeEnabled: false,
 						name: "detectionzone",
 						id: tangleID()
@@ -479,13 +524,12 @@
 						visible: false
 					}}
 				/>
-				
 				<Circle
 					config={{
 						x: activeMenu.location.x,
 						y: activeMenu.location.y,
 						radius: innerRadius * .35,
-						fill: "rgba(255,255,255,1)",
+						fill: "rgba(255,255,255,0)",
 						strokeEnabled: false,
 						name: "detectionzone",
 						id: tangleID()
@@ -497,24 +541,6 @@
 						collision.listening(true);
 					}}
 				/>
-				<Arc bind:handle={collision}
-					config={{
-						x: activeMenu.location.x,
-						y: activeMenu.location.y,
-						innerRadius: innerRadius,
-						outerRadius: outerRadius,
-						angle: 360,
-						fill: "rgba(100,100,100,.3)",
-						strokeWidth: 1,
-						name: "collision"
-					}}
-					on:pointerenter={(e) => {
-						e.detail.target.listening(false)
-						radialStage.container().style.cursor = "not-allowed";
-						adjustInnerHitboxes(1);
-					}}
-				/>
-
 			</Group>
 		{/if}
 	</Layer>
