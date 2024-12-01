@@ -13,11 +13,15 @@
 	function togglePlayerControls() {
 		if (selected == "btn-outline-secondary") {
 			selected = "btn-secondary";
-			jQuery('#cams').css('z-index', '100').css('pointer-events', 'all').css('visibility', 'hidden');
+			jQuery('#cams').css('z-index', '100');
+			jQuery('#cams').css('pointer-events', 'all');
+			jQuery('#chat').css('visibility', 'hidden');
 			controls = 1;
 		} else {
 			selected = "btn-outline-secondary";
-			jQuery('#cams').css('z-index', '').css('pointer-events', '').css('visibility', '');
+			jQuery('#cams').css('z-index', '');
+			jQuery('#cams').css('pointer-events', '');
+			jQuery('#chat').css('visibility', '');
 		}
 	}
 
