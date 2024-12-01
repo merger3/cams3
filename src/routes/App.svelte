@@ -188,7 +188,7 @@
 		</div>
 	</div>
 	<Keyboard bind:this={$keyboardHandler} bind:controls bind:selected on:sendcmd={sendCommand}/>
-	<!-- <Chat /> -->
+	<Chat />
 {/if}
 	
 <style>

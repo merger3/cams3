@@ -8,14 +8,20 @@
 	let headerHeight: number;
 	let bodyHeight: number;
 
-	let embedHeight = 0;
-	let marginTop = 0;
+	let embedHeight: number;
+	let marginTop: number;
 	function resizeEmbedRaw() {
 		let baseHeight = bodyHeight - headerHeight;
 		embedHeight = 1.5 * baseHeight;
 		marginTop = embedHeight - baseHeight;
 	}
-	var resizeEmbed = _.throttle(resizeEmbedRaw, 50, { 'leading': true, 'trailing': true });
+	var resizeEmbedThrottled = _.throttle(resizeEmbedRaw, 50, { 'leading': true, 'trailing': true });
+	var resizeEmbedDebounced = _.debounce(resizeEmbedRaw, 50, { 'leading': false, 'trailing': true })
+
+	function resizeEmbed() {
+		resizeEmbedThrottled();
+		resizeEmbedDebounced();
+	}
 
 	onMount(() => {
 		resizeEmbedRaw()

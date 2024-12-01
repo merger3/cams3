@@ -177,9 +177,7 @@
 		radials.getChildren(function(node){
 			return node.getClassName() == "Arc" && (!exempt || node.id() != exempt);
 		}).forEach(function (shape: Konva.Node) {
-			// console.log(`${shape.id()} ${shape.id() == exempt ? "==" : "!!"} ${exempt}`)
-
-			// calculatedRadius = innerRadius * value;
+			calculatedRadius = innerRadius * value;
 			(shape as Konva.Arc).hitFunc(function(context: any) {
 				var arc = shape as Konva.Arc;
 				var angle = Konva.getAngle(arc.angle()),
@@ -197,16 +195,15 @@
 	let hoverTimeout: number;
 	let hovered: Konva.Arc;
 	function highlightRadial(e: CustomEvent, r: RadialPart) {
-		console.log(hovered)
-		if (hovered) {
-
-			console.log(e.detail.target.id() != hovered.id())
+		if (unhoverSubTimeout) {
+			clearTimeout(unhoverSubTimeout);
 		}
-		if (hovered && e.detail.target.id() != hovered.id()) {
-			console.log("checking timeout")
-			if (unhoverTimeout) {
-				console.log("clearing timeout")
-				clearTimeout(unhoverTimeout);
+		if (hovered) {
+			if (e.detail.target.id() == hovered.id()) {
+				if (unhoverTimeout) {
+					clearTimeout(unhoverTimeout);
+				}
+				
 			}
 		}
 		hovered = e.detail.target;
@@ -232,16 +229,19 @@
 	}
 
 	let unhoverTimeout: number;
+	let unhoverSubTimeout: number;
 	function unhighlightRadial(e: CustomEvent, r: RadialPart) {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
 		unhoverTimeout = setTimeout(() => {
-			if (hoverTimeout) {
-				clearTimeout(hoverTimeout);
-			}
-		
-			(e.detail.target as Konva.Shape).fill(r.color);
+			(e.detail.target as Konva.Shape).fill(r.color);			
+		}, 10);
+		unhoverSubTimeout = setTimeout(() => {
 			label.hide();
-			// hovered = undefined;
-		}, 300);
+			radialStage.container().style.cursor = "default";
+			hovered = undefined;
+		}, 10);
 	}
 
 	function defaultAction() {
@@ -305,10 +305,14 @@
 			name: "collision"
 		});
 		collision.on("pointerenter", (e) => {
+			if (unhoverSubTimeout) {
+				clearTimeout(unhoverSubTimeout);
+			}
+
 			e.target.moveToBottom()
 			e.target.listening(false);
 			radialStage.container().style.cursor = "none";
-			adjustInnerHitboxes(1);
+			adjustInnerHitboxes(.9);
 		})
 
 		radialLayer.add(collision);
