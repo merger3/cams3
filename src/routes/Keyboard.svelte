@@ -344,10 +344,11 @@
 				actionSet[0].args.push(false);
 				actionSet.push({"action": "loadlayer", "args": [sublayer]});
 			}
-			console.log(p)
-			p.hotkeys.trim().split(" ").forEach((v) => {
+	
+			p.hotkeys?.trim().split(" ").forEach((v) => {
 				presetHotkeys.hotkeys[hotkeyFromString(v).hotkey()] = actionSet;
 			});
+			
 		});
 		return presetHotkeys;
 	}

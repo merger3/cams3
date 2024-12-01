@@ -136,7 +136,7 @@
 		activeMenu = undefined;
 		radialLayer.listening(false);
 		radialStage.listening(false);
-		collision.destroy();
+		collision?.destroy();
 		jQuery('#stage').css('z-index', '');
 
 		RemoveSelection(Selector.Radial);
@@ -150,7 +150,7 @@
 			radials.hide();
 			label.hide();
 			jQuery(".vanish").css("visibility", "hidden");
-			collision.destroy();
+			collision?.destroy();
 			radialStage.container().style.cursor = "default";
 			await func();
 			_.defer(function() {dispatch("simulatepointerup", {event: lastPointerEvent});});
