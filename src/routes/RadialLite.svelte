@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Arc, Group, Text, Stage, Layer } from "svelte-konva";
+	import { Arc, Group, Text, Stage, Layer, Circle } from "svelte-konva";
 	import Konva from "konva";
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse } from '$types';
@@ -10,7 +10,10 @@
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
 	import { RadialMenus, Transparency } from '$lib/radials';
 	import { portal } from "svelte-portal";
+	import { customAlphabet } from 'nanoid';
+
 	const dispatch = createEventDispatcher();
+	const tangleID = customAlphabet('0123456789abcdef', 5);
 
 	export let stageWidth: number;
 	export let stageHeight: number;
@@ -21,11 +24,14 @@
 	let innerRadius: number;
 	let outerRadius: number;
 
+	let calculatedRadius: number;
+
 	let radialStage: Konva.Stage;
 	export let radialLayer: Konva.Layer;
 	let radials: Konva.Group;
 	let label: Konva.Text;
-	
+	let collision: Konva.Arc;
+
 	let lastPointerEvent: any;
 
 	const name = "radial";
@@ -83,7 +89,11 @@
 			});
 		});
 
-		activeMenu = RadialMenus[mainMenu];
+		if ($commandText == defaultCMD) {
+			activeMenu = RadialMenus["alt"];
+		} else {
+			activeMenu = RadialMenus["main"];
+		}
 		if (!activeMenu) {
 			return;
 		}
@@ -98,7 +108,7 @@
 		radialStage.listening(true);
 		jQuery('#stage').css('z-index', '49');
 
-		fontSize = (2 * parseFloat(getComputedStyle(document.documentElement).fontSize));
+		fontSize = (1.8 * parseFloat(getComputedStyle(document.documentElement).fontSize));
 
 		let screenSize = window.innerHeight + window.innerWidth;
 		if (screenSize <= 1500) {
@@ -112,6 +122,7 @@
 			outerRadius = (screenSize * .024) + (screenSize * .04);
 		}
 
+		calculatedRadius = innerRadius * .35;
 		this.IsActive = true;
 	}
 
@@ -136,6 +147,7 @@
 			radials.hide();
 			label.hide();
 			jQuery(".vanish").css("visibility", "hidden");
+			radialStage.container().style.cursor = "default";
 			await func();
 			_.defer(function() {dispatch("simulatepointerup", {event: lastPointerEvent});});
 		};
@@ -157,17 +169,42 @@
 		}	
 	}
 
+	function adjustInnerHitboxes(value: number) {
+		radials.getChildren(function(node){
+			return node.getClassName() == "Arc" && node.name() != "collision";
+		}).forEach(function (shape: Konva.Node) {
+			calculatedRadius = innerRadius * value;
+			(shape as Konva.Arc).hitFunc(function(context: any) {
+				var arc = shape as Konva.Arc;
+				var angle = Konva.getAngle(arc.angle()),
+				clockwise = arc.clockwise();
+
+				context.beginPath();
+				context.arc(0, 0, arc.outerRadius() * 1.75, 0, angle, clockwise);
+				context.arc(0, 0, calculatedRadius, angle, 0, !clockwise);
+				context.closePath();
+				context.fillStrokeShape(arc);
+			});
+		});
+	}
+
 	let hoverTimeout: number;
 	let hovered = false;
 	function highlightRadial(e: CustomEvent, r: RadialPart) {
 		hovered = true;
-		(e.detail.target as Konva.Shape).fill("rgba(92, 150, 255, 0.15)")
+		let shape: Konva.Shape = e.detail.target;
+
+		shape.fill("rgba(92, 150, 255, 0.15)")
 		let hoveredElementPos = e.detail.target.getPosition();
 		label.position({x: hoveredElementPos.x, y: hoveredElementPos.y});
 		label.offsetX(label.width() / 2);
 		label.offsetY(label.height() / 2);
 		label.text(r.label);
 		label.show();
+
+		// adjustInnerHitboxes(0);
+		radialStage.container().style.cursor = "not-allowed";
+		collision.moveToTop();
 
 		if (r.submenu) {
 			hoverTimeout = setTimeout(() => {
@@ -180,9 +217,10 @@
 		if (hoverTimeout) {
 			clearTimeout(hoverTimeout);
 		}
-		hovered = false;
+	
 		(e.detail.target as Konva.Shape).fill(r.color);
 		label.hide();
+		hovered = false;
 	}
 
 	function defaultAction() {
@@ -208,7 +246,7 @@
 
 		context.beginPath();
 		context.arc(0, 0, arc.outerRadius() * 1.75, 0, angle, clockwise);
-		context.arc(0, 0, arc.innerRadius() * .35, angle, 0, !clockwise);
+		context.arc(0, 0, calculatedRadius, angle, 0, !clockwise);
 		context.closePath();
 		context.fillStrokeShape(arc);
 	}
@@ -240,11 +278,15 @@
 		jQuery("#stage")[0].addEventListener("pointerdown", (e) => radialStageHandlePointerUp(e, true));
  	});
 
-	let rh: {[key: string]: any} = {"send": send, "clear": clear, "select": enableZone, "presets": presetsMenu, "focus": () => focuscam(activeMenu.target), "zoom": () => zoomcam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload":  () => loadNextCam("load")};
+	let rh: {[key: string]: any} = {"send": send, "clear": clear, "click": click, "select": enableZone, "presets": presetsMenu, "focus": () => focuscam(activeMenu.target), "zoom": () => zoomcam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload":  () => loadNextCam("load")};
 	rh = {...{"iroff": () => buildCommand("ptzir", ["off"]), "iron": () => buildCommand("ptzir", ["on"]), "irauto": () => buildCommand("ptzir", ["auto"])}, ...rh};
 	rh = {...{"up": () => buildCommand("ptzmove", ["up"]), "upright": () => buildCommand("ptzmove", ["upright"]), "right": () => buildCommand("ptzmove", ["right"]), "downright": () => buildCommand("ptzmove", ["downright"]), "down": () => buildCommand("ptzmove", ["down"]), "downleft": () => buildCommand("ptzmove", ["downleft"]), "left": () => buildCommand("ptzmove", ["left"]), "upleft": () => buildCommand("ptzmove", ["upleft"])}, ...rh};
 
 	function send() {
+		dispatch("sendcmd");
+	}
+
+	function click() {
 		if ($commandText == defaultCMD) {
 			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 			$commandText = ClickTangle({
@@ -385,6 +427,20 @@
 	<Layer bind:handle={radialLayer} config={{listening: false}}>
 		{#if $am.Actions[name].IsActive && activeMenu}
 			<Group bind:handle={radials} config={{visible: true}}>
+				<Circle
+					config={{
+						x: activeMenu.location.x,
+						y: activeMenu.location.y,
+						radius: innerRadius * 1,
+						fill: "rgba(1,1,1,1)",
+						strokeEnabled: false,
+						name: "detectionzone",
+						id: tangleID()
+					}}
+					on:pointerenter={(e) => {
+						radialStage.container().style.cursor = "default";
+					}}
+				/>
 				{#each activeMenu.parts as r}
 					<Arc 
 						config={{
@@ -398,6 +454,7 @@
 							strokeWidth: 1,
 							rotation: r.rotation,
 							name: "radialpart",
+							id: tangleID(),
 							hitFunc: arcCustomHitbox
 						}}
 						on:pointerenter={(e) => highlightRadial(e, r)}
@@ -422,6 +479,42 @@
 						visible: false
 					}}
 				/>
+				
+				<Circle
+					config={{
+						x: activeMenu.location.x,
+						y: activeMenu.location.y,
+						radius: innerRadius * .35,
+						fill: "rgba(255,255,255,1)",
+						strokeEnabled: false,
+						name: "detectionzone",
+						id: tangleID()
+					}}
+					on:pointerenter={(e) => {
+						radialStage.container().style.cursor = "default";
+						adjustInnerHitboxes(.35);
+						collision.moveToTop();
+						collision.listening(true);
+					}}
+				/>
+				<Arc bind:handle={collision}
+					config={{
+						x: activeMenu.location.x,
+						y: activeMenu.location.y,
+						innerRadius: innerRadius,
+						outerRadius: outerRadius,
+						angle: 360,
+						fill: "rgba(100,100,100,.3)",
+						strokeWidth: 1,
+						name: "collision"
+					}}
+					on:pointerenter={(e) => {
+						e.detail.target.listening(false)
+						radialStage.container().style.cursor = "not-allowed";
+						adjustInnerHitboxes(1);
+					}}
+				/>
+
 			</Group>
 		{/if}
 	</Layer>

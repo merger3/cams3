@@ -142,9 +142,9 @@
 				<ContextMenu on:sendcmd={() => dispatch("sendcmd")}>
 					<div id="menutrigger" class="overlay unselectable z-100" />
 				</ContextMenu>
-			<PresetsMenu on:sendcmd={() => dispatch("sendcmd")}>
-				<div id="presetsmenutrigger" class="overlay unselectable z-100" />
-			</PresetsMenu>
+				<PresetsMenu on:sendcmd={() => dispatch("sendcmd")}>
+					<div id="presetsmenutrigger" class="overlay unselectable z-100" />
+				</PresetsMenu>
 
 			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 250, triggerBeforeFinished: true, spread: 12 }} />
 

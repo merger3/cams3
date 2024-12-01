@@ -1,4 +1,5 @@
 import type { RadialPart, RadialMenu, Coordinates } from '$types';
+import _ from "lodash";
 
 export const Transparency = .75;
 export const DefaultColor = `rgba(21, 21, 21, ${Transparency})`;
@@ -83,6 +84,17 @@ RadialMenus["main"] = {
 	]
 }
 
+function customizer(value: any, index: number): any {
+	if (value.action == "send" && value.label == "send") {
+		return {size: 1.5, action: "click", label: "click", icon: "crosshair2"}
+	} else if(value.action == "clear" && value.label == "clear") {
+		return {size: 1.5, action: "clickzoom", label: "clickzoom", icon: "crosshair"}
+	} else {
+		return undefined;
+	}
+}
+
+RadialMenus["alt"] = _.cloneDeepWith(RadialMenus["main"], customizer as any)
 
 Object.entries(RadialMenus).forEach(([name, menu]) => {
 	menu.name = name;

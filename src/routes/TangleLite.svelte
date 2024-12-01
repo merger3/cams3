@@ -310,34 +310,6 @@
 
 
 	function handlePointerOut(e: PointerEvent) {
-		const target = e.target as HTMLElement;
-		if (!target || !target.getBoundingClientRect) {
-			console.error('Event target is not an HTMLElement.');
-			return;
-		}
-
-		const rect = target.getBoundingClientRect();
-
-		const clampedX = Math.min(Math.max(e.clientX, rect.left), rect.right);
-		const clampedY = Math.min(Math.max(e.clientY, rect.top), rect.bottom);
-
-		const syntheticEvent = new PointerEvent('pointerup', {
-			bubbles: true,
-			cancelable: true,
-			composed: true,
-			pointerId: e.pointerId,
-			pointerType: e.pointerType,
-			isPrimary: e.isPrimary,
-			screenX: e.screenX + (clampedX - e.clientX),
-			screenY: e.screenY + (clampedY - e.clientY),
-			clientX: clampedX,
-			clientY: clampedY,
-			buttons: e.buttons,
-			pressure: e.pressure,
-		});
-
-		e.target.dispatchEvent(syntheticEvent);
-		return;
 		if (e.pointerType != "touch" && $am.ActiveStates.has(States.StagePointerDown)) {
 			prevPointers = pointers;
 			if (pointers > 0) {
@@ -379,6 +351,37 @@
 			if (log) {
 				console.log(printStates($am.ActiveStates))
 			}
+
+			const target = e.target as HTMLElement;
+			if (!target || !target.getBoundingClientRect) {
+				console.error('Event target is not an HTMLElement.');
+				return;
+			}
+
+			const rect = target.getBoundingClientRect();
+
+			const clampedX = Math.min(Math.max(e.clientX, rect.left), rect.right);
+			const clampedY = Math.min(Math.max(e.clientY, rect.top), rect.bottom);
+
+			const syntheticEvent = new PointerEvent('pointerup', {
+				bubbles: true,
+				cancelable: true,
+				composed: true,
+				pointerId: e.pointerId,
+				pointerType: e.pointerType,
+				isPrimary: e.isPrimary,
+				screenX: e.screenX + (clampedX - e.clientX),
+				screenY: e.screenY + (clampedY - e.clientY),
+				clientX: clampedX,
+				clientY: clampedY,
+				buttons: e.buttons,
+				pressure: e.pressure,
+			});
+
+			e.target.dispatchEvent(syntheticEvent);
+
+			$am.Actions["click"].Cancel();
+
 		}
 	}
 
