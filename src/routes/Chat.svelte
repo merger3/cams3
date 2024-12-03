@@ -28,7 +28,10 @@
 		resizeEmbedRaw();
 		myOffcanvas.addEventListener('show.bs.offcanvas', (event: any) => {
 			resizeEmbedRaw();
-		})
+		});
+		myOffcanvas.addEventListener('hidden.bs.offcanvas', (event: any) => {
+			resizeEmbedRaw();
+		});
 		window.addEventListener('resize', resizeEmbed);
 		return () => {
 			window.removeEventListener('resize', resizeEmbed);
