@@ -9,8 +9,7 @@
 	import { RedrawSelections } from '$lib/zones';
 	import TangleLite from './TangleLite.svelte';
 	import Zoomable from '$lib/actions/Zoomable.svelte';
-	import ContextMenu from '$lib/actions/ContextMenu.svelte';
-	import PresetsMenu from '$lib/actions/PresetsMenu.svelte';
+	import ContextMenuLite from '$lib/actions/ContextMenuLite.svelte';
 	
 	export let controls: number;
 
@@ -139,12 +138,9 @@
 	<div id="vid2" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 		<Zoomable>
 			<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
-				<ContextMenu on:sendcmd={() => dispatch("sendcmd")}>
+				<ContextMenuLite on:sendcmd={() => dispatch("sendcmd")}>
 					<div id="menutrigger" class="overlay unselectable z-100" />
-				</ContextMenu>
-				<PresetsMenu on:sendcmd={() => dispatch("sendcmd")}>
-					<div id="presetsmenutrigger" class="overlay unselectable z-100" />
-				</PresetsMenu>
+				</ContextMenuLite>
 
 			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 250, triggerBeforeFinished: true, spread: 12 }} />
 

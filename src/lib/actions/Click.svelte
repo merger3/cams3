@@ -2,7 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
 	import { Circle } from "svelte-konva";
-	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom, stage, ClearStage, swapsIsOpen, presetsIsOpen } from '$lib/stores';
+	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom, stage, ClearStage, menuIsOpen } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import {  ClickTangle } from '$lib/rect';
@@ -98,17 +98,11 @@
 	}
 
 	function finshDrawing(e: Konva.KonvaPointerEvent) {
-		if ($swapsIsOpen) {
+		if ($menuIsOpen) {
 			$am.Actions["swaps"].Cancel();
 			$am.Actions["click"].Cancel();
 			return;
 		}
-
-		if ($presetsIsOpen) {
-			$am.Actions["presetsmenu"].Cancel();
-			$am.Actions["click"].Cancel();
-			return;
-		}	
 		
 		$am.Actions[name].IsActive = true;
 		$stage.off('pointermove.click')

@@ -2,9 +2,9 @@
 	import { Arc, Group, Text, Stage, Layer, Circle } from "svelte-konva";
 	import Konva from "konva";
 	import { createEventDispatcher, onMount, tick } from 'svelte';
-	import type { RadialPart, RadialMenu, Coordinates, SwapResponse } from '$types';
+	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, MenuItem } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, clickZoom, swapsCache, ClearStage, SyncCache } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, clickZoom, GetSwaps, ClearStage, SyncCache } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -119,8 +119,8 @@
 			innerRadius = (screenSize * .030);
 			outerRadius = (screenSize * .030) + (screenSize * .046);
 		} else {
-			innerRadius = (screenSize * .024);
-			outerRadius = (screenSize * .024) + (screenSize * .04);
+			innerRadius = (screenSize * .022);
+			outerRadius = (screenSize * .022) + (screenSize * .04);
 		}
 		
 		calculatedRadius = innerRadius * .35;
@@ -224,7 +224,7 @@
 		if (r.submenu) {
 			hoverTimeout = setTimeout(() => {
 				loadNewMenu(r);
-			}, 325);
+			}, 300);
 		}
 	}
 
@@ -256,6 +256,7 @@
 		}
 		lastPointerEvent = e;
 		if (force || !hovered) {
+			radialStage.container().style.cursor = "default";
 			dispatch("simulatepointerup", {event: e});
 		}
 	}
@@ -327,7 +328,20 @@
 		
  	});
 
-	let rh: {[key: string]: any} = {"send": send, "clear": clear, "click": click, "select": enableZone, "presets": presetsMenu, "focus": () => focuscam(activeMenu.target), "zoom": () => zoomcam(activeMenu.target), "reset": () => buildCommand("resetcam"), "swap": swapMenu, "nextswap": () => loadNextCam("swap"), "nextload":  () => loadNextCam("load")};
+	let rh: {[key: string]: any} = {
+		"send": send, 
+		"clear": clear, 
+		"click": click, 
+		"select": enableZone, 
+		"swap": () => openMenu("swaps"), 
+		"presets": () => openMenu("presetsmenu"), 
+		"clickzoom": () => openMenu("zoommenu"),
+		"focus": () => focuscam(activeMenu.target), 
+		"zoom": () => zoomcam(activeMenu.target), 
+		"reset": () => buildCommand("resetcam"), 
+		"nextswap": () => loadNextCam("swap"), 
+		"nextload":  () => loadNextCam("load")
+	};
 	rh = {...{"iroff": () => buildCommand("ptzir", ["off"]), "iron": () => buildCommand("ptzir", ["on"]), "irauto": () => buildCommand("ptzir", ["auto"])}, ...rh};
 	rh = {...{"up": () => buildCommand("ptzmove", ["up"]), "upright": () => buildCommand("ptzmove", ["upright"]), "right": () => buildCommand("ptzmove", ["right"]), "downright": () => buildCommand("ptzmove", ["downright"]), "down": () => buildCommand("ptzmove", ["down"]), "downleft": () => buildCommand("ptzmove", ["downleft"]), "left": () => buildCommand("ptzmove", ["left"]), "upleft": () => buildCommand("ptzmove", ["upleft"])}, ...rh};
 
@@ -393,27 +407,17 @@
 		AddSelection(zone, Selector.Focus);
 	}
 
-	function swapMenu() {
+	function openMenu(menu: string) {
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		let mousePos = radialStage.getPointerPosition();
+		let targetCoords: Coordinates;
 		if (mousePos && $am.ActiveStates.has(States.MousePointer)) {
-			$am.Actions["swaps"].Enable({x: (mousePos.x - ifOverlay.left) / $panzoom.getScale(), y: (mousePos.y - ifOverlay.top) / $panzoom.getScale()})
+			targetCoords = {x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()};
 		} else {
-			$am.Actions["swaps"].Enable({x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()})
+			targetCoords = {x: (mousePos.x - ifOverlay.left) / $panzoom.getScale(), y: (mousePos.y - ifOverlay.top) / $panzoom.getScale()};
 		}
-
-		const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: 0, clientY: 0, button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
-		jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
-	}
-
-	function presetsMenu() {
-		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-		let mousePos = radialStage.getPointerPosition();
-		if (mousePos && $am.ActiveStates.has(States.MousePointer)) {
-			$am.Actions["presetsmenu"].Enable({x: (mousePos.x - ifOverlay.left) / $panzoom.getScale(), y: (mousePos.y - ifOverlay.top) / $panzoom.getScale()})
-		} else {
-			$am.Actions["presetsmenu"].Enable({x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()})
-		}
+		// @ts-ignore: presetsmenu can take an extra argument
+		$am.Actions[menu].Enable(targetCoords, {x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()})
 
 		const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: 0, clientY: 0, button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
 		jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
@@ -424,37 +428,33 @@
 		if (!cam.found) {
 			return;
 		}
+		let name: string = cam.cam;
 
-		let swaps = $swapsCache[cam.cam]
+		let swaps: MenuItem = await GetSwaps(name);
 		if (!swaps) {
-			let response = await $server.post('/camera/swaps', {camera: cam.cam});
-			swaps = response.data;
-			if (!swaps.found) {
-				return;
-			} else {
-				$swapsCache[cam.cam] = swaps;
-			}
+			return;
 		}
 
-		if (!swaps.swaps.subentries[0] || swaps.swaps.subentries[0].subentries) {
+		if (!swaps.items[0] || swaps.items[0].items) {
 			return;
 		}
 
 		if (action == "swap") {
-			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
+			$commandText = `!swap ${name} ${swaps.items[0].value}`
 			dispatch('sendcmd');
 
-			SyncCache(swaps.swaps.subentries[0].label);
+			SyncCache(swaps.items[0].value);
 		} else if (action == "load") {
 			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 			let mousePos = radialStage.getPointerPosition();
+			let targetCoords: Coordinates;
 			if (mousePos && $am.ActiveStates.has(States.MousePointer)) {
-				// @ts-ignore: presetsmenu can take an extra argument
-				$am.Actions["presetsmenu"].Enable({x: (mousePos.x - ifOverlay.left) / $panzoom.getScale(), y: (mousePos.y - ifOverlay.top) / $panzoom.getScale()}, swaps.swaps.subentries[0].label)
+				targetCoords = {x: (mousePos.x - ifOverlay.left) / $panzoom.getScale(), y: (mousePos.y - ifOverlay.top) / $panzoom.getScale()};
 			} else {
-				// @ts-ignore: presetsmenu can take an extra argument
-				$am.Actions["presetsmenu"].Enable({x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()}, swaps.swaps.subentries[0].label)
+				targetCoords = {x: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(), y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale()}
 			}
+			// @ts-ignore: presetsmenu can take an extra argument
+			$am.Actions["presetsmenu"].Enable(targetCoords, swaps.items[0].value)
 
 			const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: 0, clientY: 0, button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
 			jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);

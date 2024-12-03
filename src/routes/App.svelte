@@ -115,7 +115,7 @@
 
 		$server = axios.create({
 			timeout: 10000,
-			baseURL: '/api/',
+			baseURL: 'https://alvsanc-cams.dev/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 

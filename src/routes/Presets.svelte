@@ -55,7 +55,7 @@
 	let scrollAreaElement: HTMLDivElement;
 	let buttonWidth: string;
 	async function loadMenu(coordinates: Coordinates, target: Konva.Rect) {
-		let presets: CamPresets = {name: "", presets: []};
+		let presets: CamPresets = {value: "", items: []};
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
 		
 		if (cam.found) {
@@ -66,7 +66,7 @@
 					presets = response.data.camPresets;
 					$presetButtonCache[cam.cam] = response.data.camPresets;
 				} else {
-					$presetButtonCache[cam.cam] = {name: cam.cam, presets: []}
+					$presetButtonCache[cam.cam] = {value: cam.cam, items: []}
 				}
 			} else {
 				presets = cachedPresets;
@@ -116,10 +116,10 @@
 	});
 </script>
 
-{#if $camPresets.presets.length != 0}
+{#if $camPresets.items.length != 0}
 	<ScrollArea bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-3 mt-1.5 mb-auto mx-1 z-20 rounded shadow" scrollbarYClasses="">
 		<div id="presets-menu" class="w-100">
-			<Subpresets bind:buttonWidth bind:preset={$camPresets.presets} on:sendcmd={() => dispatch("sendcmd")} />
+			<Subpresets bind:buttonWidth bind:preset={$camPresets.items} on:sendcmd={() => dispatch("sendcmd")} />
 		</div>
 		<div class="mt-2.5" />
 	</ScrollArea>

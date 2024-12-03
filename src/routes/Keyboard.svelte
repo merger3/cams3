@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { zones, am, commandText, ClearStage, stage, swapsIsOpen, GetCam, swapsCache, presetHotkeyCache, SyncCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, presetsIsOpen, GetZone } from '$lib/stores';
-	import type { HotkeyPreset, CamPresets } from '$types';
+	import { zones, am, commandText, ClearStage, stage, menuIsOpen, GetCam, swapsCache, presetHotkeyCache, SyncCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, GetZone, GetSwaps } from '$lib/stores';
+	import type { HotkeyPreset, CamPresets, SwapResponse, MenuItem } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, GetSelectedRect, AddSelection, RemoveSelection } from '$lib/zones';
 	import Konva from "konva";
@@ -338,7 +338,7 @@
 			presetHotkeys = compileHotkeys(presetBaseKeys, LayerType.PresetsSub);
 		}
 		presets.forEach((p) => {
-			let actionSet: Actions[] = [{"action": "selectpreset", "args": [p.name]}];
+			let actionSet: Actions[] = [{"action": "selectpreset", "args": [p.value]}];
 			if (p.sublayer && p.sublayer.length != 0) {
 				let sublayer = unpackPresets(p.sublayer);
 				actionSet[0].args.push(false);
@@ -362,7 +362,7 @@
 			return;
 		}
 
-		if (!$camPresets || $camPresets.presets.length == 0) {
+		if (!$camPresets || $camPresets.items.length == 0) {
 			return;
 		}
 
@@ -371,9 +371,9 @@
 			return;
 		}
 
-		let cam = $camPresets.name;
+		let cam = $camPresets.value;
 
-		let presets: CamPresets = {name: "", presets: []};
+		let presets: CamPresets = {value: "", items: []};
 		let cachedPresets = $presetHotkeyCache[cam];
 		if (!cachedPresets) {
 			let response = await $server.post('/camera/presets/hotkeys', {camera: cam})
@@ -381,15 +381,14 @@
 				presets = response.data.camPresets;
 				$presetHotkeyCache[cam] = response.data.camPresets;
 			} else {
-				$presetHotkeyCache[cam] = {name: cam, presets: []}
+				$presetHotkeyCache[cam] = {value: cam, items: []}
 			}
 		} else {
 			presets = cachedPresets;
 		}
 
 		console.log(presets)
-
-		let newLayer = unpackPresets(presets.presets, compileHotkeys(presetBaseKeys, LayerType.PresetsBase));
+		let newLayer = unpackPresets(presets.items, compileHotkeys(presetBaseKeys, LayerType.PresetsBase));
 		addLayer(newLayer);
 
 		presetTimer = setTimeout(() => {
@@ -418,8 +417,8 @@
 	async function spin(target: number, amount: number) {
 		if (!spinningCam) {
 			let name: string;
-			if ($camPresets && $camPresets.name != "") {
-				name = $camPresets.name;
+			if ($camPresets && $camPresets.value != "") {
+				name = $camPresets.value;
 			} else {
 				let zone = GetSelectedRect(Selector.Presets);
 				if (!zone) {
@@ -453,8 +452,8 @@
 	async function resetSpin() {
 		if (!spinningCam) {
 			let name: string;
-			if ($camPresets && $camPresets.name != "") {
-				name = $camPresets.name;
+			if ($camPresets && $camPresets.value != "") {
+				name = $camPresets.value;
 			} else {
 				let zone = GetSelectedRect(Selector.Presets);
 				if (!zone) {
@@ -690,11 +689,7 @@
 			cancelPresetSelection();
 			return;
 		}
-		if ($presetsIsOpen) {
-			$am.Actions["presetsmenu"].Cancel();
-			return;
-		}
-		if ($swapsIsOpen) {
+		if ($menuIsOpen) {
 			$am.Actions["swaps"].Cancel();
 			return;
 		}
@@ -708,8 +703,8 @@
 		}
 
 		let name: string;
-		if ($camPresets && $camPresets.name != "") {
-			name = $camPresets.name;
+		if ($camPresets && $camPresets.value != "") {
+			name = $camPresets.value;
 		} else {
 			let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
 			if (!cam.found) {
@@ -731,8 +726,8 @@
 		}
 
 		let name: string;
-		if ($camPresets && $camPresets.name != "") {
-			name = $camPresets.name;
+		if ($camPresets && $camPresets.value != "") {
+			name = $camPresets.value;
 		} else {
 			let cam = await GetCam({coordinates: {x: zone.x() + (zone.width() / 2), y: zone.y() + (zone.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(zone.name())}, $server)
 			if (!cam.found) {
@@ -751,8 +746,8 @@
 	let autosend = true;
 	async function buildCommand(command: string, autosend: boolean, ...values: string[]): Promise<string> {
 		let name: string;
-		if ($camPresets && $camPresets.name != "") {
-			name = $camPresets.name;
+		if ($camPresets && $camPresets.value != "") {
+			name = $camPresets.value;
 		} else {
 			let zone = GetSelectedRect(Selector.Presets);
 			if (!zone) {
@@ -777,8 +772,8 @@
 
 	async function loadNextCam(action: string) {
 		let name: string;
-		if ($camPresets && $camPresets.name != "") {
-			name = $camPresets.name;
+		if ($camPresets && $camPresets.value != "") {
+			name = $camPresets.value;
 		} else {
 			let zone = GetSelectedRect(Selector.Presets);
 			if (!zone) {
@@ -792,27 +787,21 @@
 			name = cam.cam;
 		}
 
-		let swaps = $swapsCache[name]
+		let swaps: MenuItem = await GetSwaps(name);
 		if (!swaps) {
-			let response = await $server.post('/camera/swaps', {camera: name});
-			swaps = response.data;
-			if (!swaps.found) {
-				return;
-			} else {
-				$swapsCache[name] = swaps;
-			}
+			return;
 		}
 
-		if (!swaps.swaps.subentries[0] || swaps.swaps.subentries[0].subentries) {
+		if (!swaps.items[0] || swaps.items[0].items) {
 			return;
 		}
 
 		if (action == "swap") {
-			$commandText = `!swap ${swaps.cam} ${swaps.swaps.subentries[0].label}`
+			$commandText = `!swap ${name} ${swaps.items[0].value}`
 			dispatch('sendcmd');
-			SyncCache(swaps.swaps.subentries[0].label);
+			SyncCache(swaps.items[0].value);
 		} else if (action == "load") {
-			presetsMenu(swaps.swaps.subentries[0].label);
+			presetsMenu(swaps.items[0].value);
 		}
 	}
 
@@ -859,7 +848,7 @@
 	}
 
 	function presetsMenu(cam: string = undefined) {
-		if ($presetsIsOpen) {
+		if ($menuIsOpen) {
 			$am.Actions["presetsmenu"].Cancel();
 			return;
 		}
@@ -875,7 +864,7 @@
 	}
 
 	function swapMenu() {
-		if ($swapsIsOpen) {
+		if ($menuIsOpen) {
 			$am.Actions["swaps"].Cancel();
 			return;
 		}
@@ -912,7 +901,7 @@
 		if (actions) {
 			actions.forEach((action) => {
 				let outcome = functions[action.action];
-				if (outcome && !(($swapsIsOpen && outcome != swapMenu) || $presetsIsOpen && outcome != presetsMenu)) {
+				if (outcome && !(($menuIsOpen && (outcome != swapMenu || outcome != presetsMenu)))) {
 					e.preventDefault()
 					Promise.resolve().then(() => outcome(...action.args));
 				}

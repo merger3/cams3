@@ -10,21 +10,16 @@ interface Config {
 }
 
 interface CamPresets {
-    name: string;
-    presets: any[];
+    value: string;
+    items: any[];
 } 
 
 interface ButtonPreset {
-    name: string;
-} 
-
-interface MenuPreset {
-    name: string;
-	subentries: MenuPreset[];
+    value: string;
 } 
 
 interface HotkeyPreset {
-    name: string;
+    value: string;
     hotkeys: string;
 	sublayer: HotkeyPreset[];
 } 
@@ -37,14 +32,18 @@ interface Entry {
 interface SwapResponse {
 	found: boolean;
 	cam: string;
-	position: number;
-	swaps: Entry;
+	items: MenuItem;
 }
 
 interface CamPosition {
 	found: boolean;
 	cam: string;
 	position: number;
+}
+
+interface MenuItem {
+	value: string;
+	items: MenuItem[];
 }
 
 interface Coordinates {

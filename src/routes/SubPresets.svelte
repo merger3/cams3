@@ -9,7 +9,7 @@
 	export let preset: ButtonPreset[];
 
     function buildCommand(preset: string) {
-		let newCommand: string = `!ptzload ${$camPresets.name} ${preset}`;
+		let newCommand: string = `!ptzload ${$camPresets.value} ${preset}`;
 		if (newCommand == $commandText) {
 			dispatch("sendcmd");
 		} else {
@@ -22,8 +22,7 @@
 </script>
 
 {#each preset as p}
-	{#if p.name != "separator"}
-		<button type="button" on:click={() => buildCommand(p.name)} class="btn btn-outline-warning btn-lg d-block px-0 mb-2 overflow-hidden position-relative h-16" style="width: {buttonWidth}">{p.name}</button>
+	{#if p.value != "separator"}
+		<button type="button" on:click={() => buildCommand(p.value)} class="btn btn-outline-warning btn-lg d-block px-0 mb-2 overflow-hidden position-relative h-16" style="width: {buttonWidth}">{p.value}</button>
 	{/if}
-	<!-- <Subpresets bind:buttonWidth bind:preset={p.subentries} on:sendcmd={() => dispatch("sendcmd")} /> -->
 {/each}

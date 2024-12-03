@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { type AxiosInstance } from 'axios';
-import type { CamRequest, CamResponse, Coordinates, Dimensions, CamPresets, SwapResponse } from '$types';
+import type { CamRequest, CamResponse, Coordinates, Dimensions, CamPresets, SwapResponse, MenuItem } from '$types';
 import {type PanzoomObject} from '@panzoom/panzoom'
 import { type BaseParams } from 'svelte-gestures';
 import { setPointerControls } from 'svelte-gestures';
@@ -17,20 +17,19 @@ export let token = writable<string>();
 export let server = writable<AxiosInstance>();
 export let stage = writable<Konva.Stage>();
 export let zones = writable<Konva.Group>();
-export let camPresets = writable<CamPresets>({name: "", presets: []});
+export let camPresets = writable<CamPresets>({value: "", items: []});
 export let clickZoom = writable<number>(100);
 export let clickFocus = writable<number>(0);
 export let panzoom = writable<PanzoomObject>();
 export let clickTimer = writable<number>();
-export let swapsIsOpen = writable<boolean>();
-export let presetsIsOpen = writable<boolean>();
+export let menuIsOpen = writable<boolean>();
 export let keyboardHandler = writable<Keyboard>();
 
 
 export let presetButtonCache = writable<{[key: string]: CamPresets}>({})
 export let presetMenuCache = writable<{[key: string]: CamPresets}>({})
 export let presetHotkeyCache = writable<{[key: string]: CamPresets}>({})
-export let swapsCache = writable<{[key: string]: SwapResponse}>({})
+export let swapsCache = writable<{[key: string]: MenuItem}>({})
 
 export let am = writable<ActionsManager>();
 
@@ -99,9 +98,10 @@ export async function SyncCache(cam: string) {
 	let target: string = response.data.result;
 	if (!get(swapsCache)[target]) {
 		response = await get(server).post('/camera/swaps', {camera: target});
+		let swapData: SwapResponse = response.data;
 		console.log(`Updating swaps cache for ${cam}`)
-		if (response.data.found) {
-			get(swapsCache)[target] = response.data;
+		if (swapData.found) {
+			get(swapsCache)[target] = swapData.items;
 		}
 	}
 
@@ -111,7 +111,7 @@ export async function SyncCache(cam: string) {
 		if (response.data.found) {
 			get(presetButtonCache)[target] = response.data.camPresets;
 		} else {
-			get(presetButtonCache)[target] = {name: target, presets: []}
+			get(presetButtonCache)[target] = {value: target, items: []}
 		}
 	}
 
@@ -121,7 +121,7 @@ export async function SyncCache(cam: string) {
 		if (response.data.found) {
 			get(presetMenuCache)[target] = response.data.camPresets;
 		} else {
-			get(presetMenuCache)[target] = {name: target, presets: []}
+			get(presetMenuCache)[target] = {value: target, items: []}
 		}
 	}
 
@@ -131,9 +131,24 @@ export async function SyncCache(cam: string) {
 		if (response.data.found) {
 			get(presetHotkeyCache)[target] = response.data.camPresets;
 		} else {
-			get(presetHotkeyCache)[target] = {name: target, presets: []}
+			get(presetHotkeyCache)[target] = {value: target, items: []}
 		}
 	}
+}
+
+export async function GetSwaps(name: string): Promise<MenuItem> {
+	let swaps: MenuItem = get(swapsCache)[name]
+	if (!swaps) {
+		let response = await get(server).post('/camera/swaps', {camera: name});
+		let swapResponse: SwapResponse = response.data;
+		if (!swapResponse.found) {
+			return;
+		} else {
+			swaps = swapResponse.items;
+			get(swapsCache)[name] = swaps;
+		}
+	}
+	return swaps;
 }
 
 export function GrowZone(stage: Konva.Stage, zone: Konva.Rect) {
