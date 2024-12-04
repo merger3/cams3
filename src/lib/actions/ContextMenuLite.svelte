@@ -264,7 +264,6 @@
 		removeClickListener();
 		if ($menuIsOpen) {
 			$menuIsOpen = false;
-			opc(false);
 			animationTimer = setTimeout(() => {
 				cancelled = true;
 			}, 200);
@@ -276,6 +275,7 @@
 			clearSelectors();
 			currentAction = undefined;
 		}
+		opc(false);
 	}
 
 	function reverseMenu(item: MenuItem) {
