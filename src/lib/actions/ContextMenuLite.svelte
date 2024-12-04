@@ -266,14 +266,14 @@
 			$menuIsOpen = false;
 			animationTimer = setTimeout(() => {
 				cancelled = true;
-				clearSelector(this.Name);
+				clearSelectors();
 			}, 200);
 		} else {
 			cancelled = true;
 			items = undefined;
 			dataReady = false;
 			deactivateAll();
-			clearSelector(this.Name);
+			clearSelectors();
 			currentAction = undefined;
 		}
 	}
