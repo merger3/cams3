@@ -295,7 +295,6 @@
 	let transition = flyAndScale;
 	function opc(open: boolean) {
 		if (open) {
-			console.log("open")
 			dispatch("openmenu");
 			setTimeout(() => {
 				let menuContainer = jQuery(".custommenu")[0];
@@ -336,7 +335,7 @@
 					let container = jQuery(".custommenu")[0];
 					container.scrollTop = container.scrollHeight;
 				})
-			}, 50)
+			}, 100)
 		}
 	}
 

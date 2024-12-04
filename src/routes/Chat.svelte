@@ -44,7 +44,7 @@
 Chat
 </button>
 
-<div bind:this={myOffcanvas} class="offcanvas offcanvas-end lg:!w-1/4 sm:!w-1/3" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+<div bind:this={myOffcanvas} class="offcanvas offcanvas-end xl:!w-1/4 sm:!w-1/3" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
 	<Tabs.Root value="agg" class="w-100 h-100">
 		<div class="offcanvas-header p-2 pb-1" bind:clientHeight={headerHeight}>
 			<Tabs.List class="grid w-full grid-cols-2 w-100 ms-.5 me-0">
