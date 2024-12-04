@@ -9,6 +9,7 @@
 
 	export let cam: string;
 	export let items: MenuItem[];
+	export let content: HTMLDivElement;
 
 	async function handleClick(target: string, value: string) {
 		let position = GetSelectedRect(Selector.ContexMenu); // Or pass this into the component
@@ -43,8 +44,8 @@
 		<ContextMenu.Sub>
 			<ContextMenu.SubTrigger class="h-10" inset>{e.value}</ContextMenu.SubTrigger>
 			<ContextMenu.SubContent class="w-4 overflow-visible text-center" fitViewport={false} overlap={true}> 
-				<SwapMenu items={e.items} bind:cam on:sendcmd={() => dispatch("sendcmd")}/>
+				<SwapMenu items={e.items} bind:cam bind:content on:sendcmd={() => dispatch("sendcmd")}/>
 			</ContextMenu.SubContent>
 		</ContextMenu.Sub>
 	{/if}
-{/each}	
+{/each}

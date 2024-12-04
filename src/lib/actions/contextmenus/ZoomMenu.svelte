@@ -13,7 +13,7 @@
 
 	function handleClick(target: string, value: string) {
 		
-		$commandText = `!ptzload ${Math.round(position.x)} ${Math.round(position.y)} ${value == "Max" ? 10000 : value}`;
+		$commandText = `!ptzclick ${Math.round(position.x)} ${Math.round(position.y)} ${value == "Max" ? 10000 : value}`;
 		ClearStage($stage, [Selector.PresetMenu]);
 		dispatch("sendcmd");
 	}

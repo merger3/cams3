@@ -12,6 +12,9 @@
 	import Konva from "konva";
 	import {  ClickTangle } from '$lib/rect';
 	import ZoomMenu from "./contextmenus/ZoomMenu.svelte";
+	import { cn, flyAndScale } from "$lib/utils.js";
+
+
 	const dispatch = createEventDispatcher();
 
 	const defaultCMD: string = "​";
@@ -155,9 +158,11 @@
 		$am.Actions[zoomMenuName].IsActive = false;
 	}
 
+	let invocationPosition: Coordinates;
 	async function openMenu(coordinates: Coordinates) {
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: ((coordinates.x * $panzoom.getScale())+ ifOverlay.left), clientY: ((coordinates.y * $panzoom.getScale()) + ifOverlay.top)});
+		invocationPosition = {x: (coordinates.x * $panzoom.getScale())+ ifOverlay.left, y: (coordinates.y * $panzoom.getScale()) + ifOverlay.top};
+		const rightClickEvent = new MouseEvent('contextmenu', {bubbles: true, cancelable: true, view: window, button: 2, buttons: 2, clientX: invocationPosition.x, clientY: invocationPosition.y});
 		
 		dataReady = true;
 		removeClickListener();
@@ -267,24 +272,65 @@
 		}
 	}
 
+	function reverseMenu(item: MenuItem) {
+		item.items.forEach((value) => {
+			if (value.items && value.items.length > 0) {
+				reverseMenu(value);
+			}
+		});
+		return item.items.reverse();
+	}
+
+	const placeholder = (function() {} as any)
+
+	let shown = "invisible";
+	let reopen = false;
+	let reversed = false;
+	let transition = placeholder;
 	function opc(open: boolean) {
 		if (open) {
 			dispatch("openmenu");
-		} else {
+			setTimeout(() => {
+				let menuRect = jQuery(".custommenu")[0].getBoundingClientRect();
+				if (Math.abs(invocationPosition.y - menuRect.top) <= Math.abs(invocationPosition.y - menuRect.bottom)) {
+					shown = "visible"
+				} else {
+					reverseMenu(items);
+					reversed = true;
+					reopen = true;
+					transition = flyAndScale;
+					shown = "visible"
+					$menuIsOpen = false;
+					opc(false);
+				}
+			})
+		} else if (!reopen) {
 			if (!swapRegEx.exec($commandText)) {
 				if (currentAction) {
 					clearSelector(currentAction.Name);
 				}
-			} 
+			}
+			if (reversed) {
+				reverseMenu(items);
+				reversed = false;
+			}
 			animationTimer = setTimeout(() => {
 				items = undefined;
 				dataReady = false;
 				deactivateAll();
 				currentAction = undefined;
+				shown = "invisible";
 			}, 200);
 			removeClickListener();
+		} else {
+			reopen = false;
+			setTimeout(() => {
+				$menuIsOpen = true;
+			}, 50)
 		}
 	}
+
+	let content: HTMLDivElement;
 </script>
 
 
@@ -295,15 +341,15 @@
 		</ContextMenu.Trigger>
 
 		{#if currentAction.Name == swapMenuName}
-			<ContextMenu.Content class="w-52 dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
-				<SwapMenu items={items.items} cam={items.value} on:sendcmd={() => dispatch("sendcmd")}/>
+			<ContextMenu.Content el={content} transition={transition} class="w-52 dark:bg-slate-800 max-w-screen overflow-scroll {shown}" fitViewport={true} overlap={true} >
+				<SwapMenu items={items.items} cam={items.value} bind:content on:sendcmd={() => dispatch("sendcmd")}/>
 			</ContextMenu.Content>
 		{:else if currentAction.Name == presetMenuName}
-			<ContextMenu.Content class="w-[11rem] dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
+			<ContextMenu.Content transition={transition} class="w-[11rem] dark:bg-slate-800 max-w-screen overflow-scroll {shown}" fitViewport={true} overlap={true} >
 				<PresetsMenu items={items.items} cam={items.value} on:sendcmd={() => dispatch("sendcmd")}/>
 			</ContextMenu.Content>
 		{:else if currentAction.Name == zoomMenuName}
-			<ContextMenu.Content class="w-[2rem] dark:bg-slate-800 max-w-screen overflow-scroll" fitViewport={true} overlap={true} >
+			<ContextMenu.Content transition={transition} class="w-[2rem] dark:bg-slate-800 max-w-screen overflow-scroll {shown}" fitViewport={true} overlap={true} >
 				<ZoomMenu items={items.items} cam={items.value} bind:position on:sendcmd={() => dispatch("sendcmd")}/>
 			</ContextMenu.Content>
 		{/if}
