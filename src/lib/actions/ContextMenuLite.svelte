@@ -264,9 +264,9 @@
 		removeClickListener();
 		if ($menuIsOpen) {
 			$menuIsOpen = false;
+			clearSelectors();
 			animationTimer = setTimeout(() => {
 				cancelled = true;
-				clearSelectors();
 			}, 200);
 		} else {
 			cancelled = true;
