@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
-	import { createEventDispatcher, onMount, tick, setContext, getContext } from 'svelte';
+	import { createEventDispatcher, onMount, tick, setContext, getContext, beforeUpdate, afterUpdate } from 'svelte';
 	import { get, writable } from 'svelte/store';
 	import type { SwapResponse, Coordinates, MenuItem, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
@@ -152,6 +152,11 @@
 		}
 	}
 
+	function clearSelectors() {
+		RemoveSelection(Selector.ContexMenu);
+		RemoveSelection(Selector.PresetMenu);
+	}
+
 	function deactivateAll() {
 		$am.Actions[swapMenuName].IsActive = false;
 		$am.Actions[presetMenuName].IsActive = false;
@@ -261,6 +266,7 @@
 			$menuIsOpen = false;
 			animationTimer = setTimeout(() => {
 				cancelled = true;
+				clearSelector(this.Name);
 			}, 200);
 		} else {
 			cancelled = true;
@@ -286,29 +292,29 @@
 	let shown = "invisible";
 	let reopen = false;
 	let reversed = false;
-	let transition = placeholder;
+	let transition = flyAndScale;
 	function opc(open: boolean) {
 		if (open) {
+			console.log("open")
 			dispatch("openmenu");
 			setTimeout(() => {
-				let menuRect = jQuery(".custommenu")[0].getBoundingClientRect();
+				let menuContainer = jQuery(".custommenu")[0];
+				let menuRect = menuContainer.getBoundingClientRect();
 				if (Math.abs(invocationPosition.y - menuRect.top) <= Math.abs(invocationPosition.y - menuRect.bottom)) {
 					shown = "visible"
 				} else {
 					reverseMenu(items);
 					reversed = true;
 					reopen = true;
-					transition = flyAndScale;
 					shown = "visible"
 					$menuIsOpen = false;
 					opc(false);
 				}
 			})
+			
 		} else if (!reopen) {
 			if (!swapRegEx.exec($commandText)) {
-				if (currentAction) {
-					clearSelector(currentAction.Name);
-				}
+				clearSelectors();
 			}
 			if (reversed) {
 				reverseMenu(items);
@@ -326,6 +332,10 @@
 			reopen = false;
 			setTimeout(() => {
 				$menuIsOpen = true;
+				setTimeout(() => {
+					let container = jQuery(".custommenu")[0];
+					container.scrollTop = container.scrollHeight;
+				})
 			}, 50)
 		}
 	}
