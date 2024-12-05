@@ -211,7 +211,7 @@
 
 		'Escape Backspace': "clear closechat",
 
-		'!c Slash': "openchat",
+		'!c Slash': "openchat closechat",
 
 		'Digit1': "swapto1",
 		'Digit2': "swapto2",
