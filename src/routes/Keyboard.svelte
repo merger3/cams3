@@ -16,7 +16,7 @@
 
 	let spinFast = 15;
 	let spinSlow = 5;
-
+	
 	enum LayerType {
 		Default,
 		GeneralBase,
@@ -198,6 +198,9 @@
 		"previouslayer": previousLayer,
 		"resetlayers": cancelPresetSelection,
 		"loadlayer": addLayer,
+
+		"openchat": openChat,
+		"closechat": closeChat
 	}
 
 	let hotkeys: uncompiledLayer = {
@@ -206,7 +209,9 @@
 
 		'Space Enter NumpadEnter': "send",
 
-		'Escape Backspace': "clear",
+		'Escape Backspace': "clear closechat",
+
+		'!c Slash': "openchat",
 
 		'Digit1': "swapto1",
 		'Digit2': "swapto2",
@@ -296,7 +301,7 @@
 		"+Equal": "spinzoominsmall",
 		"+Minus": "spinzoomoutsmall",
 
-		"Slash": "resetspin",
+		"^Slash +Slash !Slash": "resetspin",
 
 		"Tab": "loadpreset",
 
@@ -684,7 +689,34 @@
 		}
 	}
 
+	function openChat(): boolean {
+		let offcanvasEl = jQuery("#offcanvas");
+		let offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl[0])
+		if (!offcanvas) {
+			offcanvas = new bootstrap.Offcanvas('#offcanvas')
+		}
+		if (!offcanvasEl.hasClass("show")) {
+			offcanvas.show();
+			return true;
+		}
+		return false;
+	}
+
+	function closeChat(): boolean {
+		let offcanvasEl = jQuery("#offcanvas");
+		let offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl[0])
+		if (offcanvas && offcanvasEl.hasClass("show")) {
+			offcanvas.hide();
+			return true;
+		}
+		return false;
+	}
+
 	function clear() {
+		if (jQuery("#offcanvas").hasClass("show")) {
+			return;
+		}
+		
 		if (GetSelectedRect(Selector.SelectingPreset)) {
 			cancelPresetSelection();
 			return;
@@ -939,3 +971,4 @@
 		window.addEventListener('keydown', handleKeyboard);
 	});
 </script>
+

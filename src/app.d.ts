@@ -3,6 +3,7 @@
 
 declare global {
 	const Twitch: typeof Twitch;
+	const bootstrap: typeof bootstrap;
 	namespace App {
 		// interface Error {}
 		// interface Locals {}
