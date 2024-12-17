@@ -124,13 +124,26 @@
 
 		if (mousePos) {
 			if (tangle.width() < 0) {
-				tangle.x(tangle.x() + tangle.width())
-				tangle.width(Math.abs(tangle.width()))
+				tangle.x(tangle.x() + tangle.width());
+				tangle.width(Math.abs(tangle.width()));
 			}
 			if (tangle.height() < 0) {
-				tangle.y(tangle.y() + tangle.height()) 
-				tangle.height(Math.abs(tangle.height()))
+				tangle.y(tangle.y() + tangle.height()) ;
+				tangle.height(Math.abs(tangle.height()));
 			}
+
+			if (tangle.width() > tangle.height()) {
+				let oldHeight = tangle.height();
+				let balancedHeight = tangle.width() / (16/9);
+				tangle.height(balancedHeight);
+				tangle.y(tangle.y() - (balancedHeight - oldHeight) / 2)
+			} else {
+				let oldWidth = tangle.width();
+				let balancedWidth = tangle.height() / (9/16);
+				tangle.width(balancedWidth);
+				tangle.x(tangle.x() - (balancedWidth - oldWidth) / 2)
+			}
+			layer.draw();
 
 			writeCommand(tangle);
 			manufactureTangle();
@@ -274,6 +287,19 @@
 						scaleX: 1,
 						scaleY: 1,
 					});
+
+					if (node.width() > node.height()) {
+						let oldHeight = node.height();
+						let balancedHeight = node.width() / (16/9);
+						node.height(balancedHeight);
+						node.y(node.y() - (balancedHeight - oldHeight) / 2)
+					} else {
+						let oldWidth = node.width();
+						let balancedWidth = node.height() / (9/16);
+						node.width(balancedWidth);
+						node.x(node.x() - (balancedWidth - oldWidth) / 2)
+					}
+					layer.draw();
 					writeCommand(node as Konva.Rect);
 					break; 
 				} 
