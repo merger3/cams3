@@ -450,6 +450,18 @@
 		handlePointerUp({"evt": e.detail.event} as KonvaPointerEvent);
 	}
 
+	async function buildCache() {
+		let response = await $server.get('/synced');
+		if (response.status == 200 && response.data.length == Zones.length) {
+			Zones.forEach(async (z) => {
+				let cam = await GetCam({coordinates: {x: z.Rect.x() + (z.Rect.width() / 2), y: z.Rect.y() + (z.Rect.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(z.Name)}, $server)
+				if (cam.found) {	
+					SyncCache(cam.cam);
+				}
+			});
+		}
+	}
+
 	let pointers = 0;
 	let prevPointers = 0;
 	onMount(async () => {
@@ -465,15 +477,10 @@
 
 		CreateZones($zones);
 
-		let response = await $server.get('/synced');
-		if (response.status == 200 && response.data.length == Zones.length) {
-			Zones.forEach(async (z) => {
-				let cam = await GetCam({coordinates: {x: z.Rect.x() + (z.Rect.width() / 2), y: z.Rect.y() + (z.Rect.height() / 2)}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(z.Name)}, $server)
-				if (cam.found) {	
-					SyncCache(cam.cam);
-				}
-			});
-		} 
+		buildCache();
+		setInterval(() => {
+			buildCache();
+		}, 300000);
  	});
 </script>
 

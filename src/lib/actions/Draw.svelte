@@ -132,18 +132,7 @@
 				tangle.height(Math.abs(tangle.height()));
 			}
 
-			if (tangle.width() > tangle.height()) {
-				let oldHeight = tangle.height();
-				let balancedHeight = tangle.width() / (16/9);
-				tangle.height(balancedHeight);
-				tangle.y(tangle.y() - (balancedHeight - oldHeight) / 2)
-			} else {
-				let oldWidth = tangle.width();
-				let balancedWidth = tangle.height() / (9/16);
-				tangle.width(balancedWidth);
-				tangle.x(tangle.x() - (balancedWidth - oldWidth) / 2)
-			}
-			layer.draw();
+			snapToRatio(tangle);
 
 			writeCommand(tangle);
 			manufactureTangle();
@@ -155,6 +144,21 @@
 		} 
 	}
 
+
+	function snapToRatio(shape: Konva.Rect) {
+		if (shape.width() >= shape.height() && (shape.width() / shape.height() > 1.5) ) {
+			let oldHeight = shape.height();
+			let balancedHeight = shape.width() / (16/9);
+			shape.height(balancedHeight);
+			shape.y(shape.y() - (balancedHeight - oldHeight) / 2)
+		} else {
+			let oldWidth = shape.width();
+			let balancedWidth = shape.height() / (9/16);
+			shape.width(balancedWidth);
+			shape.x(shape.x() - (balancedWidth - oldWidth) / 2)
+		}
+		layer.draw();
+	}
 
 
 	function manufactureTangle() {
@@ -288,18 +292,8 @@
 						scaleY: 1,
 					});
 
-					if (node.width() > node.height()) {
-						let oldHeight = node.height();
-						let balancedHeight = node.width() / (16/9);
-						node.height(balancedHeight);
-						node.y(node.y() - (balancedHeight - oldHeight) / 2)
-					} else {
-						let oldWidth = node.width();
-						let balancedWidth = node.height() / (9/16);
-						node.width(balancedWidth);
-						node.x(node.x() - (balancedWidth - oldWidth) / 2)
-					}
-					layer.draw();
+					snapToRatio(node as Konva.Rect);
+
 					writeCommand(node as Konva.Rect);
 					break; 
 				} 
