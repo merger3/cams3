@@ -15,7 +15,6 @@
 	const defaultCMD: string = "​";
 	export let videosource: number;
 
-
 	$commandText = defaultCMD;
 
 	let resize: HTMLElement;
@@ -70,7 +69,7 @@
 
 		$server = axios.create({
 			timeout: 10000,
-			baseURL: 'https://alvsanc-cams.dev/api/',
+			baseURL: '/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
@@ -82,7 +81,6 @@
 			}
 			return error;
 		});
-
 
 		checkAuth();
 		setInterval(() => {

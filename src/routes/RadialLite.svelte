@@ -225,7 +225,7 @@
 		if (r.submenu) {
 			hoverTimeout = setTimeout(() => {
 				loadNewMenu(r);
-			}, 300);
+			}, 250);
 		}
 	}
 
@@ -506,6 +506,7 @@
 						on:pointerenter={(e) => highlightRadial(e, r)}
 						on:pointerleave={(e) => unhighlightRadial(e, r)}
 						on:pointerup={getFunctionFromName(r.action)}
+						on:pointerdown={getFunctionFromName(r.action)}
 					/>
 					<i class="bi bi-{r.icon} absolute z-100 pointer-events-none text-2xl vanish" style={iconStyle(r)} use:portal={"#stage"}/>
 				{/each}
