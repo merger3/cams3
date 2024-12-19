@@ -139,12 +139,12 @@
 		"select5": () => enableZone('5'),
 		"select6": () => enableZone('6'),
 
-		"swapto1": () => swapPosition(1),
-		"swapto2": () => swapPosition(2),
-		"swapto3": () => swapPosition(3),
-		"swapto4": () => swapPosition(4),
-		"swapto5": () => swapPosition(5),
-		"swapto6": () => swapPosition(6),
+		"swapto1": () => swapPosition(1, true),
+		"swapto2": () => swapPosition(2, true),
+		"swapto3": () => swapPosition(3, true),
+		"swapto4": () => swapPosition(4, true),
+		"swapto5": () => swapPosition(5, true),
+		"swapto6": () => swapPosition(6, true),
 
 		"resetcam": () => buildCommand("resetcam", autosend),
 		"focuscam": focusCam,
@@ -835,7 +835,7 @@
 	}
 
 
-	function swapPosition(target: number) {
+	function swapPosition(target: number, autosend: boolean = false) {
 		let sourceZone = GetSelectedRect(Selector.Presets);
 		if (!sourceZone) {
 			return;
@@ -844,14 +844,20 @@
 		if (!targetZone) {
 			return;
 		}
-		AddSelection(sourceZone, Selector.SwapSource);
-		AddSelection(targetZone, Selector.SwapTarget);
 		let swaps: number[] = [Number(sourceZone.name()), target]
-		if (swaps[0] == swaps[1]) {
-			ClearStage($stage);
-			return;
-		} else {
+		
+		if (swaps[0] != swaps[1]) {
 			swaps.sort(function(a, b){return a - b});
+			let cmd = `!swap ${swaps[0]} ${swaps[1]}`;
+
+			if (autosend) {
+				sendCommand({cmd: cmd, reset: false})
+				return;
+			}
+
+			AddSelection(sourceZone, Selector.SwapSource);
+			AddSelection(targetZone, Selector.SwapTarget);
+
 			ClearStage($stage, [Selector.SwapSource, Selector.SwapTarget]);
 			let newArrow = new Konva.Arrow({
 				x: 0,
@@ -872,7 +878,7 @@
 			});
 
 			$zones.getLayer().add(newArrow);
-			$commandText = `!swap ${swaps[0]} ${swaps[1]}`
+			$commandText = cmd;
 		}
 	}
 
