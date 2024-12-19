@@ -480,7 +480,7 @@
 		buildCache();
 		setInterval(() => {
 			buildCache();
-		}, 300000);
+		}, 600000);
  	});
 </script>
 

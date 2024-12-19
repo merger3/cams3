@@ -7,63 +7,18 @@
 	import Keyboard from './Keyboard.svelte';
 	import axios from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
-	import { Selector, AddSelection, GetSelectedRect } from '$lib/zones';
 	import ResizeObserver from 'resize-observer-polyfill'
 	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight, keyboardHandler } from '$lib/stores';
 	import _ from 'lodash';
 	InitializeAM();
 
 	const defaultCMD: string = "​";
-	const swapRegEx = new RegExp('^\!swap ([0-9]) ([0-9])$');
 	export let videosource: number;
 
 
 	$commandText = defaultCMD;
 
 	let resize: HTMLElement;
-
-	async function sendCommand() {
-		if ($commandText == defaultCMD) {
-			return;
-		}
-		// Edge case with click delay must be manually cancelled here
-		$am.Actions["click"].Cancel();
-
-		let sentCommand = $commandText;
-		$server.post('/send', {
-			command: $commandText
-		}).then(function (response) {
-			if (sentCommand.startsWith("!swap")) {
-				let result = swapRegEx.exec(sentCommand);
-				if (result) {
-					let presetSelected = GetSelectedRect(Selector.Presets);
-					if (presetSelected?.name()) {
-						let presetZone = presetSelected.name();
-						let targetZone = presetZone === result[1] ? result[2] : (presetZone === result[2] ? result[1] : null);
-						
-						if (targetZone) {
-							AddSelection($zones.findOne(`.${targetZone}`), Selector.Presets);
-						}
-					}
-				} else {
-					_.delay(function() {
-						let z = GetSelectedRect(Selector.Presets);
-						if (z) {
-							$am.Actions["doubleclick"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
-						}
-					}, 400);
-				}
-			}
-		}).catch(function (error) {
-			console.log(error);
-		});
-		
-		$keyboardHandler.cancelPresetSelection();
-		Reset($stage);
-		if (document.activeElement) {
-			(document.activeElement as HTMLElement).blur();
-		}
-	}
 
 	function resizeTextRaw() {
 		if ($commandText == "<br>") {
@@ -115,7 +70,7 @@
 
 		$server = axios.create({
 			timeout: 10000,
-			baseURL: '/api/',
+			baseURL: 'https://alvsanc-cams.dev/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 

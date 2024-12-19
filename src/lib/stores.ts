@@ -6,7 +6,7 @@ import { type BaseParams } from 'svelte-gestures';
 import { setPointerControls } from 'svelte-gestures';
 import { type ActionsManager } from '$lib/actions';
 import { States } from '$lib/actions';
-import { RemoveSelection, Selector, Zones } from '$lib/zones';
+import { RemoveSelection, Selector, AddSelection, GetSelectedRect } from '$lib/zones';
 import Keyboard from '../routes/Keyboard.svelte';
 import Konva from "konva";
 
@@ -32,6 +32,59 @@ export let presetHotkeyCache = writable<{[key: string]: CamPresets}>({})
 export let swapsCache = writable<{[key: string]: MenuItem}>({})
 
 export let am = writable<ActionsManager>();
+
+interface SendOptions {
+    value: string;
+    items: any[];
+} 
+
+const defaultCMD: string = "​";
+const swapRegEx = new RegExp('^\!swap ([0-9]) ([0-9])$');
+const clickRegEx = new RegExp('^\!ptzclick ([0-9])+ ([0-9])+ 100 ?$');
+async function sendCommand() {
+	if (get(commandText) == defaultCMD) {
+		return;
+	}
+	// Edge case with click delay must be manually cancelled here
+	get(am).Actions["click"].Cancel();
+
+	let sentCommand = get(commandText);
+	get(server).post('/send', {
+		command: get(commandText)
+	}).then(function (response) {
+		if (sentCommand.startsWith("!swap")) {
+			let result = swapRegEx.exec(sentCommand);
+			if (result) {
+				let presetSelected = GetSelectedRect(Selector.Presets);
+				if (presetSelected?.name()) {
+					let presetZone = presetSelected.name();
+					let targetZone = presetZone === result[1] ? result[2] : (presetZone === result[2] ? result[1] : null);
+					
+					if (targetZone) {
+						AddSelection(get(zones).findOne(`.${targetZone}`), Selector.Presets);
+					}
+				}
+			} else {
+				_.delay(function() {
+					let z = GetSelectedRect(Selector.Presets);
+					if (z) {
+						get(am).Actions["doubleclick"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
+					}
+				}, 400);
+			}
+		}
+	}).catch(function (error) {
+		console.log(error);
+	});
+	
+	if (!clickRegEx.exec(sentCommand)) {
+		get(keyboardHandler).cancelPresetSelection();
+		Reset(get(stage));
+		if (document.activeElement) {
+			(document.activeElement as HTMLElement).blur();
+		}
+	}
+}
 
 export function InitializeAM() {
 	let newAM: ActionsManager = {
