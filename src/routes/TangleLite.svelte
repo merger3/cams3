@@ -200,6 +200,8 @@
 			origin = {x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()};
 			if (e.target.getParent() == $zones) {
 				$am.ActiveStates.add(States.ClickedEmptySpace);
+			} else if (e.target.getParent().getClassName() == "Transformer") {
+				$am.ActiveStates.add(States.ClickedTransformer);
 			}
 			$stage.on("pointermove.stage", handlePointerMove);
 
@@ -286,6 +288,7 @@
 			$am.ActiveStates.delete(States.StageDraggingMinimal)
 			$am.ActiveStates.delete(States.PointerRemoved)
 			$am.ActiveStates.delete(States.ClickedEmptySpace);
+			$am.ActiveStates.delete(States.ClickedTransformer);
 			$am.ActiveStates.delete(States.ClickedListeningShape);
 
 			$am.ActiveStates.delete(States.MousePointer);
@@ -329,6 +332,7 @@
 				$am.ActiveStates.delete(States.StageDraggingMinimal)
 				$am.ActiveStates.delete(States.PointerRemoved)
 				$am.ActiveStates.delete(States.ClickedEmptySpace);
+				$am.ActiveStates.delete(States.ClickedTransformer);
 				$am.ActiveStates.delete(States.ClickedListeningShape);
 
 				ResetZone(startZone as Konva.Rect)

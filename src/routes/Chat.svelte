@@ -48,8 +48,8 @@ Chat
 	<Tabs.Root value="agg" class="w-100 h-100">
 		<div class="offcanvas-header p-2 pb-1" bind:clientHeight={headerHeight}>
 			<Tabs.List class="grid w-full grid-cols-2 w-100 ms-.5 me-0">
-				<Tabs.Trigger value="alveus">Alveus</Tabs.Trigger>
 				<Tabs.Trigger value="agg">AGG</Tabs.Trigger>
+				<Tabs.Trigger value="alveus">Alveus</Tabs.Trigger>
 			</Tabs.List>
 			<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 		</div>

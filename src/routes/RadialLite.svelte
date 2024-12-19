@@ -46,7 +46,8 @@
 				States.StagePressed
 			]),
 			Inactive: new Set([
-				States.StageDraggingMinimal
+				States.StageDraggingMinimal,
+				States.ClickedTransformer
 			]),
 		},
 		CancelConditions: {

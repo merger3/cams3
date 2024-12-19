@@ -132,7 +132,7 @@
 				tangle.height(Math.abs(tangle.height()));
 			}
 
-			snapToRatio(tangle);
+			snapToRatio(tangle, true);
 
 			writeCommand(tangle);
 			manufactureTangle();
@@ -145,17 +145,21 @@
 	}
 
 
-	function snapToRatio(shape: Konva.Rect) {
+	function snapToRatio(shape: Konva.Rect, keepCentered: boolean) {
 		if (shape.width() >= shape.height() && (shape.width() / shape.height() > 1.5) ) {
 			let oldHeight = shape.height();
 			let balancedHeight = shape.width() / (16/9);
 			shape.height(balancedHeight);
-			shape.y(shape.y() - (balancedHeight - oldHeight) / 2)
+			if (keepCentered) {
+				shape.y(shape.y() - (balancedHeight - oldHeight) / 2)
+			}
 		} else {
 			let oldWidth = shape.width();
 			let balancedWidth = shape.height() / (9/16);
 			shape.width(balancedWidth);
-			shape.x(shape.x() - (balancedWidth - oldWidth) / 2)
+			if (keepCentered) {
+				shape.x(shape.x() - (balancedWidth - oldWidth) / 2)
+			}
 		}
 		layer.draw();
 	}
@@ -196,7 +200,9 @@
 
 		let newTranformer = new Konva.Transformer({
 			anchorSize: Math.max(Math.min((newTangle.width() / 8), 17), 3),
-			keepRatio: false,
+			keepRatio: true,
+			shiftBehavior: "inverted",
+			centeredScaling: false,
 			rotateEnabled: false,
 			borderEnabled: false,
 			ignoreStroke: true,
@@ -208,6 +214,7 @@
 			}
 		});
 		
+		// newTangle.on("dragstart", handleTangleDragStart)
 		newTangle.on("dragmove", handleTangleDrag)
 		newTangle.on("dragend", endTangleDrag)
 		newTangle.on("transformstart", handleTransformStart);
@@ -221,6 +228,10 @@
 		newTranformer.nodes([newTangle]);
 
 		layer.add(newTangleGroup);
+	}
+
+	function handleTangleDragStart(e: any) {
+		// snapToRatio(e.target as Konva.Rect, true);
 	}
 
 	function handleTangleDrag(e: any) {
@@ -241,6 +252,7 @@
 		e.target.getParent().getChildren().forEach(function (node: Konva.Node) {
 			switch(node.getClassName()) { 
 				case "Rect": { 
+					snapToRatio(node as Konva.Rect, true);
 					writeCommand(node as Konva.Rect);
 					break; 
 				} 
@@ -307,7 +319,7 @@
 						scaleY: 1,
 					});
 
-					snapToRatio(node as Konva.Rect);
+					// snapToRatio(node as Konva.Rect, false);
 
 					writeCommand(node as Konva.Rect);
 					break; 

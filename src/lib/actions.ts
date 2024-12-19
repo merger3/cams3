@@ -36,7 +36,8 @@ export enum States {
 
 	CrossedZones,
 	ClickedEmptySpace,
-	ClickedListeningShape
+	ClickedListeningShape,
+	ClickedTransformer
 }
 
 export interface Action {
