@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { zones, am, commandText, ClearStage, stage, menuIsOpen, GetCam, swapsCache, presetHotkeyCache, SyncCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, GetZone, GetSwaps } from '$lib/stores';
+	import { zones, am, commandText, ClearStage, stage, menuIsOpen, GetCam, swapsCache, presetHotkeyCache, SyncCache, server, ifDimensions, camPresets, Reset, clickFocus, clickZoom, GetZone, GetSwaps, sendCommand } from '$lib/stores';
 	import type { HotkeyPreset, CamPresets, SwapResponse, MenuItem } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, GetSelectedRect, AddSelection, RemoveSelection } from '$lib/zones';
@@ -125,7 +125,7 @@
 	}
 
 	let functions: {[key: string]: any} = {
-		"send": sendCommand,
+		"send": triggerSend,
 
 		"openpresetsmenu": presetsMenu,
 		"openswapmenu": swapMenu,
@@ -447,8 +447,7 @@
 			spinValues[target] = -90;
 		}
 
-		$commandText = `!ptzspin ${spinningCam} ${spinValues[pan]} ${spinValues[tilt]} ${spinValues[zoom]}`
-		dispatch('sendcmd');
+		sendCommand({cmd: `!ptzspin ${spinningCam} ${spinValues[pan]} ${spinValues[tilt]} ${spinValues[zoom]}`, reset: false});
 		if (spinValues[pan] == 0 && spinValues[tilt] == 0 && spinValues[zoom] == 0) {
 			spinningCam = undefined;
 		}
@@ -475,8 +474,7 @@
 			spinningCam = name;
 		}
 
-		$commandText = `!ptzspin ${spinningCam} 0 0 0`;
-		dispatch('sendcmd');
+		sendCommand({cmd: `!ptzspin ${spinningCam} 0 0 0`, reset: false});
 		spinValues = [0, 0, 0];
 		spinningCam = undefined;
 	}
@@ -488,7 +486,7 @@
 		let lastCMD = $commandText;
 		await buildCommand("ptzload", false, p);
 		if (send && lastCMD == $commandText) {
-			dispatch('sendcmd');
+			sendCommand({cmd: $commandText});
 		}
 	}
 
@@ -796,7 +794,7 @@
 		let cmd = `!${command} ${name} ${values.join(" ")}`
 		$commandText = cmd;
 		if (autosend) {
-			dispatch('sendcmd');
+			sendCommand({cmd: $commandText});
 		}
 		ClearStage($stage, [Selector.SelectingPreset, Selector.SubSelectingPreset]);
 		return cmd;
@@ -829,8 +827,7 @@
 		}
 
 		if (action == "swap") {
-			$commandText = `!swap ${name} ${swaps.items[0].value}`
-			dispatch('sendcmd');
+			sendCommand({cmd: `!swap ${name} ${swaps.items[0].value}`, reset: false});
 			SyncCache(swaps.items[0].value);
 		} else if (action == "load") {
 			presetsMenu(swaps.items[0].value);
@@ -910,11 +907,11 @@
 		jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
 	}
 
-	function sendCommand() {
+	function triggerSend() {
 		if ($commandText == defaultCMD) {
 			loadPreset()
 		} else {
-			dispatch("sendcmd");
+			sendCommand({cmd: $commandText});
 		}
 	}
 

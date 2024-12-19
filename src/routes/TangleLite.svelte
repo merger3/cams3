@@ -555,4 +555,4 @@
 		<Scroll on:forceiframeresize={bubbleResize}/>
 	</Layer>
 </Stage>
-<RadialLite bind:radialLayer bind:stageWidth bind:stageHeight on:simulatepointerup={pressUpHandler} on:sendcmd={(e) => {dispatch("sendcmd")}}/>
+<RadialLite bind:radialLayer bind:stageWidth bind:stageHeight on:simulatepointerup={pressUpHandler} />

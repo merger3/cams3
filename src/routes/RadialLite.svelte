@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, MenuItem } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, clickZoom, GetSwaps, ClearStage, SyncCache } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, clickZoom, GetSwaps, ClearStage, SyncCache, sendCommand } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -346,22 +346,21 @@
 	rh = {...{"up": () => buildCommand("ptzmove", ["up"]), "upright": () => buildCommand("ptzmove", ["upright"]), "right": () => buildCommand("ptzmove", ["right"]), "downright": () => buildCommand("ptzmove", ["downright"]), "down": () => buildCommand("ptzmove", ["down"]), "downleft": () => buildCommand("ptzmove", ["downleft"]), "left": () => buildCommand("ptzmove", ["left"]), "upleft": () => buildCommand("ptzmove", ["upleft"])}, ...rh};
 
 	function send() {
-		dispatch("sendcmd");
+		sendCommand({cmd: $commandText});
 	}
 
 	function click() {
-		if ($commandText == defaultCMD) {
-			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-			$commandText = ClickTangle({
-				X: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(),
-				Y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale(),
-				Width: 0,
-				Height: 0,
-				FrameWidth: $ifDimensions.width,
-				FrameHeight: $ifDimensions.height
-			}).command
-		}
-		dispatch("sendcmd");
+		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+		let cmd = ClickTangle({
+			X: (activeMenu.location.x - ifOverlay.left) / $panzoom.getScale(),
+			Y: (activeMenu.location.y - ifOverlay.top) / $panzoom.getScale(),
+			Width: 0,
+			Height: 0,
+			FrameWidth: $ifDimensions.width,
+			FrameHeight: $ifDimensions.height
+		}).command
+		
+		sendCommand({cmd: cmd, reset: false});
 	}
 
 	function enableZone() {
@@ -379,8 +378,7 @@
 		if (!cam.found) {
 			return;
 		}
-		$commandText = `!${command} ${cam.cam} ${values.join(" ")}`
-		dispatch('sendcmd');
+		sendCommand({cmd: `!${command} ${cam.cam} ${values.join(" ")}`, reset: false});
 	}
 
 	async function zoomcam(zone: Konva.Rect) {
@@ -440,9 +438,7 @@
 		}
 
 		if (action == "swap") {
-			$commandText = `!swap ${name} ${swaps.items[0].value}`
-			dispatch('sendcmd');
-
+			sendCommand({cmd: `!swap ${name} ${swaps.items[0].value}`, reset: false});
 			SyncCache(swaps.items[0].value);
 		} else if (action == "load") {
 			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();

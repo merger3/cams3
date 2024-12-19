@@ -2,10 +2,9 @@
 	import { onMount, createEventDispatcher } from 'svelte';
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import type { Entry, SwapResponse, MenuItem } from '$types';
-	import { commandText, stage, ClearStage, swapsCache, server, SyncCache } from '$lib/stores';
+	import { commandText, stage, ClearStage, sendCommand, SyncCache } from '$lib/stores';
 	import { GetSelectedRect, Selector } from '$lib/zones';
 	import SwapMenu from '$lib/actions/contextmenus/SwapMenu.svelte';
-	const dispatch = createEventDispatcher();
 
 	export let cam: string;
 	export let items: MenuItem[];
@@ -23,8 +22,7 @@
 				return;
 			}
 			swaps.sort(function(a, b){return a - b}); 
-			$commandText = `!swap ${swaps[0]} ${swaps[1]}`
-			dispatch("sendcmd");
+			sendCommand({cmd: `!swap ${swaps[0]} ${swaps[1]}`, reset: false});
 		} else {
 			$commandText = `!swap ${target} ${value}`
 			SyncCache(value);
@@ -44,7 +42,7 @@
 		<ContextMenu.Sub>
 			<ContextMenu.SubTrigger class="h-10" inset>{e.value}</ContextMenu.SubTrigger>
 			<ContextMenu.SubContent class="w-4 overflow-visible text-center" fitViewport={false} overlap={true}> 
-				<SwapMenu items={e.items} bind:cam bind:content on:sendcmd={() => dispatch("sendcmd")}/>
+				<SwapMenu items={e.items} bind:cam bind:content />
 			</ContextMenu.SubContent>
 		</ContextMenu.Sub>
 	{/if}

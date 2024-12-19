@@ -8,6 +8,7 @@ import { type ActionsManager } from '$lib/actions';
 import { States } from '$lib/actions';
 import { RemoveSelection, Selector, AddSelection, GetSelectedRect } from '$lib/zones';
 import Keyboard from '../routes/Keyboard.svelte';
+import _ from 'lodash';
 import Konva from "konva";
 
 export let commandText = writable<string>("​");
@@ -34,26 +35,31 @@ export let swapsCache = writable<{[key: string]: MenuItem}>({})
 export let am = writable<ActionsManager>();
 
 interface SendOptions {
-    value: string;
-    items: any[];
+    cmd: string;
+    reset: boolean;
 } 
 
 const defaultCMD: string = "​";
 const swapRegEx = new RegExp('^\!swap ([0-9]) ([0-9])$');
 const clickRegEx = new RegExp('^\!ptzclick ([0-9])+ ([0-9])+ 100 ?$');
-async function sendCommand() {
-	if (get(commandText) == defaultCMD) {
+export async function sendCommand(userOpts: any) {
+	let defaults: SendOptions = {
+		cmd: defaultCMD, 
+		reset: true
+	};
+	let opts: SendOptions = {...defaults, ...userOpts};
+
+	if (opts.cmd == defaultCMD) {
 		return;
 	}
 	// Edge case with click delay must be manually cancelled here
 	get(am).Actions["click"].Cancel();
 
-	let sentCommand = get(commandText);
 	get(server).post('/send', {
-		command: get(commandText)
+		command: opts.cmd
 	}).then(function (response) {
-		if (sentCommand.startsWith("!swap")) {
-			let result = swapRegEx.exec(sentCommand);
+		if (opts.cmd.startsWith("!swap")) {
+			let result = swapRegEx.exec(opts.cmd);
 			if (result) {
 				let presetSelected = GetSelectedRect(Selector.Presets);
 				if (presetSelected?.name()) {
@@ -77,7 +83,7 @@ async function sendCommand() {
 		console.log(error);
 	});
 	
-	if (!clickRegEx.exec(sentCommand)) {
+	if (opts.reset && !(clickRegEx.exec(opts.cmd) && !userOpts.reset)) {
 		get(keyboardHandler).cancelPresetSelection();
 		Reset(get(stage));
 		if (document.activeElement) {

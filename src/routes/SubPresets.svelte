@@ -1,19 +1,17 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
 	import Subpresets from './SubPresets.svelte';
-	import { commandText, stage, camPresets, ClearStage } from '$lib/stores';
+	import { commandText, stage, camPresets, ClearStage, sendCommand } from '$lib/stores';
 	import type { ButtonPreset } from '$types';
-
-	const dispatch = createEventDispatcher();
-
+	
 	export let preset: ButtonPreset[];
 
     function buildCommand(preset: string) {
 		let newCommand: string = `!ptzload ${$camPresets.value} ${preset}`;
 		if (newCommand == $commandText) {
-			dispatch("sendcmd");
+			sendCommand({cmd: newCommand})
 		} else {
-			$commandText =  newCommand;
+			$commandText = newCommand;
 			ClearStage($stage)
 		}
     }

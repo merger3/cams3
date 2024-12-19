@@ -2,18 +2,16 @@
 	import { onMount, createEventDispatcher } from 'svelte';
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import type { Entry, SwapResponse, MenuItem } from '$types';
-	import { commandText, stage, ClearStage, swapsCache, server, SyncCache } from '$lib/stores';
+	import { commandText, stage, ClearStage, sendCommand } from '$lib/stores';
 	import { GetSelectedRect, Selector } from '$lib/zones';
 	import PresetsMenu from '$lib/actions/contextmenus/PresetsMenu.svelte';
-	const dispatch = createEventDispatcher();
-
+	
 	export let cam: string;
 	export let items: MenuItem[];
 
 	function handleClick(target: string, value: string) {
-		$commandText = `!ptzload ${target} ${value}`;
 		ClearStage($stage, [Selector.PresetMenu]);
-		dispatch("sendcmd");
+		sendCommand({cmd: `!ptzload ${target} ${value}`, reset: false});
 	}
 </script>
  
@@ -28,7 +26,7 @@
 		<ContextMenu.Sub>
 			<ContextMenu.SubTrigger class="h-10" inset>{e.value}</ContextMenu.SubTrigger>
 			<ContextMenu.SubContent class="w-4 overflow-visible text-center" fitViewport={false} overlap={true}> 
-				<PresetsMenu items={e.items} bind:cam on:sendcmd={() => dispatch("sendcmd")}/>
+				<PresetsMenu items={e.items} bind:cam />
 			</ContextMenu.SubContent>
 		</ContextMenu.Sub>
 	{/if}

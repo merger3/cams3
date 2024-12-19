@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { commandText, ifDimensions, multiTouchPan, ClearStage, stage, commandHeight } from '$lib/stores';
+	import { commandText, ifDimensions, multiTouchPan, ClearStage, stage, commandHeight, sendCommand } from '$lib/stores';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { Box } from '$types';
 	import { Motion } from 'svelte-motion'
@@ -132,19 +132,19 @@
 				</div>
 			</div>
 		</Motion>
-		<button on:click={(e) => {dispatch("sendcmd")}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown themed" style="height: {$commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
+		<button on:click={(e) => {sendCommand({cmd: $commandText})}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown themed" style="height: {$commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
 	</div>
 	<div id="stage" class="unselectable" />
 	<div id="vid2" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 		<Zoomable>
 			<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
-				<ContextMenuLite on:sendcmd={() => dispatch("sendcmd")}>
+				<ContextMenuLite>
 					<div id="menutrigger" class="overlay unselectable z-100" />
 				</ContextMenuLite>
 
 			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 250, triggerBeforeFinished: true, spread: 12 }} />
 
-			<TangleLite bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} on:sendcmd={(e) => {dispatch("sendcmd")}}/>
+			<TangleLite bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} />
 			
 			{#if videosource == lola}
 				<iframe

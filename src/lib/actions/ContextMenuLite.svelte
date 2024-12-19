@@ -351,15 +351,15 @@
 
 		{#if currentAction.Name == swapMenuName}
 			<ContextMenu.Content el={content} transition={transition} class="w-52 dark:bg-slate-800 max-w-screen overflow-scroll {shown}" fitViewport={true} overlap={true} >
-				<SwapMenu items={items.items} cam={items.value} bind:content on:sendcmd={() => dispatch("sendcmd")}/>
+				<SwapMenu items={items.items} cam={items.value} bind:content />
 			</ContextMenu.Content>
 		{:else if currentAction.Name == presetMenuName}
 			<ContextMenu.Content transition={transition} class="w-[11rem] dark:bg-slate-800 max-w-screen overflow-scroll {shown}" fitViewport={true} overlap={true} >
-				<PresetsMenu items={items.items} cam={items.value} on:sendcmd={() => dispatch("sendcmd")}/>
+				<PresetsMenu items={items.items} cam={items.value} />
 			</ContextMenu.Content>
 		{:else if currentAction.Name == zoomMenuName}
 			<ContextMenu.Content transition={transition} class="w-[2rem] dark:bg-slate-800 max-w-screen overflow-scroll {shown}" fitViewport={true} overlap={true} >
-				<ZoomMenu items={items.items} cam={items.value} bind:position on:sendcmd={() => dispatch("sendcmd")}/>
+				<ZoomMenu items={items.items} cam={items.value} bind:position />
 			</ContextMenu.Content>
 		{/if}
 	{/if}
