@@ -210,6 +210,7 @@
 		
 		newTangle.on("dragmove", handleTangleDrag)
 		newTangle.on("dragend", endTangleDrag)
+		newTangle.on("transformstart", handleTransformStart);
 		newTangle.on("transform", handleTransform);
 		newTangle.on("transformend", handleTransformEnd)
 
@@ -251,6 +252,20 @@
 					break; 
 				}
 			} 
+		});
+	}
+
+	function handleTransformStart(e: any) {
+		e.target.getParent().getChildren(function(node: any){
+			return node.getClassName() == "Transformer";
+		}).forEach(function (node: Konva.Node) {
+			let transformer = (node as Konva.Transformer);
+			let activeAnchor: string = transformer.getActiveAnchor();
+			if (activeAnchor == "top-left" || activeAnchor == "top-right" || activeAnchor == "bottom-right" || activeAnchor == "bottom-left") {
+				transformer.centeredScaling(true);
+			} else {
+				transformer.centeredScaling(false);
+			}
 		});
 	}
 
