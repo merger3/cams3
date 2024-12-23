@@ -83,7 +83,8 @@ export async function sendCommand(userOpts: any) {
 		console.log(error);
 	});
 	
-	if (opts.reset && !(clickRegEx.exec(opts.cmd) && !userOpts.reset)) {
+	// if (opts.reset && !(clickRegEx.exec(opts.cmd) && !userOpts.reset)) {
+	if (opts.reset) {
 		get(keyboardHandler).cancelPresetSelection();
 		Reset(get(stage));
 		if (document.activeElement) {
