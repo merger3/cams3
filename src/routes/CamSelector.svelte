@@ -33,7 +33,6 @@
 		}
 	}
 
-
 	function getSwapString(): string {
 		return window.location.pathname == "/lola" ? "Twitch" : "Lola";
 	}

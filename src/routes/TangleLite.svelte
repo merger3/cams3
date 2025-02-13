@@ -476,7 +476,7 @@
 		$stage.on("pointerup.stage", handlePointerUp);
 		$stage.on("wheel.stage", wheelHandler);
 
-		jQuery("#overlay")[0].addEventListener("pointerout",handlePointerOut);
+		jQuery("#overlay")[0].addEventListener("pointerout", handlePointerOut);
 		jQuery("#overlay")[0].addEventListener("press", pressDownHandler);
 
 		CreateZones($zones);

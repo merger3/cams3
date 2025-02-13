@@ -142,7 +142,7 @@
 					<div id="menutrigger" class="overlay unselectable z-100" />
 				</ContextMenuLite>
 
-			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 250, triggerBeforeFinished: true, spread: 12 }} />
+			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 200, triggerBeforeFinished: true, spread: 12 }} />
 
 			<TangleLite bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} />
 			

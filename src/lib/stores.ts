@@ -76,7 +76,7 @@ export async function sendCommand(userOpts: any) {
 					if (z) {
 						get(am).Actions["doubleclick"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
 					}
-				}, 400);
+				}, 0);
 			}
 		}
 	}).catch(function (error) {

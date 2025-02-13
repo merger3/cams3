@@ -10,6 +10,18 @@
 	import ResizeObserver from 'resize-observer-polyfill'
 	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight, keyboardHandler, sendCommand } from '$lib/stores';
 	import _ from 'lodash';
+	import { io, Socket } from "socket.io-client";
+
+
+	// const socket: any = io("https://api.ptz.app:2039/");
+	// socket.on('message', (message: any) => {
+	// 	console.log('Message received:', message);
+	// });
+
+	// socket.onAny((eventName: any, ...args: any) => {
+	// 	console.log(eventName); // 'hello'
+	// 	console.log(args); // [ 1, '2', { 3: '4', 5: ArrayBuffer (1) [ 6 ] } ]
+	// });
 	InitializeAM();
 
 	const defaultCMD: string = "​";
