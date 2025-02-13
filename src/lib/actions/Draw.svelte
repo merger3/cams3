@@ -29,7 +29,8 @@
 				States.ClickedEmptySpace
 			]),
 			Inactive: new Set([
-				States.CrossedZones
+				States.CrossedZones,
+				States.StageDoubleClick
 			]),
 		},
 		CancelConditions: {

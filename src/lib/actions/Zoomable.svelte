@@ -61,7 +61,7 @@
 		Enable: enablePinch
 	}
 
-	const resetThresholdDefault: number = 1.4;
+	const resetThresholdDefault: number = 1.3;
 	let resetThreshold: number = resetThresholdDefault;
 	function enablePinch(this: Action, origin: Coordinates) {
 		this.IsActive = true;
@@ -201,12 +201,12 @@
 	function enableScroll(this: Action, origin: Coordinates) {
 		this.IsActive = true;
 		if ($am.ActiveStates.has(States.WheelScrollUp)) {
-			if (zoom < 4) {
-				zoom += .3;
+			if (zoom < 7) {
+				zoom += .2 * $panzoom.getScale();
 			}
 		} else if ($am.ActiveStates.has(States.WheelScrollDown)) {
 			if (zoom > 1) {
-				zoom -= .3;
+				zoom -= .2 * $panzoom.getScale();
 			} 
 		}
 
@@ -365,7 +365,7 @@
 
 
 	onMount(() => {
-		$panzoom = Panzoom(zoomarea, {noBind: true, cursor: 'default', pinchAndPan: false, disablePan: false, disableZoom: false, panOnlyWhenZoomed: false, canvas: false, step: 0.6, maxScale: 4, minScale: .7})
+		$panzoom = Panzoom(zoomarea, {noBind: true, cursor: 'default', pinchAndPan: false, disablePan: false, disableZoom: false, panOnlyWhenZoomed: false, canvas: false, step: 0.6, maxScale: 7, minScale: .7})
 	});
 
   </script>

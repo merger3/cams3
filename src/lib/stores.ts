@@ -52,9 +52,7 @@ export async function sendCommand(userOpts: any) {
 	if (opts.cmd == defaultCMD) {
 		return;
 	}
-	// Edge case with click delay must be manually cancelled here
-	get(am).Actions["click"].Cancel();
-
+	
 	get(server).post('/send', {
 		command: opts.cmd
 	}).then(function (response) {

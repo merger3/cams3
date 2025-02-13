@@ -66,12 +66,16 @@
 	}
 
 	function setPointerCountStates(activePointers: number) {
+		$am.ActiveStates.delete(States.NoPointers);
 		$am.ActiveStates.delete(States.OnePointer);
 		$am.ActiveStates.delete(States.TwoPointers);
 		$am.ActiveStates.delete(States.ThreePointers);
 		$am.ActiveStates.delete(States.OverThreePointers);
 
 		switch (activePointers) {
+		case 0:
+			$am.ActiveStates.add(States.NoPointers);
+			break;
 		case 1:
 			$am.ActiveStates.add(States.OnePointer);
 			break;
@@ -154,7 +158,7 @@
 
 	let doubleClicktimer: number;
 	let clicks: number = 0;
-	function monitorDoubleClick(e: KonvaPointerEvent) {
+	function monitorDoubleClick(e: KonvaPointerEvent): boolean {
 		clicks++;
 		doubleClicktimer = setTimeout(() => {
 			if (clicks > 0) {
@@ -175,6 +179,9 @@
 
 			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 			$am.CheckActions({x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()});
+			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -198,11 +205,15 @@
 		
 		if ($am.ActiveStates.has(States.OnePointer)) {
 			origin = {x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()};
+
 			if (e.target.getParent() == $zones) {
 				$am.ActiveStates.add(States.ClickedEmptySpace);
 			} else if (e.target.getParent().getClassName() == "Transformer") {
 				$am.ActiveStates.add(States.ClickedTransformer);
+			} else if (e.target.getClassName() == "Circle") {
+				$am.ActiveStates.add(States.ClickedCircle);
 			}
+			
 			$stage.on("pointermove.stage", handlePointerMove);
 
 			if (e.evt.pointerType == 'mouse') {
@@ -237,7 +248,6 @@
 
 		monitorDoubleClick(e);
 		$am.CheckActions({x: origin.x, y: origin.y});
-		$am.ActiveStates.delete(States.StageDoubleClick);
 	}
 	
 	function handlePointerMoveRaw(e: KonvaPointerEvent) {
@@ -289,6 +299,7 @@
 			$am.ActiveStates.delete(States.PointerRemoved)
 			$am.ActiveStates.delete(States.ClickedEmptySpace);
 			$am.ActiveStates.delete(States.ClickedTransformer);
+			$am.ActiveStates.delete(States.ClickedCircle);
 			$am.ActiveStates.delete(States.ClickedListeningShape);
 
 			$am.ActiveStates.delete(States.MousePointer);
@@ -305,6 +316,7 @@
 
 		
 		$am.ActiveStates.delete(States.StagePressed); 
+		$am.ActiveStates.delete(States.StageDoubleClick);
 
 		if (log) {
 			console.log(printStates($am.ActiveStates))
@@ -333,6 +345,7 @@
 				$am.ActiveStates.delete(States.PointerRemoved)
 				$am.ActiveStates.delete(States.ClickedEmptySpace);
 				$am.ActiveStates.delete(States.ClickedTransformer);
+				$am.ActiveStates.delete(States.ClickedCircle);
 				$am.ActiveStates.delete(States.ClickedListeningShape);
 
 				ResetZone(startZone as Konva.Rect)
@@ -351,6 +364,7 @@
 			}
 
 			$am.ActiveStates.delete(States.StagePressed); 
+			$am.ActiveStates.delete(States.StageDoubleClick);
 
 			if (log) {
 				console.log(printStates($am.ActiveStates))
@@ -383,9 +397,6 @@
 			});
 
 			e.target.dispatchEvent(syntheticEvent);
-
-			$am.Actions["click"].Cancel();
-
 		}
 	}
 

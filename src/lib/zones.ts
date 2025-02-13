@@ -42,13 +42,13 @@ export function CreateZones(boxGroup: Konva.Group) {
 export let Zones: Zone[] = [];
 let configs: {[key in Selector]?: any} = {};
 
-configs[Selector.Presets] = {stroke: 'rgba(202, 148, 24, 1)', strokeWidth: 2.5}; // Bolder golden-brown
+configs[Selector.Presets] = {stroke: 'rgba(202, 148, 24, 1)', strokeWidth: 3}; // Bolder golden-brown
 configs[Selector.SelectingPreset] = {stroke: 'rgba(13, 110, 253, 1)', strokeWidth: 3}; // Pink
-configs[Selector.SubSelectingPreset] = {stroke: 'rgba(12, 189, 225, 1)', strokeWidth: 2.25}; // Rich red
-configs[Selector.PresetMenu] = {stroke: 'rgba(13, 90, 225, 1)', strokeWidth: 2.5}; // Bold blue
-configs[Selector.Focus] = {stroke: 'rgba(25, 100, 230, 1)', strokeWidth: 2.5}; // Stronger blue
-configs[Selector.Zoom] = {stroke: 'rgba(220, 20, 60, 1)', strokeWidth: 2.5}; // Muted warm amber
-configs[Selector.Keyboard] = {stroke: 'rgba(178, 60, 20, 1)', strokeWidth: 2.5}; // Intense brick red
+configs[Selector.SubSelectingPreset] = {stroke: 'rgba(12, 189, 225, 1)', strokeWidth: 3}; // Rich red
+configs[Selector.PresetMenu] = {stroke: 'rgba(13, 90, 225, 1)', strokeWidth: 3}; // Bold blue
+configs[Selector.Focus] = {stroke: 'rgba(25, 100, 230, 1)', strokeWidth: 3}; // Stronger blue
+configs[Selector.Zoom] = {stroke: 'rgba(220, 20, 60, 1)', strokeWidth: 3}; // Muted warm amber
+configs[Selector.Keyboard] = {stroke: 'rgba(178, 60, 20, 1)', strokeWidth: 3}; // Intense brick red
 configs[Selector.SwapSource] = {stroke: 'rgba(96, 153, 95, 1)', strokeWidth: 3}; // Strong green
 configs[Selector.SwapTarget] = {stroke: 'rgba(150, 92, 151, 1)', strokeWidth: 3}; // Vibrant purple
 configs[Selector.ContexMenu] = {stroke: 'rgba(75, 45, 120, 1)', strokeWidth: 3}; // Rich dark purple
@@ -79,6 +79,7 @@ export function AddSelection(rect: Konva.Rect, config: Selector) {
 
 	zone.Selections.push({Name: config, Config: configs[config], Rect: newSelector});
 	zone.Rect.getLayer().add(newSelector);
+	newSelector.moveToBottom();
 }
 
 export function RemoveSelection(config: Selector): string {

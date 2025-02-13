@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
-	import { am, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, presetButtonCache, keyboardHandler } from '$lib/stores';
+	import { am, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, presetButtonCache, keyboardHandler, menuIsOpen } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -11,22 +11,34 @@
 
 	const dispatch = createEventDispatcher();
 
-	const name = "doubleclick";
+	const name = "click";
 
 	$am.Actions[name] = {
 		Name: name,
 		TriggerConditions: {
 			Active: new Set([
-				States.StageDoubleClick,
+				States.StagePointerDown,
+				States.PointerAdded,
+				States.OnePointer,
 				States.LeftMouseButtonPressed,
-				States.OnePointer
+				States.ClickedEmptySpace
 			]),
-			Inactive: new Set(),
+			Inactive: new Set([
+				States.StageDraggingBuffered,
+				States.StageDoubleClick,
+				States.CrossedZones
+			]),
 		},
 		CancelConditions: {
-			Active: new Set(),
+			Active: new Set([
+				States.StageDraggingBuffered,
+				States.StageDoubleClick,
+				States.CrossedZones
+			]),
 			Inactive: new Set([
-				States.OnePointer
+				States.StagePointerDown,
+				States.OnePointer,
+				States.LeftMouseButtonPressed
 			]),
 		},
 		IsActive: false,
@@ -35,27 +47,42 @@
 	}
 
 	let target: Konva.Rect;
+	let presets: CamPresets = undefined;
 	function enable(this: Action, origin: Coordinates) {
-		$am.Actions["click"].Cancel();
+		if ($menuIsOpen) {
+			$am.Actions["swaps"].Cancel();
+			$am.Actions["click"].Cancel();
+			return;
+		}
+		presets = undefined;
 		$am.Actions[name].IsActive = true;
 		target = GetZone($zones, origin);
 		if (!target) {
 			$am.Actions[name].Cancel();
 			return;
 		}
-		
-		loadMenu(origin, target)
+		loadMenu(origin, target);
+
+		$stage.on('pointerup.click', () => {
+			$stage.off('pointerup.click');
+			if (presets) {
+				$am.Actions[name].IsActive = false;
+				loadButtons(target, presets);
+			}
+		});
 	}
 
 	function cancel(this: Action) {
+		$stage.off('pointerup.click')
 		target = undefined;
+		presets = undefined;
 		$am.Actions[name].IsActive = false;
 	}
-	
+
 	let scrollAreaElement: HTMLDivElement;
 	let buttonWidth: string;
 	async function loadMenu(coordinates: Coordinates, target: Konva.Rect) {
-		let presets: CamPresets = {value: "", items: []};
+		// presets = {value: "", items: []};
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
 		
 		if (cam.found) {
@@ -82,13 +109,28 @@
 			buttonWidth = "100%";
 		}
 
+		// Probably causes a race condition if latency is > 200ms
+		if ($am.Actions[name].IsActive) {
+			if ($am.ActiveStates.has(States.NoPointers)) {
+				loadButtons(target, presets);
+			} else {
+				$stage.off('pointerup.click');
+				$stage.on('pointerup.click', () => {
+					$stage.off('pointerup.click');
+					loadButtons(target, presets);
+				});
+			}
+		}
+
+		$am.Actions[name].IsActive = false;
+	}
+
+	function loadButtons(target: Konva.Rect, presets: CamPresets) {
 		$keyboardHandler.cancelPresetSelection();
 		AddSelection(target, Selector.Presets);
 		$camPresets = presets;
 
 		setTimeout(updateButtonSizeRaw, 50);
-
-		$am.Actions[name].IsActive = false;
 	}
 
 	function updateButtonSizeRaw() {
@@ -99,11 +141,11 @@
 		}
 	}
 
-	var updateButtonSizeDebounced = _.debounce(updateButtonSizeRaw, 50, { 'leading': false, 'trailing': true })
-	var updateButtonSizeThrottled = _.throttle(updateButtonSizeRaw, 50, { 'leading': false, 'trailing': true })
+	var updateButtonSizeDebounced = _.debounce(updateButtonSizeRaw, 60, { 'leading': false, 'trailing': true })
+	var updateButtonSizeThrottled = _.throttle(updateButtonSizeRaw, 60, { 'leading': false, 'trailing': true })
 
 	function updateButtonSize() {
-		updateButtonSizeThrottled();
+		// updateButtonSizeThrottled();
 		updateButtonSizeDebounced();
 	}
 

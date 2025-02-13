@@ -10,6 +10,7 @@ export enum States {
 	StageDraggingBuffered,
 	StageDraggingMinimal,
 	StageDraggingDejittered,
+	NoPointers,
 	OnePointer,
 	TwoPointers,
 	ThreePointers,
@@ -37,7 +38,8 @@ export enum States {
 	CrossedZones,
 	ClickedEmptySpace,
 	ClickedListeningShape,
-	ClickedTransformer
+	ClickedTransformer,
+	ClickedCircle
 }
 
 export interface Action {

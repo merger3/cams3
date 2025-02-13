@@ -7,7 +7,7 @@
 	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, clickZoom, GetSwaps, ClearStage, SyncCache, sendCommand } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
-	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
+	import { Selector, AddSelection, RemoveSelection, GetSelectedRect } from '$lib/zones';
 	import { RadialMenus, Transparency } from '$lib/radials';
 	import { portal } from "svelte-portal";
 	import { customAlphabet } from 'nanoid';
@@ -47,7 +47,9 @@
 			]),
 			Inactive: new Set([
 				States.StageDraggingMinimal,
-				States.ClickedTransformer
+				States.ClickedTransformer,
+				States.ClickedCircle,
+				States.StageDoubleClick
 			]),
 		},
 		CancelConditions: {
@@ -65,7 +67,8 @@
 	
 	let fontSize: number = 0;
 	let activeMenu: RadialMenu | undefined;
-	function enable(this: Action, origin: Coordinates) {		
+	function enable(this: Action, origin: Coordinates) {
+		$am.Actions["click"].Cancel();
 		let zone = GetZone($zones, {x: (origin.x / $panzoom.getScale()), y: (origin.y / $panzoom.getScale())});
 		if (!zone) {
 			return;
@@ -102,7 +105,6 @@
 		activeMenu.target = zone;
 		hovered = undefined;
 
-		$am.Actions["click"].Cancel();
 		AddSelection(zone, Selector.Radial);
 
 		
@@ -341,7 +343,8 @@
 		"zoom": () => zoomcam(activeMenu.target), 
 		"reset": () => buildCommand("resetcam"), 
 		"nextswap": () => loadNextCam("swap"), 
-		"nextload":  () => loadNextCam("load")
+		"nextload":  () => loadNextCam("load"),
+		"primary":  () => swapPosition(1)
 	};
 	rh = {...{"iroff": () => buildCommand("ptzir", ["off"]), "iron": () => buildCommand("ptzir", ["on"]), "irauto": () => buildCommand("ptzir", ["auto"])}, ...rh};
 	rh = {...{"up": () => buildCommand("ptzmove", ["up"]), "upright": () => buildCommand("ptzmove", ["upright"]), "right": () => buildCommand("ptzmove", ["right"]), "downright": () => buildCommand("ptzmove", ["downright"]), "down": () => buildCommand("ptzmove", ["down"]), "downleft": () => buildCommand("ptzmove", ["downleft"]), "left": () => buildCommand("ptzmove", ["left"]), "upleft": () => buildCommand("ptzmove", ["upleft"])}, ...rh};
@@ -455,6 +458,25 @@
 
 			const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: 0, clientY: 0, button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
 			jQuery('#overlay')[0].dispatchEvent(pointerUpEvent);
+		}
+	}
+
+	function swapPosition(target: number) {
+		let sourceZone = GetSelectedRect(Selector.Radial);
+		if (!sourceZone) {
+			return;
+		}
+		let targetZone = $zones.findOne(`.${target}`) as Konva.Rect;
+		if (!targetZone) {
+			return;
+		}
+		let swaps: number[] = [Number(sourceZone.name()), target]
+		
+		if (swaps[0] != swaps[1]) {
+			swaps.sort(function(a, b){return a - b});
+			let cmd = `!swap ${swaps[0]} ${swaps[1]}`;
+			sendCommand({cmd: cmd, reset: false})
+			return;
 		}
 	}
 </script>

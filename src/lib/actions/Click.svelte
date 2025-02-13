@@ -2,14 +2,14 @@
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
 	import { Circle } from "svelte-konva";
-	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom, stage, ClearStage, menuIsOpen } from '$lib/stores';
+	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom, stage, ClearStage } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import {  ClickTangle } from '$lib/rect';
 	import { customAlphabet } from 'nanoid';
 	const tangleID = customAlphabet('0123456789abcdef', 5);
 
-	const name = "click";
+	const name = "doubleclick";
 
 	let dot: Konva.Circle;
 
@@ -17,28 +17,20 @@
 		Name: name,
 		TriggerConditions: {
 			Active: new Set([
-				States.StagePointerDown,
-				States.PointerAdded,
-				States.OnePointer,
+				States.StageDoubleClick,
 				States.LeftMouseButtonPressed,
-				States.ClickedEmptySpace
+				States.OnePointer
 			]),
 			Inactive: new Set([
-				States.StageDraggingBuffered,
-				States.StageDoubleClick,
 				States.CrossedZones
 			]),
 		},
 		CancelConditions: {
 			Active: new Set([
-				States.StageDraggingBuffered,
-				States.StageDoubleClick,
 				States.CrossedZones
 			]),
 			Inactive: new Set([
-				States.StagePointerDown,
-				States.OnePointer,
-				States.LeftMouseButtonPressed
+				States.OnePointer
 			]),
 		},
 		IsActive: false,
@@ -47,41 +39,38 @@
 	}
 
 	function enable(this: Action, origin: Coordinates) {
-		if ($clickTimer) {
-			clearTimeout($clickTimer);
-		}
-	
-		if ($am.ActiveStates.has(States.StageDraggingDejittered)) {
-			$stage.on('pointermove.click', handleDrag);
-		}
-		$stage.on('pointerup.click', finshDrawing);
-
-		// Figure this out
+		$stage.on('pointermove.doubleclick', handleDrag);
+		$stage.on('pointerup.doubleclick', finshDrawing);
+		ClearStage($stage);
 		$am.Actions[name].IsActive = true;
 	}
 
 	function cancel(this: Action) {
-		if ($clickTimer) {
-			clearTimeout($clickTimer);
-		}
-		$stage.off('pointermove.click')
-		$stage.off('pointerup.click')
+		$stage.off('pointermove.doubleclick')
+		$stage.off('pointerup.doubleclick')
 
 		dot.hide();
 		this.IsActive = false;
 	}
 
 
-	function writeCommand() {
-		$commandText = ClickTangle({
-			X: dot.x(),
-			Y: dot.y(),
+	function writeCommand(target: Konva.Circle, reset: boolean = false) {
+		let text = ClickTangle({
+			X: target.x(),
+			Y: target.y(),
 			Width: 0,
 			Height: 0,
 			FrameWidth: $ifDimensions.width,
 			FrameHeight: $ifDimensions.height
 		}).command
-		$clickZoom = 100;
+
+		if ($commandText.startsWith("!ptzclick") && reset) {
+			$commandText = `${text.split(" ").slice(0, -1).join(" ")} ${$clickZoom}`;
+		} else {
+			$commandText = text;
+			$clickZoom = 100;
+		}
+
 	}
 
 	// Throttle
@@ -98,31 +87,20 @@
 	}
 
 	function finshDrawing(e: Konva.KonvaPointerEvent) {
-		if ($menuIsOpen) {
-			$am.Actions["swaps"].Cancel();
-			$am.Actions["click"].Cancel();
-			return;
-		}
-		
-		$am.Actions[name].IsActive = true;
-		$stage.off('pointermove.click')
-		$stage.off('pointerup.click')
-		$clickTimer = setTimeout(() => {
-			
-			ClearStage($stage);
+		$stage.off('pointermove.doubleclick')
+		$stage.off('pointerup.doubleclick')
 
-			let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
-			dot.position({
-				x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(),
-				y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()
-			})
-			
-			writeCommand();
-			manufactureDot();
-			
-			dot.hide();
-			$am.Actions[name].IsActive = false;
-		}, 250);
+		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
+		dot.position({
+			x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(),
+			y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()
+		})
+		
+		writeCommand(dot);
+		manufactureDot();
+		dot.hide();
+
+		$am.Actions[name].IsActive = false;
 	}
 
 	function manufactureDot() {
@@ -131,13 +109,30 @@
 			y: dot.y(),
 			name: "click",
 			id: tangleID(),
-			radius: 2,
+			radius: 3,
 			strokeScaleEnabled: false,
-			fill: 'black',
-			draggable: false,
+			fill: 'rgba(204, 55, 97, 1)',
+			stroke: 'black',
+			strokeWidth: 1,
+			draggable: true,
 			visible: true,
-			listening: false
+			listening: true,
+			hitFunc: dotCustomHitbox
 		});
+
+		newDot.on("dragmove", (e: any) => {
+			let mousePos = $stage.getPointerPosition();
+			if (mousePos) {
+				e.target.position({
+					x: mousePos.x,
+					y: mousePos.y,
+				})
+			}
+		})
+
+		newDot.on("dragend", (e: any) => {
+			writeCommand(e.target as Konva.Circle, true);
+		})
 
 		dot.getLayer()?.add(newDot);
 	}
@@ -145,8 +140,16 @@
 
 	onMount(async () => {
 		await tick();
+		// dot.getLayer().toggleHitCanvas()
  	});
 
+	function dotCustomHitbox(context: Konva.Context, shape: any) {
+		var circle = shape as Konva.Circle;
+		context.beginPath();
+		context.arc(0, 0, circle.radius() * 2.5, 0, Math.PI * 2, true);
+		context.closePath();
+		context.fillStrokeShape(circle);
+	}
 </script>
 
 <Circle 
@@ -154,11 +157,13 @@
 	config={{
 		x: 0,
 		y: 0,
-		radius: 2,
+		radius: 3,
 		strokeScaleEnabled: false,
-		fill: 'black',
+		fill: 'rgba(204, 55, 97, 1)',
+		stroke: 'black',
+		strokeWidth: 1,
 		draggable: false,
 		visible: false,
-		listening: false
+		listening: false,
 	}} 
 />
