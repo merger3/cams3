@@ -110,7 +110,7 @@
 		
 		radialLayer.listening(true);
 		radialStage.listening(true);
-		jQuery('#stage').css('z-index', '49');
+		jQuery('#stage').css('z-index', '51');
 		
 		fontSize = (1.8 * parseFloat(getComputedStyle(document.documentElement).fontSize));
 		
