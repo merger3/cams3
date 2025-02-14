@@ -128,9 +128,9 @@
 				<!-- <div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;" bind:innerHTML={$commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} > -->
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<div on:click={(e) => {sendCommand({cmd: $commandText})}} use:fit={{min_size: 1}} use:motion class="btn btn-outline-primary btn-lg ext-center border border-primary rounded command z-40 movedown themed" id="command" style="width:{$ifDimensions.width}px; max-width:{$ifDimensions.width}px; white-space: pre; pointer-events: none;">
+				<button on:click={(e) => {sendCommand({cmd: $commandText})}} use:fit={{min_size: 1}} use:motion class="btn btn-outline-primary btn-lg text-center p-0 command z-40 movedown themed" id="command" style="width:{$ifDimensions.width}px; max-width:{$ifDimensions.width}px; white-space: pre; pointer-events: none;">
 					​
-				</div>
+				</button>
 			</div>
 		</Motion>
 		<!-- <button on:click={(e) => {sendCommand({cmd: $commandText})}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown themed" style="height: {$commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button> -->
