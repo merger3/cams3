@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { ifDimensions, commandHeight, commandText, sendCommand } from '$lib/stores';
+	import { ifDimensions, commandHeight, commandText, sendCommand, quicksend } from '$lib/stores';
 
 	const dispatch = createEventDispatcher();
 	const defaultCMD: string = "​";
@@ -8,6 +8,7 @@
 	// This is mostly temporary. I'm working on a more robust settings system that talks to the server
 	// and loads persistent settings from a sqlite DB but this is a quick and dirty way to do this single thing that's essential.
 	export let selected: string;
+	export let quicksendSelected: string;
 	export let controls: number;
 
 	function togglePlayerControls() {
@@ -36,6 +37,15 @@
 	function getSwapString(): string {
 		return window.location.pathname == "/lola" ? "Twitch" : "Lola";
 	}
+
+	function toggleQuicksend() {
+		if (quicksendSelected == "btn-outline-secondary") {
+			quicksendSelected = "btn-secondary";
+		} else {
+			quicksendSelected = "btn-outline-secondary";
+		}
+	}
+
 </script>
 
 <div class="dropdown z-40 movedown">
@@ -46,6 +56,7 @@
 		<button type="button" on:click={() => sendCommand({cmd: "!scenecams"})} class="btn btn-outline-secondary btn-md d-block w-100 mb-2 overflow-hidden">Force Resync</button>
 		<button type="button" on:click={() => togglePlayerControls()} class="btn {selected} btn-lg d-block w-100 mb-2 overflow-hidden">Toggle Video<br>Controls</button>
 		<button type="button" on:click={() => toggleVideoSource()} class="btn btn-outline-secondary btn-sm d-block w-100 mb-2 overflow-hidden">Swap to {getSwapString()}</button>
+		<button type="button" on:click={() => toggleQuicksend()} class="btn {quicksendSelected} btn-sm d-block w-100 mb-2 overflow-hidden">Toggle Preset Quicksend</button>
 	</div>
 </div>
 

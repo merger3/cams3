@@ -25,6 +25,7 @@ export let panzoom = writable<PanzoomObject>();
 export let clickTimer = writable<number>();
 export let menuIsOpen = writable<boolean>();
 export let keyboardHandler = writable<Keyboard>();
+export let quicksend = writable<boolean>();
 
 
 export let presetButtonCache = writable<{[key: string]: CamPresets}>({})

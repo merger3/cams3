@@ -5,6 +5,7 @@
 	import type { ButtonPreset } from '$types';
 	
 	export let preset: ButtonPreset[];
+	export let quicksendSelected: string;
 
     function buildCommand(preset: string) {
 		let newCommand: string = `!ptzload ${$camPresets.value} ${preset}`;
@@ -12,7 +13,9 @@
 			sendCommand({cmd: newCommand})
 		} else {
 			$commandText = newCommand;
-			sendCommand({cmd: newCommand})
+			if (quicksendSelected == "btn-outline-secondary") {
+				sendCommand({cmd: newCommand})
+			}
 			ClearStage($stage)
 		}
     }

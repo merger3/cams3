@@ -10,6 +10,7 @@
 	import _ from 'lodash';
 
 	const dispatch = createEventDispatcher();
+	export let quicksendSelected: string;
 
 	const name = "click";
 
@@ -161,7 +162,7 @@
 {#if $camPresets.items.length != 0}
 	<ScrollArea bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-3 mt-1.5 mb-auto mx-1 z-20 rounded shadow" scrollbarYClasses="">
 		<div id="presets-menu" class="w-100">
-			<Subpresets bind:buttonWidth bind:preset={$camPresets.items} />
+			<Subpresets bind:quicksendSelected bind:buttonWidth bind:preset={$camPresets.items} />
 		</div>
 		<div class="mt-2.5" />
 	</ScrollArea>
