@@ -85,9 +85,9 @@
 		// zones = [{x: origin, y: origin, height: height, width: width, zone: 1}];
 	}
 
-	var resizeIframe = _.debounce(resizeIframeRaw, 50, { 'leading': false, 'trailing': true });
-	var clearStageDebounced = _.debounce(ClearStage, 50, { 'leading': true, 'trailing': false })
-	var redrawSelectionsDebounced = _.debounce(RedrawSelections, 50, { 'leading': false, 'trailing': true })
+	var resizeIframe = _.debounce(resizeIframeRaw, 20, { 'leading': false, 'trailing': true });
+	var clearStageDebounced = _.debounce(ClearStage, 20, { 'leading': true, 'trailing': false })
+	var redrawSelectionsDebounced = _.debounce(RedrawSelections, 20, { 'leading': false, 'trailing': true })
 
 
 	// function submitCommand(e: KeyboardEvent) {
@@ -123,16 +123,16 @@
 </svelte:head>
 <div class="vstack gap-1" id="videowrapper">
 	<div class="hstack gap-1">
-		<Motion whileFocus={{ scale: 1.3 }} let:motion>
+		<Motion whileFocus={{ scale: 1.2 }} let:motion>
 			<div style={parent_style}height:{$commandHeight}px;>
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<!-- <div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;" bind:innerHTML={$commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} > -->
-				<div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;">
+				<button on:click={(e) => {sendCommand({cmd: $commandText})}} use:fit={{min_size: 1}} use:motion class="btn btn-outline-primary btn-lg ext-center border border-primary rounded command z-40 movedown themed" id="command" style="width:{$ifDimensions.width}px; max-width:{$ifDimensions.width}px; white-space: pre; pointer-events: none;">
 					​
-				</div>
+				</button>
 			</div>
 		</Motion>
-		<button on:click={(e) => {sendCommand({cmd: $commandText})}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown themed" style="height: {$commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button>
+		<!-- <button on:click={(e) => {sendCommand({cmd: $commandText})}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown themed" style="height: {$commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button> -->
 	</div>
 	<div id="stage" class="unselectable" />
 	<div id="vid2" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">

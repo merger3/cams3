@@ -27,6 +27,7 @@ export let menuIsOpen = writable<boolean>();
 export let keyboardHandler = writable<Keyboard>();
 export let quicksend = writable<boolean>();
 
+export let resizeText = writable<any>();
 
 export let presetButtonCache = writable<{[key: string]: CamPresets}>({})
 export let presetMenuCache = writable<{[key: string]: CamPresets}>({})

@@ -7,21 +7,11 @@
 	import Keyboard from './Keyboard.svelte';
 	import axios from 'axios';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
+	import { Motion } from 'svelte-motion'
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight, keyboardHandler, sendCommand } from '$lib/stores';
+	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight, keyboardHandler, sendCommand, resizeText } from '$lib/stores';
 	import _ from 'lodash';
-	import { io, Socket } from "socket.io-client";
-
-
-	// const socket: any = io("https://api.ptz.app:2039/");
-	// socket.on('message', (message: any) => {
-	// 	console.log('Message received:', message);
-	// });
-
-	// socket.onAny((eventName: any, ...args: any) => {
-	// 	console.log(eventName); // 'hello'
-	// 	console.log(args); // [ 1, '2', { 3: '4', 5: ArrayBuffer (1) [ 6 ] } ]
-	// });
+	
 	InitializeAM();
 
 	const defaultCMD: string = "​";
@@ -37,12 +27,13 @@
 		}
 		fit(resize, {min_size: 8});
 	}
-	var resizeText = _.throttle(resizeTextRaw, 20, { 'leading': true, 'trailing': true });
+	$resizeText = _.debounce(resizeTextRaw, 20, { 'leading': true, 'trailing': true });
 
 	function setTheme(): boolean {
 		const timeout = 50;
 		if ($commandText == defaultCMD) {
 			jQuery(".themed").removeClass("btn-outline-primary-alt").addClass("btn-outline-primary");
+			jQuery("#command").css("pointer-events", "none");
 			setTimeout(() => {
 				jQuery("#command").removeClass("border-primary-alt").addClass("border-primary").text("​");
 				jQuery("#sendbutton").text(" Send ");
@@ -50,6 +41,8 @@
 			}, timeout);
 		} else {
 			jQuery(".themed").removeClass("btn-outline-primary").addClass("btn-outline-primary-alt");
+			jQuery("#command").css("pointer-events", "all");
+
 			setTimeout(() => {
 				jQuery("#command").removeClass("border-primary").addClass("border-primary-alt").text($commandText);
 				jQuery("#sendbutton").text(` ${$commandText} `);
@@ -81,7 +74,7 @@
 
 		$server = axios.create({
 			timeout: 10000,
-			baseURL: '/api/',
+			baseURL: 'https://alvsanc-cams.dev/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
@@ -105,17 +98,22 @@
 
 		// jQuery(".movedown").on('wheel', handleWheel)
 		if ($commandText) {
-			resizeText();
+			$resizeText();
 		}
 	});
-	$: resizeObserverDefined && $commandText && setTheme() && resizeText();
+	$: resizeObserverDefined && $commandText && setTheme() && $resizeText();
 
 	// These are temporary pending settings implementation, as well as everywhere they are bound
 	let selected = "btn-outline-secondary"
 	let quicksendSelected = "btn-outline-secondary"
 	let controls = 0;
 
-
+	function handleClick(definition: any) {
+		if (definition.scale == 1) {
+			resizeObserverDefined = true;
+			$resizeText();
+		}
+	}
 
 
 </script>
@@ -144,9 +142,11 @@
 					<CamSelector bind:controls bind:selected bind:quicksendSelected/>
 				</div>
 				<Presets bind:quicksendSelected />
-				<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
-					<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={() => sendCommand({cmd: $commandText})} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown themed" > Send </button>
-				</div>
+				<Motion whileFocus={{ scale: 1.2 }} onAnimationStart={() => {resizeObserverDefined = false}} onAnimationComplete={(definition) => {handleClick(definition)}} let:motion>
+					<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
+						<button bind:this={resize} use:motion use:fit={{min_size: 16}} id="sendbutton" on:click={() => {sendCommand({cmd: $commandText}); setTheme();}} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown themed" > Send </button>
+					</div>
+				</Motion>
 			</div>
 			<div class="col-auto g-0" id="wrapper">
 				<VideoLite bind:controls bind:videosource on:sendcmd={sendCommand}/>
