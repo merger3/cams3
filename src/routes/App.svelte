@@ -81,7 +81,7 @@
 
 		$server = axios.create({
 			timeout: 10000,
-			baseURL: '/api/',
+			baseURL: 'https://alvsanc-cams.dev/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
@@ -112,6 +112,7 @@
 
 	// These are temporary pending settings implementation, as well as everywhere they are bound
 	let selected = "btn-outline-secondary"
+	let quicksendSelected = "btn-outline-secondary"
 	let controls = 0;
 
 
@@ -140,9 +141,9 @@
 		<div class="row justify-content-between flex-nowrap ">
 			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector" style="max-height: {$commandHeight + $ifDimensions.height}px;">
 				<div style="min-height: {$commandHeight}px;max-height: {$commandHeight}px;">
-					<CamSelector bind:controls bind:selected />
+					<CamSelector bind:controls bind:selected bind:quicksendSelected/>
 				</div>
-				<Presets />
+				<Presets bind:quicksendSelected />
 				<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
 					<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={() => sendCommand({cmd: $commandText})} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown themed" > Send </button>
 				</div>
