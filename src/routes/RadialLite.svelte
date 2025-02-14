@@ -369,7 +369,7 @@
 
 	function enableZone() {
 		if (activeMenu.target) {
-			$am.Actions["doubleclick"].Enable({x: activeMenu.target.x() + (activeMenu.target.width() / 2), y: activeMenu.target.y() + (activeMenu.target.height() / 2)})
+			$am.Actions["click"].Enable({x: activeMenu.target.x() + (activeMenu.target.width() / 2), y: activeMenu.target.y() + (activeMenu.target.height() / 2)})
 		}
 	}
 

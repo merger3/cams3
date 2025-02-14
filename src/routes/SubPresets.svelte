@@ -12,6 +12,7 @@
 			sendCommand({cmd: newCommand})
 		} else {
 			$commandText = newCommand;
+			sendCommand({cmd: newCommand})
 			ClearStage($stage)
 		}
     }

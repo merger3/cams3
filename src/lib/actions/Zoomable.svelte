@@ -10,17 +10,18 @@
 	let zoomarea: HTMLElement;
 
 	function toggleTangle(state: boolean) {
-		$stage.find(".tangle").forEach(function (tangleGroup: any) {
+		$stage.find(".tangle, .click").forEach(function (tangleGroup: any) {
 			tangleGroup.getChildren().forEach(function (node: Konva.Node) {
 				switch(node.getClassName()) { 
-					case "Rect": { 
+					case "Circle":
+					case "Rect": {
 						node.draggable(state);
 						node.listening(state);
 						if (!state) {
 							node.stopDrag();
 						}
 						break; 
-					} 
+					}
 					case "Transformer": { 
 						node.listening(state)
 						let tranformer = (node as Konva.Transformer);

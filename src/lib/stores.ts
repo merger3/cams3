@@ -72,9 +72,9 @@ export async function sendCommand(userOpts: any) {
 				_.delay(function() {
 					let z = GetSelectedRect(Selector.Presets);
 					if (z) {
-						get(am).Actions["doubleclick"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
+						get(am).Actions["click"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
 					}
-				}, 0);
+				}, 10);
 			}
 		}
 	}).catch(function (error) {

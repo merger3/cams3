@@ -924,7 +924,7 @@
 	function enableZone(slot: string) {
 		let z = $zones.findOne(`.${slot}`) as Konva.Rect;
 		if (z) {
-			$am.Actions["doubleclick"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
+			$am.Actions["click"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
 		}
 	}
 
