@@ -109,10 +109,10 @@
 	let controls = 0;
 
 	function handleClick(definition: any) {
-		if (definition.scale == 1) {
-			resizeObserverDefined = true;
-			$resizeText();
-		}
+		$commandText = defaultCMD;
+		setTheme();
+		$resizeText();
+		resizeObserverDefined = true;
 	}
 
 
@@ -144,7 +144,7 @@
 				<Presets bind:quicksendSelected />
 				<Motion whileFocus={{ scale: 1.2 }} onAnimationStart={() => {resizeObserverDefined = false}} onAnimationComplete={(definition) => {handleClick(definition)}} let:motion>
 					<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
-						<button bind:this={resize} use:motion use:fit={{min_size: 16}} id="sendbutton" on:click={() => {sendCommand({cmd: $commandText}); setTheme();}} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown themed" > Send </button>
+						<button bind:this={resize} use:motion use:fit={{min_size: 16}} id="sendbutton" on:click={() => {sendCommand({cmd: $commandText})}} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown themed" > Send </button>
 					</div>
 				</Motion>
 			</div>
