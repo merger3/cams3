@@ -142,11 +142,11 @@
 		}
 	}
 
-	var updateButtonSizeDebounced = _.debounce(updateButtonSizeRaw, 60, { 'leading': false, 'trailing': true })
-	var updateButtonSizeThrottled = _.throttle(updateButtonSizeRaw, 60, { 'leading': false, 'trailing': true })
+	var updateButtonSizeDebounced = _.debounce(updateButtonSizeRaw, 50, { 'leading': false, 'trailing': true })
+	var updateButtonSizeThrottled = _.throttle(updateButtonSizeRaw, 30, { 'leading': false, 'trailing': true })
 
 	function updateButtonSize() {
-		// updateButtonSizeThrottled();
+		updateButtonSizeThrottled();
 		updateButtonSizeDebounced();
 	}
 
@@ -160,7 +160,7 @@
 </script>
 
 {#if $camPresets.items.length != 0}
-	<ScrollArea bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-3 mt-1.5 mb-auto mx-1 z-20 rounded shadow" scrollbarYClasses="">
+	<ScrollArea bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-2.5 mt-1 mb-auto mx-1 z-20 rounded shadow" scrollbarYClasses="">
 		<div id="presets-menu" class="w-100">
 			<Subpresets bind:quicksendSelected bind:buttonWidth bind:preset={$camPresets.items} />
 		</div>

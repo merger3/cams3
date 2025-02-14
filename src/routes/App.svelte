@@ -142,7 +142,7 @@
 					<CamSelector bind:controls bind:selected bind:quicksendSelected/>
 				</div>
 				<Presets bind:quicksendSelected />
-				<Motion whileFocus={{ scale: 1.2 }} onAnimationStart={() => {resizeObserverDefined = false}} onAnimationComplete={(definition) => {handleClick(definition)}} let:motion>
+				<Motion onAnimationStart={() => {resizeObserverDefined = false}} onAnimationComplete={(definition) => {handleClick(definition)}} let:motion>
 					<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
 						<button bind:this={resize} use:motion use:fit={{min_size: 16}} id="sendbutton" on:click={() => {sendCommand({cmd: $commandText})}} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown themed" > Send </button>
 					</div>

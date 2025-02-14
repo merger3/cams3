@@ -85,9 +85,9 @@
 		// zones = [{x: origin, y: origin, height: height, width: width, zone: 1}];
 	}
 
-	var resizeIframe = _.debounce(resizeIframeRaw, 20, { 'leading': false, 'trailing': true });
-	var clearStageDebounced = _.debounce(ClearStage, 20, { 'leading': true, 'trailing': false })
-	var redrawSelectionsDebounced = _.debounce(RedrawSelections, 20, { 'leading': false, 'trailing': true })
+	var resizeIframe = _.throttle(resizeIframeRaw, 30, { 'leading': false, 'trailing': true });
+	var clearStageDebounced = _.debounce(ClearStage, 30, { 'leading': true, 'trailing': false })
+	var redrawSelectionsDebounced = _.debounce(RedrawSelections, 30, { 'leading': false, 'trailing': true })
 
 
 	// function submitCommand(e: KeyboardEvent) {
