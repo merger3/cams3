@@ -11,28 +11,35 @@
 
 	function toggleTangle(state: boolean) {
 		$stage.find(".tangle, .click").forEach(function (tangleGroup: any) {
-			tangleGroup.getChildren().forEach(function (node: Konva.Node) {
-				switch(node.getClassName()) { 
-					case "Circle":
-					case "Rect": {
-						node.draggable(state);
-						node.listening(state);
-						if (!state) {
-							node.stopDrag();
+			if (tangleGroup.getClassName() == "Group") { 
+				tangleGroup.getChildren().forEach(function (node: Konva.Node) {
+					switch(node.getClassName()) { 
+						case "Rect": {
+							node.draggable(state);
+							node.listening(state);
+							if (!state) {
+								node.stopDrag();
+							}
+							break; 
 						}
-						break; 
-					}
-					case "Transformer": { 
-						node.listening(state)
-						let tranformer = (node as Konva.Transformer);
-						// tranformer.resizeEnabled(state);
-						if (!state) {
-							tranformer.stopTransform();
-						}
-						break; 
+						case "Transformer": { 
+							node.listening(state)
+							let tranformer = (node as Konva.Transformer);
+							// tranformer.resizeEnabled(state);
+							if (!state) {
+								tranformer.stopTransform();
+							}
+							break; 
+						} 
 					} 
-				} 
-			});
+				});
+			} else {
+				tangleGroup.draggable(state);
+				tangleGroup.listening(state);
+				if (!state) {
+					tangleGroup.stopDrag();
+				}
+			}
 		});
 	}
 
