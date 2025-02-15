@@ -4,6 +4,7 @@
 	import { commandText, stage, camPresets, ClearStage, sendCommand } from '$lib/stores';
 	import type { ButtonPreset } from '$types';
 	import { Motion } from 'svelte-motion'
+	import { portal } from "svelte-portal";
 	
 	export let preset: ButtonPreset[];
 	export let quicksendSelected: string;
@@ -27,7 +28,7 @@
 {#each preset as p}
 	{#if p.value != "separator"}
 		<Motion whileFocus={{ scale: 1.2 }} let:motion>
-			<button type="button" use:motion on:click={() => buildCommand(p.value)} class="btn btn-outline-warning btn-lg d-block px-0 mb-2 overflow-hidden position-relative h-16" style="width: {buttonWidth}">{p.value}</button>
+			<button type="button" use:motion on:click={() => buildCommand(p.value)} class="btn btn-outline-warning btn-lg d-block px-0 mb-2 overflow-visible position-relative h-16" style="width: {buttonWidth}">{p.value}</button>
 		</Motion>
 	{/if}
 {/each}

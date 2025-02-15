@@ -158,11 +158,14 @@
 
 	let doubleClicktimer: number;
 	let clicks: number = 0;
+	let clickTargets: Konva.Node[] = [undefined, undefined];
 	function monitorDoubleClick(e: KonvaPointerEvent): boolean {
+		clickTargets[clicks] = e.target;
 		clicks++;
 		doubleClicktimer = setTimeout(() => {
 			if (clicks > 0) {
 				clicks--;
+				clickTargets[clicks] = undefined;
 			}
 		}, 200);
 
@@ -172,7 +175,25 @@
 			}
 			clicks = 0;
 			$am.ActiveStates.add(States.StageDoubleClick);
-		
+			if (clickTargets[0] == clickTargets[1]) {
+				switch (clickTargets[0].getClassName()) {
+				case "Transformer":
+					$am.ActiveStates.add(States.DoubleClickedTransformer);
+					break;
+				case "Circle":
+					$am.ActiveStates.add(States.DoubleClickedCircle);
+					break;
+				case "Rect":
+					if (clickTargets[0].name() == "selector") {
+						$am.ActiveStates.add(States.DoubleClickedTangle);
+					} else if (clickTargets[0].getParent() == $zones) {
+						$am.ActiveStates.add(States.DoubleClickedEmptySpace);
+					}
+					break;
+				}
+			}
+
+			clickTargets = [undefined, undefined]
 			if (log) {
 				console.log(printStates($am.ActiveStates));
 			}
@@ -300,12 +321,12 @@
 			$am.ActiveStates.delete(States.ClickedEmptySpace);
 			$am.ActiveStates.delete(States.ClickedTransformer);
 			$am.ActiveStates.delete(States.ClickedCircle);
+			$am.ActiveStates.delete(States.ClickedTangle);
 			$am.ActiveStates.delete(States.ClickedListeningShape);
 
 			$am.ActiveStates.delete(States.MousePointer);
 			$am.ActiveStates.delete(States.TouchPointer);
 			$am.ActiveStates.delete(States.PenPointer);
-
 
 			ResetZone(startZone as Konva.Rect)
 
@@ -317,6 +338,10 @@
 		
 		$am.ActiveStates.delete(States.StagePressed); 
 		$am.ActiveStates.delete(States.StageDoubleClick);
+		$am.ActiveStates.delete(States.DoubleClickedCircle);
+		$am.ActiveStates.delete(States.DoubleClickedTangle);
+		$am.ActiveStates.delete(States.DoubleClickedEmptySpace);
+		$am.ActiveStates.delete(States.DoubleClickedTransformer);
 
 		if (log) {
 			console.log(printStates($am.ActiveStates))
@@ -346,6 +371,7 @@
 				$am.ActiveStates.delete(States.ClickedEmptySpace);
 				$am.ActiveStates.delete(States.ClickedTransformer);
 				$am.ActiveStates.delete(States.ClickedCircle);
+				$am.ActiveStates.delete(States.ClickedTangle);
 				$am.ActiveStates.delete(States.ClickedListeningShape);
 
 				ResetZone(startZone as Konva.Rect)
@@ -365,6 +391,11 @@
 
 			$am.ActiveStates.delete(States.StagePressed); 
 			$am.ActiveStates.delete(States.StageDoubleClick);
+			$am.ActiveStates.delete(States.DoubleClickedCircle);
+			$am.ActiveStates.delete(States.DoubleClickedTangle);
+			$am.ActiveStates.delete(States.DoubleClickedEmptySpace);
+			$am.ActiveStates.delete(States.DoubleClickedTransformer);
+			
 
 			if (log) {
 				console.log(printStates($am.ActiveStates))

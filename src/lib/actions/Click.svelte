@@ -2,22 +2,55 @@
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
 	import { Circle } from "svelte-konva";
-	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom, stage, ClearStage } from '$lib/stores';
+	import { am, commandText, ifDimensions, clickTimer, panzoom, clickZoom, stage, ClearStage, sendCommand } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import {  ClickTangle } from '$lib/rect';
 	import { customAlphabet } from 'nanoid';
 	const tangleID = customAlphabet('0123456789abcdef', 5);
 
-	const name = "doubleclick";
+	const sendName = "sendclick";
+	$am.Actions[sendName] = {
+		Name: sendName,
+		TriggerConditions: {
+			Active: new Set([
+				States.DoubleClickedCircle
+			]),
+			Inactive: new Set(),
+		},
+		CancelConditions: {
+			Active: new Set(),
+			Inactive: new Set([
+				States.DoubleClickedCircle
+			]),
+		},
+		IsActive: false,
+		Enable: enableSend,
+		Cancel: cancelSend
+	}
+
+	function enableSend(this: Action, origin: Coordinates) {
+		this.IsActive = true;
+		setTimeout(() => {
+			sendCommand({cmd: $commandText});
+			this.IsActive = false;
+		}, 50)
+	}
+	
+	function cancelSend(this: Action) {
+		this.IsActive = false;
+	}
+
 
 	let dot: Konva.Circle;
-
+	
+	const name = "doubleclick";
 	$am.Actions[name] = {
 		Name: name,
 		TriggerConditions: {
 			Active: new Set([
 				States.StageDoubleClick,
+				States.DoubleClickedEmptySpace,
 				States.LeftMouseButtonPressed,
 				States.OnePointer
 			]),
@@ -146,7 +179,7 @@
 	function dotCustomHitbox(context: Konva.Context, shape: any) {
 		var circle = shape as Konva.Circle;
 		context.beginPath();
-		context.arc(0, 0, circle.radius() * 2.5, 0, Math.PI * 2, true);
+		context.arc(0, 0, circle.radius() * 3, 0, Math.PI * 2, true);
 		context.closePath();
 		context.fillStrokeShape(circle);
 	}

@@ -2,21 +2,53 @@
 	import { onMount, tick } from 'svelte';
 	import Konva from "konva";
 	import { Circle, Rect } from "svelte-konva";
-	import { am, commandText, ifDimensions, ClearStage, stage } from '$lib/stores';
+	import { am, commandText, ifDimensions, ClearStage, stage, sendCommand } from '$lib/stores';
 	import type { Coordinates } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import {  DrawTangle } from '$lib/rect';
 	import _ from 'lodash';
 	import { customAlphabet } from 'nanoid';
-
 	const tangleID = customAlphabet('0123456789abcdef', 5);
-	const name = "draw";
+
+	const sendName = "senddraw";
+	$am.Actions[sendName] = {
+		Name: sendName,
+		TriggerConditions: {
+			Active: new Set([
+				States.DoubleClickedTangle
+			]),
+			Inactive: new Set(),
+		},
+		CancelConditions: {
+			Active: new Set(),
+			Inactive: new Set([
+				States.DoubleClickedTangle
+			]),
+		},
+		IsActive: false,
+		Enable: enableSend,
+		Cancel: cancelSend
+	}
+
+	function enableSend(this: Action, origin: Coordinates) {
+		this.IsActive = true;
+		setTimeout(() => {
+			sendCommand({cmd: $commandText});
+			this.IsActive = false;
+		}, 50)
+	}
+	
+	function cancelSend(this: Action) {
+		this.IsActive = false;
+	}
+
 
 	export let layer: Konva.Layer;
-
+	
 	let tangle: Konva.Rect;
 	let dot: Konva.Circle;
-
+	
+	const name = "draw";
 	$am.Actions[name] = {
 		Name: name,
 		TriggerConditions: {
@@ -179,6 +211,7 @@
 			y: tangle.y(),
 			width: tangle.width(),
 			height: tangle.height(),
+			name: "selector",
 			fill: 'rgba(250, 128, 114, 0.3)',
 			stroke: 'rgba(255, 0, 0, 0.5)',
 			strokeWidth: 1.5,

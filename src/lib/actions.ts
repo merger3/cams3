@@ -39,7 +39,12 @@ export enum States {
 	ClickedEmptySpace,
 	ClickedListeningShape,
 	ClickedTransformer,
-	ClickedCircle
+	ClickedCircle,
+	ClickedTangle,
+	DoubleClickedTransformer,
+	DoubleClickedCircle,
+	DoubleClickedTangle,
+	DoubleClickedEmptySpace
 }
 
 export interface Action {
