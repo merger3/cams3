@@ -9,7 +9,7 @@
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import { Motion } from 'svelte-motion'
 	import ResizeObserver from 'resize-observer-polyfill'
-	import { commandText, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight, keyboardHandler, sendCommand, resizeText } from '$lib/stores';
+	import { commandText, GetScreenSize, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight, keyboardHandler, sendCommand, resizeText } from '$lib/stores';
 	import _ from 'lodash';
 	
 	InitializeAM();
@@ -52,6 +52,23 @@
 		return true;
 	}
 
+	let animationScale: number = 1;
+	let scaleMod: number = 0;
+	function setScale() {
+		switch (GetScreenSize()) {
+			case "small":
+				scaleMod = .2
+				break;
+			case "medium":
+				scaleMod = .15
+				break;
+			case "large":
+				scaleMod = .15
+				break;
+		}
+		animationScale = 1 + scaleMod;
+	}
+
 
 	let authorized: boolean = false;
 	function checkAuth() {
@@ -74,7 +91,7 @@
 
 		$server = axios.create({
 			timeout: 10000,
-			baseURL: '/api/',
+			baseURL: 'https://alvsanc-cams.dev/api/',
 			headers: {'X-Twitch-Token': $token}
 		});
 
@@ -95,27 +112,34 @@
 		window.ResizeObserver = ResizeObserver;
 		resizeObserverDefined = true;
 		window.addEventListener(`contextmenu`, (e) => e.preventDefault());
-
 		// jQuery(".movedown").on('wheel', handleWheel)
 		if ($commandText) {
 			$resizeText();
 		}
+
+		switch (GetScreenSize()) {
+			case "small":
+				scaleMod = .35
+				break;
+			case "medium":
+				scaleMod = .15
+				break;
+			case "large":
+				scaleMod = .15
+				break;
+		}
+		console.log(scaleMod)
 	});
+
 	$: resizeObserverDefined && $commandText && setTheme() && $resizeText();
+
+	
+
 
 	// These are temporary pending settings implementation, as well as everywhere they are bound
 	let selected = "btn-outline-secondary"
 	let quicksendSelected = "btn-outline-secondary"
 	let controls = 0;
-
-	function handleClick(definition: any) {
-		$commandText = defaultCMD;
-		setTheme();
-		$resizeText();
-		resizeObserverDefined = true;
-	}
-
-
 </script>
 
 <svelte:head>
@@ -142,9 +166,9 @@
 					<CamSelector bind:controls bind:selected bind:quicksendSelected/>
 				</div>
 				<Presets bind:quicksendSelected />
-				<Motion onAnimationStart={() => {resizeObserverDefined = false}} onAnimationComplete={(definition) => {handleClick(definition)}} let:motion>
-					<div class="overflow-hidden justify-content-end" style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
-						<button bind:this={resize} use:motion use:fit={{min_size: 16}} id="sendbutton" on:click={() => {sendCommand({cmd: $commandText})}} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-40 movedown themed" > Send </button>
+				<Motion animate={{ scale: animationScale }} transition={{ duration: .12 }} onAnimationComplete={(definition) => {animationScale = 1}} let:motion>
+					<div class="justify-content-end overflow-visible z-50" use:motion style="{parent_style}max-height: {$ifDimensions.height * .15}px;">
+						<button bind:this={resize}  use:fit={{min_size: 16}} id="sendbutton" on:click={() => {setScale(); sendCommand({cmd: $commandText})}} class="btn btn-outline-primary btn-lg w-100 text-center command p-0 m-0 z-50 movedown themed" > Send </button>
 					</div>
 				</Motion>
 			</div>

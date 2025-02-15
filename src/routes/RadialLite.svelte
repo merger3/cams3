@@ -4,7 +4,7 @@
 	import { createEventDispatcher, onMount, tick } from 'svelte';
 	import type { RadialPart, RadialMenu, Coordinates, SwapResponse, MenuItem } from '$types';
 	import _ from 'lodash';
-	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, clickZoom, GetSwaps, ClearStage, SyncCache, sendCommand } from '$lib/stores';
+	import { server, panzoom, GetCam, ifDimensions, am, stage, commandText, GetZone, zones, Reset, clickFocus, clickZoom, GetSwaps, ClearStage, SyncCache, sendCommand, GetScreenSize } from '$lib/stores';
 	import { ClickTangle } from '$lib/rect';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection, GetSelectedRect } from '$lib/zones';
@@ -115,15 +115,19 @@
 		fontSize = (1.8 * parseFloat(getComputedStyle(document.documentElement).fontSize));
 		
 		let screenSize = window.innerHeight + window.innerWidth;
-		if (screenSize <= 1500) {
-			innerRadius = (screenSize * .035);
-			outerRadius = (screenSize * .035) + (screenSize * .052);
-		} else if (screenSize <= 2000) {
-			innerRadius = (screenSize * .030);
-			outerRadius = (screenSize * .030) + (screenSize * .046);
-		} else {
-			innerRadius = (screenSize * .022);
-			outerRadius = (screenSize * .022) + (screenSize * .04);
+		switch (GetScreenSize()) {
+			case "small":
+				innerRadius = (screenSize * .035);
+				outerRadius = (screenSize * .035) + (screenSize * .052);
+				break;
+			case "medium":
+				innerRadius = (screenSize * .030);
+				outerRadius = (screenSize * .030) + (screenSize * .046);
+				break;
+			case "large":
+				innerRadius = (screenSize * .022);
+				outerRadius = (screenSize * .022) + (screenSize * .04);
+				break;
 		}
 		
 		calculatedRadius = innerRadius * .35;

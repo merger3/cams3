@@ -151,6 +151,17 @@ export function GetZone(zones: Konva.Group, origin: Coordinates): Konva.Rect | u
 	return zone;
 }
 
+export function GetScreenSize(): string {
+	let screenSize = window.innerHeight + window.innerWidth;
+	if (screenSize <= 1500) {
+		return "small";
+	} else if (screenSize <= 2000) {
+		return "medium";
+	} else {
+		return "large";
+	}
+}
+
 
 
 export async function SyncCache(cam: string) {

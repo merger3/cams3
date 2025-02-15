@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { commandText, ifDimensions, multiTouchPan, ClearStage, stage, commandHeight, sendCommand } from '$lib/stores';
+	import { commandText, ifDimensions, multiTouchPan, ClearStage, stage, commandHeight, sendCommand, GetScreenSize } from '$lib/stores';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { Box } from '$types';
 	import { Motion } from 'svelte-motion'
@@ -43,13 +43,16 @@
 			$ifDimensions.width = $ifDimensions.height * (16/9);
 		}
 
-		let screenSize = window.innerHeight + window.innerWidth;
-		if (screenSize <= 1500) {
-			$commandHeight = $ifDimensions.height * .08;
-		} else if (screenSize <= 2000) {
-			$commandHeight = $ifDimensions.height * .06;
-		} else {
-			$commandHeight = $ifDimensions.height * .06;
+		switch (GetScreenSize()) {
+			case "small":
+				$commandHeight = $ifDimensions.height * .08;
+				break;
+			case "medium":
+				$commandHeight = $ifDimensions.height * .06;
+				break;
+			case "large":
+				$commandHeight = $ifDimensions.height * .06;
+				break;
 		}
 		
 
@@ -100,7 +103,23 @@
 	// 	}
 	// }
 
-	let doit: number;
+	let animationScale: number = 1;
+	let scaleMod: number = 0;
+	function setScale() {
+		switch (GetScreenSize()) {
+			case "small":
+				scaleMod = .06
+				break;
+			case "medium":
+				scaleMod = .03
+				break;
+			case "large":
+				scaleMod = .03
+				break;
+		}
+		animationScale = 1 + scaleMod;
+	}
+
 	var player: any;
 	onMount(() => {
 		if (videosource == twitch) {
@@ -116,6 +135,7 @@
 		};
 	});
 
+	
 </script>
 
 <svelte:head>
@@ -123,19 +143,19 @@
 </svelte:head>
 <div class="vstack gap-1" id="videowrapper">
 	<div class="hstack gap-1">
-		<Motion whileFocus={{ scale: 1.2 }} let:motion>
+		<Motion animate={{ scale: animationScale }} transition={{ duration: .15 }} onAnimationComplete={(definition) => {animationScale = 1}} let:motion>
 			<div style={parent_style}height:{$commandHeight}px;>
 				<!-- <div use:fit={{min_size: 1}} use:motion class="text-center border border-primary rounded command z-40 movedown" id="command" style="max-width:{$ifDimensions.width}px; white-space: pre;" bind:innerHTML={$commandText} contenteditable="true" autocorrect="off" autocapitalize="off" spellcheck="false" on:keydown={submitCommand} > -->
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<button on:click={(e) => {sendCommand({cmd: $commandText})}} use:fit={{min_size: 1}} use:motion class="btn btn-outline-primary btn-lg text-center p-0 command z-40 movedown themed" id="command" style="width:{$ifDimensions.width}px; max-width:{$ifDimensions.width}px; height:{$commandHeight}px; white-space: pre; pointer-events: none;">
+				<button on:click={(e) => {setScale(); sendCommand({cmd: $commandText})}} use:fit={{min_size: 1}} use:motion class="btn btn-outline-primary btn-lg text-center p-0 command z-40 movedown themed" id="command" style="width:{$ifDimensions.width}px; max-width:{$ifDimensions.width}px; height:{$commandHeight}px; white-space: pre; pointer-events: none;">
 					​
 				</button>
 			</div>
 		</Motion>
 		<!-- <button on:click={(e) => {sendCommand({cmd: $commandText})}} class="btn btn-outline-primary btn-lg text-center command p-0 m-0 z-50 movedown themed" style="height: {$commandHeight}px; width: {$ifDimensions.width / 5}px;"> Send </button> -->
 	</div>
-	<div id="stage" class="unselectable" />
+	<div id="stage" class="unselectable z-9" />
 	<div id="vid2" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
 		<Zoomable>
 			<div id="vid" class="ratio ratio-16x9 ms-auto" style="width:{$ifDimensions.width}px;">
