@@ -122,7 +122,7 @@
 				scaleMod = .35
 				break;
 			case "medium":
-				scaleMod = .15
+				scaleMod = .2
 				break;
 			case "large":
 				scaleMod = .15

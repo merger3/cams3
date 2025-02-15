@@ -48,7 +48,7 @@
 				$commandHeight = $ifDimensions.height * .08;
 				break;
 			case "medium":
-				$commandHeight = $ifDimensions.height * .06;
+				$commandHeight = $ifDimensions.height * .07;
 				break;
 			case "large":
 				$commandHeight = $ifDimensions.height * .06;
