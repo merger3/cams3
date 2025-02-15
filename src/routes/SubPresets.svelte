@@ -18,12 +18,12 @@
 		let newCommand: string = `!ptzload ${$camPresets.value} ${preset}`;
 		if (newCommand == $commandText) {
 			sendCommand({cmd: newCommand})
-			s[index] = 1.3;
+			s[index] = 1.25;
 		} else {
 			$commandText = newCommand;
 			if (quicksendSelected == "btn-outline-secondary") {
 				sendCommand({cmd: newCommand})
-				s[index] = 1.3;
+				s[index] = 1.25;
 			}
 			ClearStage($stage)
 		}
