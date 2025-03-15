@@ -33,7 +33,8 @@
 	function isDragging(position: Coordinates) {
 		if (origin) {
 			let distance = Math.hypot(position.x - origin.x, position.y - origin.y);
-			if (distance >= ($stage.width() * .015)) {
+			// if (distance >= ($stage.width() * .015)) {
+			if (distance >= 8) {
 				$am.ActiveStates.add(States.StageDraggingBuffered)
 			} else {
 				$am.ActiveStates.delete(States.StageDraggingBuffered)

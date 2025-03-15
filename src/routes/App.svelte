@@ -10,9 +10,12 @@
 	import { Motion } from 'svelte-motion'
 	import ResizeObserver from 'resize-observer-polyfill'
 	import { commandText, GetScreenSize, token, server, InitializeAM, ifDimensions, am, stage, Reset, zones, commandHeight, keyboardHandler, sendCommand, resizeText } from '$lib/stores';
+	import { watchLayout } from '$lib/socketio';
 	import _ from 'lodash';
 	
+
 	InitializeAM();
+
 
 	const defaultCMD: string = "​";
 	export let videosource: number;
@@ -109,6 +112,8 @@
 			checkAuth();
 		}, 600000);
 	
+		watchLayout($server);
+
 		window.ResizeObserver = ResizeObserver;
 		resizeObserverDefined = true;
 		window.addEventListener(`contextmenu`, (e) => e.preventDefault());

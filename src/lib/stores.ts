@@ -36,6 +36,8 @@ export let swapsCache = writable<{[key: string]: MenuItem}>({})
 
 export let am = writable<ActionsManager>();
 
+export let camLayout = writable<string[]>([]);
+
 interface SendOptions {
     cmd: string;
     reset: boolean;
@@ -298,6 +300,11 @@ export function Reset(stage: Konva.Stage) {
 
 export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamResponse> {
 	// return {found: true, name: "fox", position: 3, cacheHit: true};
+	let storedCam: string = get(camLayout)[Number(r.position) - 1];
+	if (storedCam != undefined) {
+		return {found: true, cam: storedCam, position: Number(r.position), cacheHit: true};
+	}
+
 	let response = await a.post("/camera", {x: r.coordinates.x, y: r.coordinates.y, width: 0, height: 0, frameWidth: r.frameWidth, frameHeight: r.frameHeight, position: Number(r.position)});
 	
 	if (response.status >= 300) {

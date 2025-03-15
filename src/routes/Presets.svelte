@@ -50,11 +50,11 @@
 	let target: Konva.Rect;
 	let presets: CamPresets = undefined;
 	function enable(this: Action, origin: Coordinates) {
-		if ($menuIsOpen) {
-			$am.Actions["swaps"].Cancel();
-			$am.Actions["click"].Cancel();
-			return;
-		}
+		// if ($menuIsOpen) {
+		// 	$am.Actions["swaps"].Cancel();
+		// 	$am.Actions["click"].Cancel();
+		// 	return;
+		// }
 		presets = undefined;
 		$am.Actions[name].IsActive = true;
 		target = GetZone($zones, origin);
@@ -62,14 +62,13 @@
 			$am.Actions[name].Cancel();
 			return;
 		}
-		loadMenu(origin, target);
+		
 
 		$stage.on('pointerup.click', () => {
 			$stage.off('pointerup.click');
-			if (presets) {
-				$am.Actions[name].IsActive = false;
-				loadButtons(target, presets);
-			}
+			$am.Actions[name].IsActive = false;
+			loadMenu(origin, target);
+			loadButtons(target, presets);
 		});
 	}
 
@@ -111,17 +110,17 @@
 		}
 
 		// Probably causes a race condition if latency is > 200ms
-		if ($am.Actions[name].IsActive) {
-			if ($am.ActiveStates.has(States.NoPointers)) {
-				loadButtons(target, presets);
-			} else {
-				$stage.off('pointerup.click');
-				$stage.on('pointerup.click', () => {
-					$stage.off('pointerup.click');
-					loadButtons(target, presets);
-				});
-			}
-		}
+		// if ($am.Actions[name].IsActive) {
+		// 	if ($am.ActiveStates.has(States.NoPointers)) {
+		// 		loadButtons(target, presets);
+		// 	} else {
+		// 		$stage.off('pointerup.click');
+		// 		$stage.on('pointerup.click', () => {
+		// 			$stage.off('pointerup.click');
+		// 			loadButtons(target, presets);
+		// 		});
+		// 	}
+		// }
 
 		$am.Actions[name].IsActive = false;
 	}
