@@ -48,14 +48,12 @@
 	}
 
 	let target: Konva.Rect;
-	let presets: CamPresets = undefined;
 	function enable(this: Action, origin: Coordinates) {
 		// if ($menuIsOpen) {
 		// 	$am.Actions["swaps"].Cancel();
 		// 	$am.Actions["click"].Cancel();
 		// 	return;
 		// }
-		presets = undefined;
 		$am.Actions[name].IsActive = true;
 		target = GetZone($zones, origin);
 		if (!target) {
@@ -68,21 +66,19 @@
 			$stage.off('pointerup.click');
 			$am.Actions[name].IsActive = false;
 			loadMenu(origin, target);
-			loadButtons(target, presets);
 		});
 	}
 
 	function cancel(this: Action) {
 		$stage.off('pointerup.click')
 		target = undefined;
-		presets = undefined;
 		$am.Actions[name].IsActive = false;
 	}
 
 	let scrollAreaElement: HTMLDivElement;
 	let buttonWidth: string;
 	async function loadMenu(coordinates: Coordinates, target: Konva.Rect) {
-		// presets = {value: "", items: []};
+		let presets: CamPresets = {value: "", items: []};
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
 		
 		if (cam.found) {
@@ -109,19 +105,7 @@
 			buttonWidth = "100%";
 		}
 
-		// Probably causes a race condition if latency is > 200ms
-		// if ($am.Actions[name].IsActive) {
-		// 	if ($am.ActiveStates.has(States.NoPointers)) {
-		// 		loadButtons(target, presets);
-		// 	} else {
-		// 		$stage.off('pointerup.click');
-		// 		$stage.on('pointerup.click', () => {
-		// 			$stage.off('pointerup.click');
-		// 			loadButtons(target, presets);
-		// 		});
-		// 	}
-		// }
-
+		loadButtons(target, presets)
 		$am.Actions[name].IsActive = false;
 	}
 
@@ -150,6 +134,7 @@
 	}
 
 	onMount(() => {
+		console.log($camPresets)
 		updateButtonSizeRaw()
 		window.addEventListener('resize', updateButtonSize);
 		return () => {

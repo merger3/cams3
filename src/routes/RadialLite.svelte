@@ -231,7 +231,7 @@
 		if (r.submenu) {
 			hoverTimeout = setTimeout(() => {
 				loadNewMenu(r);
-			}, 250);
+			}, 200);
 		}
 	}
 
