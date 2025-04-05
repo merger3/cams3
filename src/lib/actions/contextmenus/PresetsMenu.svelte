@@ -20,11 +20,11 @@
 		{#if e.value == "separator"}
 			<ContextMenu.Separator class="bg-cyan-700 mx-1"/>
 		{:else}
-			<ContextMenu.Item class="h-10" on:click={() => handleClick(cam, e.value)}>{e.value}</ContextMenu.Item>
+			<ContextMenu.Item class="h-12" on:click={() => handleClick(cam, e.value)}>{e.value}</ContextMenu.Item>
 		{/if}
 	{:else}
 		<ContextMenu.Sub>
-			<ContextMenu.SubTrigger class="h-10" inset>{e.value}</ContextMenu.SubTrigger>
+			<ContextMenu.SubTrigger class="h-12 text-base" inset>{e.value}</ContextMenu.SubTrigger>
 			<ContextMenu.SubContent class="w-4 overflow-visible text-center" fitViewport={false} overlap={true}> 
 				<PresetsMenu items={e.items} bind:cam />
 			</ContextMenu.SubContent>
