@@ -309,6 +309,8 @@
 					$menuIsOpen = false;
 					opc(false);
 				}
+
+				jQuery("#overlay").css("pointer-events", "none");
 			})
 			
 		} else if (!reopen) {
@@ -326,6 +328,7 @@
 				currentAction = undefined;
 				shown = "invisible";
 			}, 200);
+			jQuery("#overlay").css("pointer-events", "");
 			removeClickListener();
 		} else {
 			reopen = false;
@@ -340,12 +343,13 @@
 	}
 
 	let content: HTMLDivElement;
+	let trigger: HTMLDivElement;
 </script>
 
 
 <ContextMenu.Root bind:open={$menuIsOpen} onOpenChange={opc} loop={true}>
 	{#if (currentAction && currentAction.IsActive) && dataReady && !cancelled}
-		<ContextMenu.Trigger>
+		<ContextMenu.Trigger el={trigger}>
 			<slot></slot>
 		</ContextMenu.Trigger>
 
