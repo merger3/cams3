@@ -45,6 +45,7 @@ interface SendOptions {
 
 const defaultCMD: string = "​";
 const swapRegEx = new RegExp('^\!swap ([0-9]) ([0-9])$');
+const swapRegEx2 = new RegExp('^\!swap (\\w+) (\\w+)$');
 const clickRegEx = new RegExp('^\!ptzclick ([0-9])+ ([0-9])+ 100 ?$');
 export async function sendCommand(userOpts: any) {
 	let defaults: SendOptions = {
@@ -73,13 +74,29 @@ export async function sendCommand(userOpts: any) {
 					}
 				}
 			} else {
-				_.delay(function() {
-					let z = GetSelectedRect(Selector.Presets);
-					if (z) {
-						get(am).Actions["click"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
-					}
-				}, 10);
+				let resetSwap = swapRegEx2.exec(opts.cmd);
+				// resetSwap[2].slice(0, -1) == "wolfmulti"
+				if (resetSwap && (resetSwap[2].startsWith("wolfmulti") || ["wolf", "wolfcorner"].includes(resetSwap[2]))) {
+					setTimeout(() => {
+						sendCommand({cmd: `!resetcam ${resetSwap[2]}`, reset: false});
+					}, 300)
+				}
 			}
+		}
+		if (opts.cmd.startsWith("!scenecams")) {
+			get(server).get('/layout').then(function (response) {
+				console.log(response)
+				camLayout.set(response.data)
+				let z = GetSelectedRect(Selector.Presets);
+				if (z) {
+					get(am).Actions["click"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
+					const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: z.x() + (z.width() / 2), clientY: z.y() + (z.height() / 2), button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+					jQuery((get(stage).findOne('#mainlayer') as Konva.Layer).getCanvas()._canvas)[0].dispatchEvent(pointerUpEvent);	
+				}
+			}).catch(function (error) {
+				console.log(error);
+			});
+			console.log(get(camLayout));
 		}
 	}).catch(function (error) {
 		console.log(error);
@@ -226,8 +243,8 @@ export async function GetSwaps(name: string): Promise<MenuItem> {
 
 export function GrowZone(stage: Konva.Stage, zone: Konva.Rect) {
 	zone.hitFunc(function(context: any) {
-		let xMargin = stage.width() * .06
-		let yMargin = stage.height() * .07
+		let xMargin = stage.width() * .04
+		let yMargin = stage.height() * .06
 		context.beginPath();
 		context.rect(-xMargin / 2, -yMargin / 2, zone.width() + xMargin, zone.height() + yMargin);
 		context.closePath();
@@ -298,20 +315,41 @@ export function Reset(stage: Konva.Stage) {
 	ResetValues();
 }
 
-export async function GetCam(r: CamRequest, a: AxiosInstance): Promise<CamResponse> {
+let multiMap: {[key: string]: string} = {
+	"wolfmulti": "wolf",
+	"wolfmulti2": "wolf",
+	"wolfmulti3": "wolf",
+	"wolfmulti4": "wolf",
+	"wolfmulti5": "wolfcorner"
+}
+
+
+export async function GetCam(r: CamRequest, a: AxiosInstance, mapMulti: boolean = true): Promise<CamResponse> {
 	// return {found: true, name: "fox", position: 3, cacheHit: true};
+	let output: CamResponse;
 	let storedCam: string = get(camLayout)[Number(r.position) - 1];
 	if (storedCam != undefined) {
-		return {found: true, cam: storedCam, position: Number(r.position), cacheHit: true};
+		output = {found: true, cam: storedCam, position: Number(r.position), cacheHit: true};
 	}
-
+	
+	console.log("Requesting cam from server");
 	let response = await a.post("/camera", {x: r.coordinates.x, y: r.coordinates.y, width: 0, height: 0, frameWidth: r.frameWidth, frameHeight: r.frameHeight, position: Number(r.position)});
 	
 	if (response.status >= 300) {
 		console.log("Could not get camera");
-		return {found: false, cam: "", position: 0, cacheHit: false}
+		output = {found: false, cam: "", position: 0, cacheHit: false}
+	} else {
+		output = response.data
 	}
-	return response.data;
+
+	if (mapMulti) {
+		let mappedName = multiMap[output.cam] 
+		if (mappedName) {
+			output.cam = mappedName
+		}	
+	}
+
+	return output;
 }
 
 

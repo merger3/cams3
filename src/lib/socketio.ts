@@ -1,7 +1,9 @@
 import { io } from "socket.io-client";
 import { get } from 'svelte/store';
-import { camLayout } from '$lib/stores';
+import { camLayout, am, stage } from '$lib/stores';
+import { RemoveSelection, Selector, AddSelection, GetSelectedRect } from '$lib/zones';
 import { type AxiosInstance } from 'axios';
+import type Konva from "konva";
 
 
 export function watchLayout(server: AxiosInstance) {
@@ -16,8 +18,18 @@ export function watchLayout(server: AxiosInstance) {
 
     socket.on('message', (message) => {
         // console.log('Message received:', message);
+
+		// camLayout.set(["wolf", "wolfcorner", "wolfmulti", "wolfmulti2", "wolfmulti5", "crowin"]);
 		camLayout.set(message.data.fullArgs.replaceAll("fullcam", "").split(' '));
 		console.log(get(camLayout));
+
+		let z = GetSelectedRect(Selector.Presets);
+		console.log(z);
+		if (z) {
+			get(am).Actions["click"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
+			const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: z.x() + (z.width() / 2), clientY: z.y() + (z.height() / 2), button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+			jQuery((get(stage).findOne('#mainlayer') as Konva.Layer).getCanvas()._canvas)[0].dispatchEvent(pointerUpEvent);	
+		}
     });
 
     socket.on('disconnect', (reason) => {

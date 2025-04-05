@@ -34,7 +34,7 @@
 		if (origin) {
 			let distance = Math.hypot(position.x - origin.x, position.y - origin.y);
 			// if (distance >= ($stage.width() * .015)) {
-			if (distance >= 12) {
+			if (distance * $panzoom.getScale() >= ($stage.width() * .01) * $panzoom.getScale()) {
 				$am.ActiveStates.add(States.StageDraggingBuffered)
 			} else {
 				$am.ActiveStates.delete(States.StageDraggingBuffered)
@@ -214,6 +214,7 @@
 		if (document.activeElement) {
 			(document.activeElement as HTMLElement).blur();
 		}
+
 		$am.ActiveStates.add(States.StagePointerDown);
 		let ifOverlay = jQuery('#overlay')[0].getBoundingClientRect();
 		

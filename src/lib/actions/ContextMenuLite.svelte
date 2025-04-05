@@ -177,7 +177,7 @@
 
 	async function loadSwapMenu(e: KonvaPointerEvent, coordinates: Coordinates, target: Konva.Rect) {
 		AddSelection(target, Selector.ContexMenu);
-		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
+		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server, false)
 		if (!cam.found) {
 			$am.Actions[swapMenuName].Cancel();
 			return;

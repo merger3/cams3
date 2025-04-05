@@ -374,6 +374,9 @@
 	function enableZone() {
 		if (activeMenu.target) {
 			$am.Actions["click"].Enable({x: activeMenu.target.x() + (activeMenu.target.width() / 2), y: activeMenu.target.y() + (activeMenu.target.height() / 2)})
+			const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX:activeMenu.target.x() + (activeMenu.target.width() / 2), clientY: activeMenu.target.y() + (activeMenu.target.height() / 2), button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+			jQuery(($stage.findOne('#mainlayer') as Konva.Layer).getCanvas()._canvas)[0].dispatchEvent(pointerUpEvent);	
+
 		}
 	}
 
@@ -430,7 +433,7 @@
 	}
 
 	async function loadNextCam(action: string) {
-		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server)
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server, (action == "swap"))
 		if (!cam.found) {
 			return;
 		}

@@ -925,6 +925,8 @@
 		let z = $zones.findOne(`.${slot}`) as Konva.Rect;
 		if (z) {
 			$am.Actions["click"].Enable({x: z.x() + (z.width() / 2), y: z.y() + (z.height() / 2)})
+			const pointerUpEvent = new PointerEvent('pointerup', {bubbles: true, cancelable: true, clientX: z.x() + (z.width() / 2), clientY: z.y() + (z.height() / 2), button: 2, buttons: 2, pointerId: 1, pointerType: 'mouse', isPrimary: true});
+			jQuery(($stage.findOne('#mainlayer') as Konva.Layer).getCanvas()._canvas)[0].dispatchEvent(pointerUpEvent);	
 		}
 	}
 

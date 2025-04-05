@@ -69,7 +69,7 @@
 		Enable: enablePinch
 	}
 
-	const resetThresholdDefault: number = 1.3;
+	const resetThresholdDefault: number = 1.2;
 	let resetThreshold: number = resetThresholdDefault;
 	function enablePinch(this: Action, origin: Coordinates) {
 		this.IsActive = true;

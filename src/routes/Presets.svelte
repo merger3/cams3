@@ -49,18 +49,12 @@
 
 	let target: Konva.Rect;
 	function enable(this: Action, origin: Coordinates) {
-		// if ($menuIsOpen) {
-		// 	$am.Actions["swaps"].Cancel();
-		// 	$am.Actions["click"].Cancel();
-		// 	return;
-		// }
 		$am.Actions[name].IsActive = true;
 		target = GetZone($zones, origin);
 		if (!target) {
 			$am.Actions[name].Cancel();
 			return;
 		}
-		
 
 		$stage.on('pointerup.click', () => {
 			$stage.off('pointerup.click');
@@ -80,7 +74,6 @@
 	async function loadMenu(coordinates: Coordinates, target: Konva.Rect) {
 		let presets: CamPresets = {value: "", items: []};
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
-		
 		if (cam.found) {
 			let cachedPresets = $presetButtonCache[cam.cam];
 			if (!cachedPresets) {
@@ -134,7 +127,6 @@
 	}
 
 	onMount(() => {
-		console.log($camPresets)
 		updateButtonSizeRaw()
 		window.addEventListener('resize', updateButtonSize);
 		return () => {
