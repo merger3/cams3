@@ -183,7 +183,7 @@
 			return;
 		}
 		let name: string = cam.cam;
-
+		console.log(`Cam in slot: ${name}`)
 		items = await GetSwaps(name);
 		if (!items) {
 			$am.Actions[swapMenuName].Cancel();

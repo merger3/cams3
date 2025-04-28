@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, createEventDispatcher } from 'svelte';
-	import { commandText, ifDimensions, multiTouchPan, ClearStage, stage, commandHeight, sendCommand, GetScreenSize } from '$lib/stores';
+	import { commandText, ifDimensions, multiTouchPan, ClearStage, stage, commandHeight, sendCommand, GetScreenSize, pressDuration } from '$lib/stores';
 	import { fit, parent_style } from '@leveluptuts/svelte-fit'
 	import type { Box } from '$types';
 	import { Motion } from 'svelte-motion'
@@ -163,7 +163,10 @@
 					<div id="menutrigger" class="overlay unselectable z-100" />
 				</ContextMenuLite>
 
-			<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: 200, triggerBeforeFinished: true, spread: 12 }} />
+				
+				<div id="overlay" class="overlay unselectable z-10" use:multiTouchPan={{notchSize: Math.round(window.innerHeight / 2 * .05)}} use:press={{ timeframe: $pressDuration, triggerBeforeFinished: true, spread: 12 }} />
+				
+
 
 			<TangleLite bind:stageWidth={winWidth} bind:stageHeight={winHeight} bind:zoneDefinitions on:forceiframeresize={resizeIframeRaw} />
 			

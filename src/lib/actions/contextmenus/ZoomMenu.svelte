@@ -21,11 +21,11 @@
 		{#if e.value == "separator"}
 			<ContextMenu.Separator class="bg-cyan-700 mx-1"/>
 		{:else}
-			<ContextMenu.Item class="h-12 text-base text-center" on:click={() => handleClick(cam, e.value)}>{e.value}{e.value != "Max" ? "%" : ""}</ContextMenu.Item>
+			<ContextMenu.Item class="h-12 xl:h-11 text-base xl:text-sm text-center" on:click={() => handleClick(cam, e.value)}>{e.value}{e.value != "Max" ? "%" : ""}</ContextMenu.Item>
 		{/if}
 	{:else}
 		<ContextMenu.Sub>
-			<ContextMenu.SubTrigger class="h-12 text-base" inset>{e.value}</ContextMenu.SubTrigger>
+			<ContextMenu.SubTrigger class="h-12 xl:h-11 text-base xl:text-sm" inset>{e.value}</ContextMenu.SubTrigger>
 			<ContextMenu.SubContent class="w-4 overflow-visible text-center" fitViewport={false} overlap={true}> 
 				<ZoomMenu items={e.items} bind:cam bind:position />
 			</ContextMenu.SubContent>

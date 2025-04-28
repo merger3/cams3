@@ -22,7 +22,7 @@
 >
 	<slot />
 	<ScrollAreaPrimitive.Thumb
-		class={cn("bg-border relative rounded-full bg-amber-700 opacity-30 hover:opacity-60 transition-opacity duration-200", orientation === "vertical" && "flex-1", "thumb-custom")}
+		class={cn("bg-border relative rounded-full bg-amber-700 opacity-35 hover:opacity-60 transition-opacity duration-200", orientation === "vertical" && "flex-1", "thumb-custom")}
 	/>
 </ScrollAreaPrimitive.Scrollbar>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
-	import { am, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, presetButtonCache, keyboardHandler, menuIsOpen } from '$lib/stores';
+	import { am, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, presetButtonCache, keyboardHandler, scrollMemory } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
 	import { Selector, AddSelection, RemoveSelection } from '$lib/zones';
@@ -74,9 +74,11 @@
 	async function loadMenu(coordinates: Coordinates, target: Konva.Rect) {
 		let presets: CamPresets = {value: "", items: []};
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
+		console.log(`preset cam: ${cam.cam}`)
 		if (cam.found) {
 			let cachedPresets = $presetButtonCache[cam.cam];
 			if (!cachedPresets) {
+				console.log("missed cache on preset buttons")
 				let response = await $server.post('/camera/presets/buttons', {camera: cam.cam})
 				if (response.data.found) {
 					presets = response.data.camPresets;
@@ -85,27 +87,39 @@
 					$presetButtonCache[cam.cam] = {value: cam.cam, items: []}
 				}
 			} else {
+				console.log(`Cached preset: ${cachedPresets.value}`)
 				presets = cachedPresets;
 			}
 		} else {
 			$am.Actions[name].Cancel();
 			return;
 		}
+		let scrollPosition: number;
 		if (scrollAreaElement) {
-			scrollAreaElement.scrollTop = 0;
+			if ($camPresets.value != "") {
+				$scrollMemory[$camPresets.value] = scrollAreaElement.scrollTop
+				console.log(`Stored scroll position for ${$camPresets.value} as ${scrollAreaElement.scrollTop}`);
+			}
+			scrollPosition = $scrollMemory[cam.cam] && $camPresets.value != cam.cam ? $scrollMemory[cam.cam] : 0;
+			console.log(`Loaded scroll position for ${cam.cam} as ${scrollPosition}`);
 			buttonWidth = scrollAreaElement.getBoundingClientRect().width + 'px';
 		} else {
 			buttonWidth = "100%";
 		}
 
-		loadButtons(target, presets)
+		loadButtons(target, presets, scrollPosition)
 		$am.Actions[name].IsActive = false;
 	}
 
-	function loadButtons(target: Konva.Rect, presets: CamPresets) {
+	function loadButtons(target: Konva.Rect, presets: CamPresets, scrollPosition: number) {
 		$keyboardHandler.cancelPresetSelection();
 		AddSelection(target, Selector.Presets);
+		console.log(`preset value: ${presets.value}`)
 		$camPresets = presets;
+
+		if (scrollAreaElement) {
+			scrollAreaElement.scrollTop = scrollPosition;
+		}
 
 		setTimeout(updateButtonSizeRaw, 50);
 	}
@@ -136,7 +150,7 @@
 </script>
 
 {#if $camPresets.items.length != 0}
-	<ScrollArea bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-2.5 mt-1 mb-auto mx-1 z-20 rounded shadow" scrollbarYClasses="">
+	<ScrollArea type="always" bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-2.5 mt-1 mb-auto mx-1 z-20 rounded shadow">
 		<div id="presets-menu" class="w-100">
 			<Subpresets bind:quicksendSelected bind:buttonWidth bind:preset={$camPresets.items} />
 		</div>

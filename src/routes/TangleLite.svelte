@@ -10,7 +10,7 @@
 	import Scroll from "$lib/actions/Scroll.svelte";
 	import { type PressCustomEvent } from 'svelte-gestures';
 	import { Selector, AddSelection, RemoveSelection, Zones } from '$lib/zones';
-	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones, ifDimensions, GetCam, server, SyncCache } from '$lib/stores';
+	import { am, commandText, GetZone, panzoom, stage, GrowZone, ResetZone, zones, ifDimensions, GetCam, server, SyncCache, pressDuration } from '$lib/stores';
 	import type { KonvaPointerEvent } from "konva/lib/PointerEvents";
 	import { States } from '$lib/actions';
 	import { CreateZones } from '$lib/zones';
@@ -33,28 +33,31 @@
 	function isDragging(position: Coordinates) {
 		if (origin) {
 			let distance = Math.hypot(position.x - origin.x, position.y - origin.y);
-			// if (distance >= ($stage.width() * .015)) {
-			if (distance * $panzoom.getScale() >= ($stage.width() * .01) * $panzoom.getScale()) {
-				$am.ActiveStates.add(States.StageDraggingBuffered)
+			let minDistance = 8;
+			let scale = $panzoom.getScale();
+			let baseThreshold = $stage.width() * 0.0125;
+			let threshold = Math.max(baseThreshold / scale, minDistance); // Ensure a minimum threshold of 5
+
+			if (distance >= threshold) {
+				$am.ActiveStates.add(States.StageDraggingBuffered);
 			} else {
-				$am.ActiveStates.delete(States.StageDraggingBuffered)
+				$am.ActiveStates.delete(States.StageDraggingBuffered);
 			}
 
 			if (distance >= 12) {
-				$am.ActiveStates.add(States.StageDraggingDejittered)
+				$am.ActiveStates.add(States.StageDraggingDejittered);
 			} else {
-				$am.ActiveStates.delete(States.StageDraggingDejittered)
+				$am.ActiveStates.delete(States.StageDraggingDejittered);
 			}
 
-			let minDistance = 8;
 			if ($am.ActiveStates.has(States.ClickedListeningShape)) {
 				minDistance = 2;
 			}
 
 			if (distance >= minDistance) {
-				$am.ActiveStates.add(States.StageDraggingMinimal)
+				$am.ActiveStates.add(States.StageDraggingMinimal);
 			} else {
-				$am.ActiveStates.delete(States.StageDraggingMinimal)
+				$am.ActiveStates.delete(States.StageDraggingMinimal);
 			}
 		}
 	}
@@ -229,13 +232,38 @@
 		if ($am.ActiveStates.has(States.OnePointer)) {
 			origin = {x: (e.evt.clientX - ifOverlay.left) / $panzoom.getScale(), y: (e.evt.clientY - ifOverlay.top) / $panzoom.getScale()};
 
+	
+
+			// switch (e.target.getParent().getClassName()) {
+			// case "Transformer":
+			// 	$am.ActiveStates.add(States.ClickedTransformer);
+			// 	break;
+			// case "Circle":
+			// 	$am.ActiveStates.add(States.ClickedCircle);
+			// 	break;
+			// case "Rect":
+			// 	if (clickTargets[0].name() == "selector") {
+			// 		$am.ActiveStates.add(States.ClickedTangle);
+			// 	} else if (clickTargets[0].getParent() == $zones) {
+			// 		$am.ActiveStates.add(States.ClickedEmptySpace);
+			// 	}
+			// 	break;
+			// }
+			
+
+
+			// $pressDuration = 200;
+			console.log(e.target.name())
 			if (e.target.getParent() == $zones) {
 				$am.ActiveStates.add(States.ClickedEmptySpace);
 			} else if (e.target.getParent().getClassName() == "Transformer") {
 				$am.ActiveStates.add(States.ClickedTransformer);
 			} else if (e.target.getClassName() == "Circle") {
 				$am.ActiveStates.add(States.ClickedCircle);
+			} else if (e.target.name() == "selector") {
+				$am.ActiveStates.add(States.ClickedTangle);
 			}
+				
 			
 			$stage.on("pointermove.stage", handlePointerMove);
 

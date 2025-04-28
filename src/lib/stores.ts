@@ -14,6 +14,7 @@ import Konva from "konva";
 export let commandText = writable<string>("​");
 export let ifDimensions = writable<Dimensions>({width: 0, height: 0});
 export let commandHeight = writable<number>();
+export let pressDuration = writable<number>(200);
 export let token = writable<string>();
 export let server = writable<AxiosInstance>();
 export let stage = writable<Konva.Stage>();
@@ -26,6 +27,7 @@ export let clickTimer = writable<number>();
 export let menuIsOpen = writable<boolean>();
 export let keyboardHandler = writable<Keyboard>();
 export let quicksend = writable<boolean>();
+export let scrollMemory = writable<{[key: string]: number}>({})
 
 export let resizeText = writable<any>();
 
@@ -79,7 +81,7 @@ export async function sendCommand(userOpts: any) {
 				if (resetSwap && (resetSwap[2].startsWith("wolfmulti") || ["wolf", "wolfcorner"].includes(resetSwap[2]))) {
 					setTimeout(() => {
 						sendCommand({cmd: `!resetcam ${resetSwap[2]}`, reset: false});
-					}, 300)
+					}, 200)
 				}
 			}
 		}
@@ -185,7 +187,8 @@ export function GetScreenSize(): string {
 
 export async function SyncCache(cam: string) {
 	let response = await get(server).post('/alias', {cam: cam});
-	let target: string = response.data.result;
+	let target: string = cam;
+	console.log(`target: ${target}`)
 	if (!get(swapsCache)[target]) {
 		response = await get(server).post('/camera/swaps', {camera: target});
 		let swapData: SwapResponse = response.data;
@@ -320,7 +323,10 @@ let multiMap: {[key: string]: string} = {
 	"wolfmulti2": "wolf",
 	"wolfmulti3": "wolf",
 	"wolfmulti4": "wolf",
-	"wolfmulti5": "wolfcorner"
+	"wolfmulti5": "wolfcorner",
+	"marmosetmulti": "marmout",
+	"foxmulti": "foxes",
+	"georgiemulti": "georgie"
 }
 
 
@@ -330,16 +336,16 @@ export async function GetCam(r: CamRequest, a: AxiosInstance, mapMulti: boolean 
 	let storedCam: string = get(camLayout)[Number(r.position) - 1];
 	if (storedCam != undefined) {
 		output = {found: true, cam: storedCam, position: Number(r.position), cacheHit: true};
-	}
-	
-	console.log("Requesting cam from server");
-	let response = await a.post("/camera", {x: r.coordinates.x, y: r.coordinates.y, width: 0, height: 0, frameWidth: r.frameWidth, frameHeight: r.frameHeight, position: Number(r.position)});
-	
-	if (response.status >= 300) {
-		console.log("Could not get camera");
-		output = {found: false, cam: "", position: 0, cacheHit: false}
 	} else {
-		output = response.data
+		console.log("Requesting cam from server");
+		let response = await a.post("/camera", {x: r.coordinates.x, y: r.coordinates.y, width: 0, height: 0, frameWidth: r.frameWidth, frameHeight: r.frameHeight, position: Number(r.position)});
+		
+		if (response.status >= 300) {
+			console.log("Could not get camera");
+			output = {found: false, cam: "", position: 0, cacheHit: false}
+		} else {
+			output = response.data
+		}
 	}
 
 	if (mapMulti) {

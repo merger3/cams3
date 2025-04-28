@@ -48,6 +48,7 @@
 			Inactive: new Set([
 				States.StageDraggingMinimal,
 				States.ClickedTransformer,
+				States.ClickedTangle,
 				States.ClickedCircle,
 				States.StageDoubleClick
 			]),
@@ -433,7 +434,7 @@
 	}
 
 	async function loadNextCam(action: string) {
-		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server, (action == "swap"))
+		let cam = await GetCam({coordinates: {x: activeMenu.location.x, y: activeMenu.location.y}, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(activeMenu.target.name())}, $server, false)
 		if (!cam.found) {
 			return;
 		}

@@ -11,6 +11,7 @@
 	export let content: HTMLDivElement;
 
 	async function handleClick(target: string, value: string) {
+		console.log(target, value);
 		let position = GetSelectedRect(Selector.ContexMenu); // Or pass this into the component
 		ClearStage($stage, [Selector.ContexMenu]);
 		if (value == "primary") {
@@ -36,11 +37,11 @@
 		{#if e.value == "separator"}
 			<ContextMenu.Separator class="bg-cyan-700 mx-1"/>
 		{:else}
-			<ContextMenu.Item class="h-12 text-base" on:click={() => handleClick(cam, e.value)}>{e.value}</ContextMenu.Item>
+			<ContextMenu.Item class="h-12 xl:h-11 text-base xl:text-sm" on:click={() => handleClick(cam, e.value)}>{e.value}</ContextMenu.Item>
 		{/if}
 	{:else}
 		<ContextMenu.Sub>
-			<ContextMenu.SubTrigger class="h-12 text-base" inset>{e.value}</ContextMenu.SubTrigger>
+			<ContextMenu.SubTrigger class="h-12 xl:h-11 text-base xl:text-sm" inset>{e.value}</ContextMenu.SubTrigger>
 			<ContextMenu.SubContent class="w-4 overflow-visible text-center" fitViewport={false} overlap={true}> 
 				<SwapMenu items={e.items} bind:cam bind:content />
 			</ContextMenu.SubContent>
