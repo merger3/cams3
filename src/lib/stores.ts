@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { type AxiosInstance } from 'axios';
-import type { CamRequest, CamResponse, Coordinates, Dimensions, CamPresets, SwapResponse, MenuItem } from '$types';
+import type { CamRequest, CamResponse, Coordinates, Dimensions, CamPresets, SwapResponse, MenuItem, ScrollState } from '$types';
 import {type PanzoomObject} from '@panzoom/panzoom'
 import { type BaseParams } from 'svelte-gestures';
 import { setPointerControls } from 'svelte-gestures';
@@ -27,7 +27,7 @@ export let clickTimer = writable<number>();
 export let menuIsOpen = writable<boolean>();
 export let keyboardHandler = writable<Keyboard>();
 export let quicksend = writable<boolean>();
-export let scrollMemory = writable<{[key: string]: number}>({})
+export let scrollMemory = writable<{[key: string]: ScrollState}>({})
 
 export let resizeText = writable<any>();
 

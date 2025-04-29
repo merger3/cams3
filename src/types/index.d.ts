@@ -14,6 +14,12 @@ interface CamPresets {
     items: any[];
 } 
 
+interface ButtonTabs {
+	tab: string;
+	buttons: ButtonPreset[];
+}
+
+
 interface ButtonPreset {
     value: string;
 } 
@@ -102,4 +108,10 @@ interface CamResponse {
 	cam: string;
 	position: number;
 	cacheHit: boolean;
+}
+
+interface ScrollState {
+	cam: string;
+	tab: string;
+	tabs: {[key: string]: number};
 }

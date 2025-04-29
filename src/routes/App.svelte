@@ -164,7 +164,7 @@
 		</div>	  
 	</div>
 {:else}
-	<div class="container-fluid" id="video-container">
+	<div class="container-fluid" id="video-container" style="max-height: 100vh; overflow: hidden;">
 		<div class="row justify-content-between flex-nowrap ">
 			<div class="col-1 text-center d-flex flex-column justify-content-between p-0 mx-1" id="camselector" style="max-height: {$commandHeight + $ifDimensions.height}px;">
 				<div style="min-height: {$commandHeight}px;max-height: {$commandHeight}px;">
@@ -200,6 +200,7 @@
 	}
 	#sendbutton {
 		height: 100%;
+		flex-shrink: 0;
 		white-space: pre;
 		position: relative;
 	}
