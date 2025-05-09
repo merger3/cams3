@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
-	import { onMount, afterUpdate, createEventDispatcher, tick } from 'svelte';
+	import { onMount, afterUpdate, createEventDispatcher, onDestroy } from 'svelte';
 	import { am, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, presetButtonCache, keyboardHandler, scrollMemory } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
@@ -76,7 +76,6 @@
 	async function loadMenu(coordinates: Coordinates, target: Konva.Rect) {
 		let presets: CamPresets = {value: "", items: []};
 		let cam = await GetCam({coordinates: coordinates, frameWidth: $ifDimensions.width, frameHeight: $ifDimensions.height, position: Number(target.name())}, $server)
-		console.log(cam)
 		if (cam.found) {	
 			let cachedPresets = $presetButtonCache[cam.cam];
 			if (!cachedPresets) {
@@ -95,21 +94,11 @@
 			$am.Actions[name].Cancel();
 			return;
 		}
-
-		console.log(presets)
 		
 		let scrollPosition: number = 0;
 		if (scrollAreaElement) {
 			if ($camPresets.value != "" && $camPresets.items.length != 0) {
-				if (!$scrollMemory[$camPresets.value]) {
-					$scrollMemory[$camPresets.value] = {cam: $camPresets.value, tab: activeTab, tabs: {}}
-				} else {
-					$scrollMemory[$camPresets.value].tab = activeTab
-				}
-				$scrollMemory[$camPresets.value].tabs[activeTab] = scrollAreaElement.scrollTop
-				console.log(`Stored scroll position for ${$camPresets.value} as ${scrollAreaElement.scrollTop}`);
-				scrollPosition = $scrollMemory[cam.cam] && $scrollMemory[cam.cam].tabs[$scrollMemory[cam.cam].tab] && $camPresets.value != cam.cam ? $scrollMemory[cam.cam].tabs[$scrollMemory[cam.cam].tab] : 0;
-				console.log(`Loaded scroll position for ${cam.cam} as ${scrollPosition}`);
+				updateScrollState($camPresets.value, activeTab, scrollAreaElement.scrollTop);
 			}
 			buttonWidth = scrollAreaElement.getBoundingClientRect().width + 'px';
 		} else {
@@ -120,19 +109,30 @@
 		$am.Actions[name].IsActive = false;
 	}
 
+	function updateScrollState(cam: string, tab: string, scrollPos: number) {
+		if (!$scrollMemory[cam]) {
+			$scrollMemory[cam] = {cam: cam, tab: activeTab, tabs: {}};
+		}
+		$scrollMemory[cam].tab = tab;
+		$scrollMemory[cam].tabs[tab] = scrollPos;
+	}
+
+
 	function loadButtons(target: Konva.Rect, presets: CamPresets, scrollPosition: number) {
 		$keyboardHandler.cancelPresetSelection();
 		AddSelection(target, Selector.Presets);
 		$camPresets = presets;
 
-		if (scrollAreaElement && $camPresets.items.length != 0) {
-			let cam = $camPresets.value;
-			if (!$scrollMemory[cam]) {
-				$scrollMemory[cam] = {cam: cam, tab: activeTab, tabs: {}}
-				$scrollMemory[cam].tabs[activeTab] = 0;
-			}
-			activeTab = $scrollMemory[cam].tab // make this so it doesn't always have to be main
-			scrollAreaElement.scrollTop = scrollPosition;
+		let cam = $camPresets.value;
+		if (!$scrollMemory[cam]) {
+			$scrollMemory[cam] = {cam: cam, tab: activeTab, tabs: {}};
+			$scrollMemory[cam].tabs[activeTab] = 0;
+		}
+
+		let scrollState = $scrollMemory[cam];
+		if (scrollAreaElement) {
+			activeTab = scrollState.tab // make this so it doesn't always have to be main
+			scrollAreaElement.scrollTop = scrollState.tabs[scrollState.tab];
 		}
 
 		setTimeout(updateButtonSizeRaw, 50);
@@ -155,46 +155,80 @@
 	}
 
 	function updateTabScrollPosition(value: string) {
-		if (scrollAreaElement) {
-			let cam = $camPresets.value;
-			console.log("$camPresets")
-			console.log($camPresets)
-			console.log($scrollMemory[cam])
-			if (!$scrollMemory[cam]) {
-				$scrollMemory[cam] = {cam: cam, tab: value, tabs: {}}
-				$scrollMemory[cam].tabs[value] = 0;
-			} else {
-				$scrollMemory[cam].tabs[$scrollMemory[cam].tab] = scrollAreaElement.scrollTop;
-				scrollAreaElement.scrollTop = $scrollMemory[cam].tabs[value] ?? 0;
-				$scrollMemory[cam].tab = value;
-			}
+		let cam = $camPresets.value;
+		console.log($scrollMemory[cam])
+		console.log(value)
+		if (scrollAreaElement && $scrollMemory[cam].tabs[value]) {
+			scrollAreaElement.scrollTop = $scrollMemory[cam].tabs[value];
 		}
+		$scrollMemory[cam].tab = value;
+		$scrollMemory[cam].tabs[value] = scrollAreaElement.scrollTop;
 	}
 
 	function jumpToTopTab(tab: string) {
-		let cam = $camPresets.value;
-		if ($scrollMemory[cam].tab == tab) {
+		return;
+		if (activeTab == tab) {
 			scrollAreaElement.scrollTop = 0;
-			$scrollMemory[cam].tabs[tab] = 0;
+			$scrollMemory[$camPresets.value].tabs[tab] = 0;
 		}
 	}
 
+	function* repeat(count: number): Generator<number> {
+		for (let i = 0; i < count; i++) yield i;
+	}
+
+	function updateScrollPositon(e: any) {
+		$scrollMemory[$camPresets.value].tabs[activeTab] = scrollAreaElement.scrollTop
+	}
+	var updateScrollPositonDebounced = _.debounce(updateScrollPositon, 100, { 'leading': false, 'trailing': true });
+
+
+
+
+	$: if (scrollAreaElement) {
+		scrollAreaElement.addEventListener('scroll', updateScrollPositonDebounced);
+	}
 	onMount(() => {
 		updateButtonSizeRaw()
+
+		// scrollAreaElement.addEventListener("scroll", updateScrollPositon);
 		window.addEventListener('resize', updateButtonSize);
 		return () => {
 			window.removeEventListener('resize', updateButtonSize);
 		};
 	});
 
+	onDestroy(() => {
+		if (scrollAreaElement) {
+		scrollAreaElement.removeEventListener('scroll', updateScrollPositonDebounced);
+		}
+	});
+
+	function generateGrid(items: any[]): any[] {
+		let i = items.length;
+		while (i > 0) {
+			let slice: any[] = [];
+			let breakpoint = Math.min(3, i);
+			for (let j = 0; j < breakpoint; j++) {
+				slice.push(items[i - breakpoint + j]);
+			}
+			i -= breakpoint;
+			console.log(`slice length: ${slice.length}`);
+			for (let item of slice) {
+				item.cols = Math.round(12 / slice.length);
+			}
+		}
+		return items;
+	}
+
 </script>
 
 {#if $camPresets.items.length != 0}
-	<ScrollArea type="always" bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-2.5 mt-1 mb-auto mx-1 z-20 rounded shadow max-h-full">
+	<ScrollArea type="always" bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-1 mt-1 mb-auto mx-1 z-20 rounded shadow max-h-full">
 		<Tabs.Root bind:value={activeTab} onValueChange={updateTabScrollPosition} class="w-100">
-			<Tabs.List class="grid w-full grid-cols-2 w-100 ms-.5 me-0 sticky top-0 z-50">
-				{#each $camPresets.items as t}
-					<Tabs.Trigger value={t.tab} on:click={() => jumpToTopTab(t.tab)}>{t.tab}</Tabs.Trigger>
+			<Tabs.List class="grid w-100 h-100 ms-.5 me-0 mb-2 mt-0 sticky top-0 z-50" style="--bs-gap: .2rem;">
+				{#each generateGrid($camPresets.items) as t}
+					<Tabs.Trigger class="border border-solid g-col-{t.cols}" value={t.tab} on:click={() => jumpToTopTab(t.tab)}>{t.tab}</Tabs.Trigger>
 				{/each}	
 			</Tabs.List>
 			{#each $camPresets.items as t}

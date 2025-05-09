@@ -19,7 +19,7 @@ export function watchLayout(server: AxiosInstance) {
     socket.on('message', (message) => {
         // console.log('Message received:', message);
 
-		// camLayout.set(["wolf", "wolfcorner", "wolfmulti", "wolfmulti2", "wolfmulti5", "crowin"]);
+		// camLayout.set(["wolf", "pasture", "wolfmulti", "wolfmulti2", "wolfmulti5", "crowin"]);
 		camLayout.set(message.data.fullArgs.replaceAll("fullcam", "").split(' '));
 		console.log(get(camLayout));
 

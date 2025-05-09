@@ -9,7 +9,8 @@ $warning: #fd9c0d;
 // );
 // $spacers: map-merge($spacers, $custom-spacers);
 
-
+$enable-grid-classes: false;
+$enable-cssgrid: true;
   
 // Merge the custom spacers with the original spacers map
 // Import Bootstrap's SCSS

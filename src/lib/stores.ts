@@ -326,7 +326,8 @@ let multiMap: {[key: string]: string} = {
 	"wolfmulti5": "wolfcorner",
 	"marmosetmulti": "marmout",
 	"foxmulti": "foxes",
-	"georgiemulti": "georgie"
+	"georgiemulti": "georgie",
+	"chickenmulti": "chicken"
 }
 
 
