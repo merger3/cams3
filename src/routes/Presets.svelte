@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import * as Tabs from "$lib/components/ui/tabs/index.js";
-	import { onMount, afterUpdate, createEventDispatcher, onDestroy } from 'svelte';
+	import { onMount, afterUpdate, createEventDispatcher, onDestroy, tick } from 'svelte';
 	import { am, server, GetCam, ifDimensions, stage, GetZone, zones, camPresets, presetButtonCache, keyboardHandler, scrollMemory } from '$lib/stores';
 	import type { Coordinates, CamPresets } from '$types';
 	import { States, type Action } from '$lib/actions';
@@ -105,7 +105,11 @@
 			buttonWidth = "100%";
 		}
 
-		loadButtons(target, presets, scrollPosition)
+		if (presets.items.length > 0) {
+			loadButtons(target, {value: presets.value, items: [...presets.items.slice(1), presets.items[0]]}, scrollPosition)
+		} else {
+			loadButtons(target, presets, scrollPosition)
+		}
 		$am.Actions[name].IsActive = false;
 	}
 
@@ -123,19 +127,30 @@
 		AddSelection(target, Selector.Presets);
 		$camPresets = presets;
 
-		let cam = $camPresets.value;
-		if (!$scrollMemory[cam]) {
-			$scrollMemory[cam] = {cam: cam, tab: activeTab, tabs: {}};
-			$scrollMemory[cam].tabs[activeTab] = 0;
-		}
+			let cam = $camPresets.value;
+			if (!$scrollMemory[cam]) {
+				let newTab = "main";
+				if ($camPresets.items.length != 0) {
+					newTab
+				}
+				// $scrollMemory[cam] = {cam: cam, tab: $camPresets.items.length != 0 ? $camPresets.items[0].tab : "main", tabs: {}};
+				$scrollMemory[cam] = {cam: cam, tab: $camPresets.items.length != 0 ? $camPresets.items[$camPresets.items.length-1].tab : "main", tabs: {}};
+				$scrollMemory[cam].tabs[activeTab] = 0;
+			}
 
-		let scrollState = $scrollMemory[cam];
-		if (scrollAreaElement) {
-			activeTab = scrollState.tab // make this so it doesn't always have to be main
-			scrollAreaElement.scrollTop = scrollState.tabs[scrollState.tab];
-		}
+			let scrollState = $scrollMemory[cam];
+			tick().then(() => {
+				if (scrollAreaElement) {
+					tick().then(() => {
+						activeTab = scrollState.tab // make this so it doesn't always have to be main
+					});
+					tick().then(() => {
+						scrollAreaElement.scrollTop = scrollState.tabs[scrollState.tab];
+					});
+				}
 
-		setTimeout(updateButtonSizeRaw, 50);
+				setTimeout(updateButtonSizeRaw, 20);
+			});
 	}
 
 	function updateButtonSizeRaw() {
@@ -155,22 +170,27 @@
 	}
 
 	function updateTabScrollPosition(value: string) {
-		let cam = $camPresets.value;
-		console.log($scrollMemory[cam])
-		console.log(value)
-		if (scrollAreaElement && $scrollMemory[cam].tabs[value]) {
-			scrollAreaElement.scrollTop = $scrollMemory[cam].tabs[value];
-		}
-		$scrollMemory[cam].tab = value;
-		$scrollMemory[cam].tabs[value] = scrollAreaElement.scrollTop;
+			let cam = $camPresets.value;
+			if ($scrollMemory[cam].tabs[value]) {
+				scrollAreaElement.scrollTop = $scrollMemory[cam].tabs[value];
+			} else {
+				scrollAreaElement.scrollTop = 0;
+			}
+			$scrollMemory[cam].tab = value;
+			$scrollMemory[cam].tabs[value] = scrollAreaElement.scrollTop;
 	}
 
 	function jumpToTopTab(tab: string) {
-		return;
-		if (activeTab == tab) {
+		let cam = $camPresets.value;
+		if ($scrollMemory[cam].tab == tab) {
 			scrollAreaElement.scrollTop = 0;
-			$scrollMemory[$camPresets.value].tabs[tab] = 0;
+			$scrollMemory[cam].tabs[tab] = 0;
+		} else {
+			tick().then(() => {
+				updateTabScrollPosition(activeTab);
+			});
 		}
+		
 	}
 
 	function* repeat(count: number): Generator<number> {
@@ -205,28 +225,30 @@
 	});
 
 	function generateGrid(items: any[]): any[] {
-		let i = items.length;
-		while (i > 0) {
+		let i = 0;
+		while (i < items.length) {
 			let slice: any[] = [];
-			let breakpoint = Math.min(3, i);
+			let breakpoint = Math.min(3, items.length - i);
 			for (let j = 0; j < breakpoint; j++) {
-				slice.push(items[i - breakpoint + j]);
+				slice.push(items[j + i])
+				
 			}
-			i -= breakpoint;
-			console.log(`slice length: ${slice.length}`);
+			i += breakpoint;
+			console.log(`slice length: ${slice.length}`)
 			for (let item of slice) {
-				item.cols = Math.round(12 / slice.length);
+				item.cols = Math.round(12 / slice.length); 
 			}
 		}
+		
 		return items;
 	}
 
 </script>
 
 {#if $camPresets.items.length != 0}
-	<ScrollArea type="always" bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-1 mt-1 mb-auto mx-1 z-20 rounded shadow max-h-full">
-		<Tabs.Root bind:value={activeTab} onValueChange={updateTabScrollPosition} class="w-100">
-			<Tabs.List class="grid w-100 h-100 ms-.5 me-0 mb-2 mt-0 sticky top-0 z-50" style="--bs-gap: .2rem;">
+	<ScrollArea type="always" bind:el={scrollAreaElement} id="presets-menu-scroll" class="bg-[#1c1b22] d-block text-center px-3 py-1 mt-0 mb-auto mx-1 z-20 rounded shadow max-h-full">
+		<Tabs.Root bind:value={activeTab} class="w-100">
+			<Tabs.List class="grid w-100 h-100 ms-.5 me-0 mb-1 mt-0 sticky top-0 z-50" style="--bs-gap: .2rem;">
 				{#each generateGrid($camPresets.items) as t}
 					<Tabs.Trigger class="border border-solid g-col-{t.cols}" value={t.tab} on:click={() => jumpToTopTab(t.tab)}>{t.tab}</Tabs.Trigger>
 				{/each}	
